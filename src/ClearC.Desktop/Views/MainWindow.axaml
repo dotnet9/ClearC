@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ClearC.Desktop.Views.MainWindow"
+        Title="ClearC"
+        Width="1180"
+        Height="780"
+        MinWidth="960"
+        MinHeight="640"
+        WindowStartupLocation="CenterScreen">
+  <Grid>
+    <TextBlock HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               FontFamily="Cascadia Code, Consolas"
+               FontSize="28"
+               Foreground="#67E8F9"
+               Text="CLEARC" />
+  </Grid>
+</Window>

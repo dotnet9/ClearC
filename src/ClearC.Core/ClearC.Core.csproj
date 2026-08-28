@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>Core cleanup models and safety policies for ClearC.</Description>
+  </PropertyGroup>
+</Project>

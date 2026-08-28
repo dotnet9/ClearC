@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ClearC.Core/ClearC.Core.csproj" />
+    <Project Path="src/ClearC.Desktop/ClearC.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ClearC.Core.Tests/ClearC.Core.Tests.csproj" />
+    <Project Path="tests/ClearC.Desktop.Tests/ClearC.Desktop.Tests.csproj" />
+  </Folder>
+</Solution>
