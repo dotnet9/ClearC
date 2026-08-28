@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ClearC.Core.Safety;
 using ClearC.Desktop.Infrastructure.Cleanup;
+using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Scanning;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
@@ -22,7 +23,12 @@ public sealed partial class App : Application
             var disk = new WindowsDiskInfoProvider().GetSystemDrive();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(scanner, executor, new CleanupSafetyPolicy(), disk)
+                DataContext = new MainWindowViewModel(
+                    scanner,
+                    executor,
+                    new CleanupSafetyPolicy(),
+                    disk,
+                    CodeWfApplicationLogger.Instance)
             };
         }
 

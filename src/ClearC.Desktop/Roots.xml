@@ -1,6 +1,9 @@
 <linker>
   <assembly fullname="ClearC.Desktop" preserve="all" />
   <assembly fullname="ClearC.Core" preserve="all" />
+  <assembly fullname="CodeWF.Log.Avalonia" preserve="all" />
+  <assembly fullname="CodeWF.Log.Core" preserve="all" />
+  <assembly fullname="CodeWF.Tools.Core" preserve="all" />
   <assembly fullname="ReactiveUI" preserve="all" />
   <assembly fullname="System.Reactive" preserve="all" />
   <assembly fullname="Semi.Avalonia" preserve="all" />

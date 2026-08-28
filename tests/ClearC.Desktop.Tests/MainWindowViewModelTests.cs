@@ -1,6 +1,7 @@
 using ClearC.Core.Models;
 using ClearC.Core.Safety;
 using ClearC.Core.Services;
+using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.ViewModels;
 
 namespace ClearC.Desktop.Tests;
@@ -60,7 +61,8 @@ public sealed class MainWindowViewModelTests
         new FakeScanner(),
         new FakeExecutor(),
         new CleanupSafetyPolicy(),
-        new DiskSnapshot("C:", "NTFS", 100_000, 40_000));
+        new DiskSnapshot("C:", "NTFS", 100_000, 40_000),
+        NullApplicationLogger.Instance);
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {

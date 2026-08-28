@@ -7,8 +7,10 @@ using ClearC.Core.Models;
 using ClearC.Core.Safety;
 using ClearC.Core.Services;
 using ClearC.Desktop.Controls;
+using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
+using CodeWF.Log.Avalonia;
 
 namespace ClearC.Desktop.Tests;
 
@@ -25,7 +27,8 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture) : I
                     new EmptyScanner(),
                     new EmptyExecutor(),
                     new CleanupSafetyPolicy(),
-                    new DiskSnapshot("C:", "NTFS", 255L * 1024 * 1024 * 1024, 73L * 1024 * 1024 * 1024))
+                    new DiskSnapshot("C:", "NTFS", 255L * 1024 * 1024 * 1024, 73L * 1024 * 1024 * 1024),
+                    NullApplicationLogger.Instance)
             };
             window.Show();
 
@@ -33,6 +36,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture) : I
             Assert.Equal(700, window.Height);
             Assert.Single(window.GetVisualDescendants().OfType<DiskDonut>());
             Assert.Single(window.GetVisualDescendants().OfType<DataGrid>());
+            Assert.Single(window.GetVisualDescendants().OfType<LogView>());
             Assert.Contains(window.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "⌕  扫描分析"));
             Assert.IsType<TitleBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<TitleBarView>()).DataContext);
             Assert.IsType<CleanupWorkspaceViewModel>(Assert.Single(window.GetVisualDescendants().OfType<CleanupWorkspaceView>()).DataContext);
@@ -53,7 +57,8 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture) : I
                 new AlignmentScanner(),
                 new EmptyExecutor(),
                 new CleanupSafetyPolicy(),
-                new DiskSnapshot("C:", "NTFS", 255L * 1024 * 1024 * 1024, 73L * 1024 * 1024 * 1024));
+                new DiskSnapshot("C:", "NTFS", 255L * 1024 * 1024 * 1024, 73L * 1024 * 1024 * 1024),
+                NullApplicationLogger.Instance);
             var window = new MainWindow { DataContext = viewModel };
             window.Show();
 

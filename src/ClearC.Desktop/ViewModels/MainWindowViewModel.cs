@@ -6,6 +6,7 @@ using ClearC.Core.Models;
 using ClearC.Core.Safety;
 using ClearC.Core.Selection;
 using ClearC.Core.Services;
+using ClearC.Desktop.Infrastructure.Logging;
 using ReactiveUI;
 
 namespace ClearC.Desktop.ViewModels;
@@ -15,6 +16,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     private readonly ICleanupScanner _scanner;
     private readonly ICleanupExecutor _executor;
     private readonly CleanupSafetyPolicy _safetyPolicy;
+    private readonly IApplicationLogger _logger;
     private readonly DiskSnapshot _initialDisk;
     private WorkflowState _state;
     private DiskSnapshot _disk;
@@ -29,11 +31,13 @@ public sealed class MainWindowViewModel : ReactiveObject
         ICleanupScanner scanner,
         ICleanupExecutor executor,
         CleanupSafetyPolicy safetyPolicy,
-        DiskSnapshot initialDisk)
+        DiskSnapshot initialDisk,
+        IApplicationLogger logger)
     {
         _scanner = scanner;
         _executor = executor;
         _safetyPolicy = safetyPolicy;
+        _logger = logger;
         _initialDisk = initialDisk;
         _disk = initialDisk;
 
@@ -54,7 +58,6 @@ public sealed class MainWindowViewModel : ReactiveObject
         SelectFilterCommand = ReactiveCommand.Create<CategoryFilterViewModel>(SelectFilter);
         CancelConfirmationCommand = ReactiveCommand.Create(CancelConfirmation);
         ConfirmCleanupCommand = ReactiveCommand.CreateFromTask(ConfirmCleanupAsync);
-        ClearLogsCommand = ReactiveCommand.Create(ClearLogs);
 
         TitleBar = new TitleBarViewModel();
         Workspace = new CleanupWorkspaceViewModel(this);
@@ -73,7 +76,6 @@ public sealed class MainWindowViewModel : ReactiveObject
     public ObservableCollection<CleanupItemViewModel> VisibleItems { get; } = [];
     public ObservableCollection<CleanupItemViewModel> SelectedItems { get; } = [];
     public ObservableCollection<CategoryFilterViewModel> Filters { get; }
-    public ObservableCollection<LogEntryViewModel> Logs { get; } = [];
 
     public TitleBarViewModel TitleBar { get; }
     public CleanupWorkspaceViewModel Workspace { get; }
@@ -86,7 +88,6 @@ public sealed class MainWindowViewModel : ReactiveObject
     public ICommand SelectFilterCommand { get; }
     public ICommand CancelConfirmationCommand { get; }
     public ICommand ConfirmCleanupCommand { get; }
-    public ICommand ClearLogsCommand { get; }
 
     public WorkflowState State
     {
@@ -189,7 +190,6 @@ public sealed class MainWindowViewModel : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref _isToastVisible, value);
     }
     public string ToastText => $"清理完成 · 释放 {ByteSizeFormatter.Format(_freedBytes)}";
-    public int LogCount => Logs.Count;
     public string StatusText => State switch
     {
         WorkflowState.Idle => "SYSTEM READY · 等待指令",
@@ -289,7 +289,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         catch (Exception exception)
         {
             State = WorkflowState.Idle;
-            AddLog("ERR", $"扫描失败：{exception.Message}");
+            AddLog("ERR", $"扫描失败：{exception.Message}", exception);
         }
         finally
         {
@@ -310,7 +310,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
         catch (InvalidOperationException exception)
         {
-            AddLog("ERR", exception.Message);
+            AddLog("ERR", exception.Message, exception);
             State = WorkflowState.Results;
             return;
         }
@@ -371,7 +371,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         catch (Exception exception)
         {
             State = WorkflowState.Done;
-            AddLog("ERR", $"清理任务失败：{exception.Message}");
+            AddLog("ERR", $"清理任务失败：{exception.Message}", exception);
         }
         finally
         {
@@ -440,16 +440,20 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
     }
 
-    private void ClearLogs()
+    private void AddLog(string level, string message, Exception? exception = null)
     {
-        Logs.Clear();
-        this.RaisePropertyChanged(nameof(LogCount));
-    }
-
-    private void AddLog(string level, string message)
-    {
-        Logs.Add(LogEntryViewModel.Create(level, message));
-        this.RaisePropertyChanged(nameof(LogCount));
+        switch (level)
+        {
+            case "WARN":
+                _logger.Warning(message, exception);
+                break;
+            case "ERR":
+                _logger.Error(message, exception);
+                break;
+            default:
+                _logger.Information(message);
+                break;
+        }
     }
 
     private void RefreshSelectionProperties()

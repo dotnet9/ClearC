@@ -18,6 +18,7 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="CodeWF.Log.Avalonia" />
     <PackageReference Include="Semi.Avalonia" />
     <PackageReference Include="Semi.Avalonia.DataGrid" />
     <PackageReference Include="ReactiveUI" />
