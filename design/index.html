@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClearC · 界面原型总览</title>
+<link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+<div class="stage">
+
+  <!-- SVG 图标库 -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <defs>
+      <symbol id="i-clean" viewBox="0 0 24 24"><path d="M11 3l1.7 4.6 4.6 1.7-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4 4 9-9"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2L3.2 19h17.6zM12 10.2v4M12 16.8h.01"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 3.2L5.8 13.4h5.4l-1.4 7.4 7.4-10.2h-5.4z"/></symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M13.5 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5z"/><path d="M13.5 3.5v5h5M9 13h6M9 16h6"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="index-wrap">
+    <div class="ix-head">
+      <h1>CLEARC // UI PROTO</h1>
+      <span>C盘清理助手 · 界面原型 · 高科技暗色主题 · v0.2</span>
+    </div>
+
+    <div class="ix-grid">
+
+      <a class="ix-card brackets" href="state-01-idle.html">
+        <div class="ix-no">STATE 01</div>
+        <div class="ix-title">初始状态</div>
+        <div class="ix-desc">应用启动后的待机界面：磁盘占用环图 71%，可释放空间显示「待扫描」，结果区为空状态提示。</div>
+        <div class="ix-file">state-01-idle.html</div>
+      </a>
+
+      <a class="ix-card brackets" href="state-02-scanning.html">
+        <div class="ix-no">STATE 02</div>
+        <div class="ix-title">分析中</div>
+        <div class="ix-desc">点击「扫描分析」后：进度条流动、结果逐行出现、扫描光带扫过列表、日志实时滚动输出。</div>
+        <div class="ix-file">state-02-scanning.html</div>
+      </a>
+
+      <a class="ix-card brackets" href="state-03-results.html">
+        <div class="ix-no">STATE 03</div>
+        <div class="ix-title">分析结果</div>
+        <div class="ix-desc">扫描完成：15 个目标全部列出，13 项可清理共 29.53 GB，默认全选，行可展开查看详情。</div>
+        <div class="ix-file">state-03-results.html</div>
+      </a>
+
+      <a class="ix-card brackets" href="state-04-confirm.html">
+        <div class="ix-no">STATE 04</div>
+        <div class="ix-title">确认清理</div>
+        <div class="ix-desc">点击「执行清理」弹出确认框：待清理清单、合计释放量、高风险项橙色警告条。</div>
+        <div class="ix-file">state-04-confirm.html</div>
+      </a>
+
+      <a class="ix-card brackets" href="state-05-cleaning.html">
+        <div class="ix-no">STATE 05</div>
+        <div class="ix-title">清理中</div>
+        <div class="ix-desc">逐项清理：已完成行打勾置灰并显示释放量，当前行青色脉冲高亮，日志持续输出。</div>
+        <div class="ix-file">state-05-cleaning.html</div>
+      </a>
+
+      <a class="ix-card brackets" href="state-06-done.html">
+        <div class="ix-no">STATE 06</div>
+        <div class="ix-title">清理完成</div>
+        <div class="ix-desc">清理结束：共释放 11.30 GB，环图降至 67%，跳过项保留标记，右下角成功 Toast。</div>
+        <div class="ix-file">state-06-done.html</div>
+      </a>
+
+    </div>
+
+    <div class="ix-foot">
+      ◎ 状态页之间可通过底部导航条互相跳转，主按钮按真实流程联动（初始 → 分析 → 结果 → 确认 → 清理 → 完成）<br>
+      ◎ 开发实现时请以各状态页为视觉基准：assets/theme.css 定义了全部颜色 / 字号 / 间距 / 动效参数
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
