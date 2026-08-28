@@ -1,6 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="using:ClearC.Desktop.Controls"
+             xmlns:log="https://codewf.com"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
              x:Class="ClearC.Desktop.Views.LogPanelView"
              x:DataType="vm:LogPanelViewModel">
@@ -15,14 +15,14 @@
           </StackPanel>
         </Grid>
       </Border>
-      <Border Grid.Row="1" Padding="14,8,14,10" Background="#04070D">
-        <controls:ClearCLogView FontFamily="{DynamicResource ClearCMonoFont}"
-                                FontSize="11.5"
-                                LogLineHeightMultiplier="1.35"
-                                MaxDisplayCount="1000"
-                                MaximumLevel="Critical"
-                                MinimumLevel="Information"
-                                TimestampFormat="HH:mm:ss" />
+      <Border Grid.Row="1" Padding="14,8,14,10" Background="#F4F7FA">
+        <log:LogView FontFamily="{DynamicResource ClearCMonoFont}"
+                     FontSize="11.5"
+                     LogLineHeightMultiplier="1.35"
+                     MaxDisplayCount="1000"
+                     MaximumLevel="Critical"
+                     MinimumLevel="Information"
+                     TimestampFormat="HH:mm:ss" />
       </Border>
     </Grid>
   </Border>
