@@ -5,6 +5,7 @@
              RequestedThemeVariant="Dark">
   <Application.Styles>
     <semi:SemiTheme Locale="zh-CN" />
+    <StyleInclude Source="avares://Semi.Avalonia.DataGrid/DataGridSemiTheme.axaml" />
     <StyleInclude Source="/Themes/Index.axaml" />
   </Application.Styles>
 </Application>

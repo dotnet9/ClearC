@@ -105,13 +105,36 @@
                    Foreground="{DynamicResource ClearCCyan}" Text="正在定位缓存与临时文件 …" />
       </StackPanel>
 
-      <ScrollViewer Margin="16,0,16,10" VerticalScrollBarVisibility="Auto"
-                    IsVisible="{Binding IsListVisible}">
-        <ItemsControl ItemsSource="{Binding VisibleItems}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:CleanupItemViewModel">
-              <StackPanel Opacity="{Binding RowOpacity}">
-                <ToggleButton Classes="cleanupRow" IsChecked="{Binding IsExpanded}">
+      <DataGrid Margin="16,0,16,10"
+                Classes="cleanupGrid"
+                AutoGenerateColumns="False"
+                Background="Transparent"
+                BorderThickness="0"
+                CanUserReorderColumns="False"
+                CanUserResizeColumns="False"
+                CanUserSortColumns="False"
+                GridLinesVisibility="None"
+                HeadersVisibility="None"
+                HorizontalScrollBarVisibility="Disabled"
+                IsReadOnly="True"
+                IsVisible="{Binding IsListVisible}"
+                ItemsSource="{Binding VisibleItems}"
+                SelectionMode="Single"
+                VerticalScrollBarVisibility="Auto">
+        <DataGrid.CellTheme>
+          <ControlTheme TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+          </ControlTheme>
+        </DataGrid.CellTheme>
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Width="*">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:CleanupItemViewModel">
+                <StackPanel HorizontalAlignment="Stretch" Opacity="{Binding RowOpacity}">
+                <ToggleButton AutomationProperties.AutomationId="CleanupResultRow"
+                              Classes="cleanupRow" IsChecked="{Binding IsExpanded}">
                   <Grid ColumnDefinitions="22,34,12,*,82,140,92,78,14">
                     <CheckBox Grid.Column="0" VerticalAlignment="Center"
                               IsEnabled="{Binding CanSelect}" IsChecked="{Binding IsSelected}" />
@@ -180,11 +203,12 @@
                     </StackPanel>
                   </StackPanel>
                 </Border>
-              </StackPanel>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
     </Grid>
   </Grid>
 </UserControl>

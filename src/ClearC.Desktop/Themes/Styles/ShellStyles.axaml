@@ -84,6 +84,7 @@
   </Style>
 
   <Style Selector="ToggleButton.cleanupRow">
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="Padding" Value="12,8" />
     <Setter Property="Margin" Value="0" />
@@ -99,6 +100,13 @@
   </Style>
   <Style Selector="ToggleButton.cleanupRow:checked /template/ ContentPresenter">
     <Setter Property="Background" Value="#090D1524" />
+  </Style>
+
+  <Style Selector="DataGrid.cleanupGrid">
+    <Setter Property="RowBackground" Value="Transparent" />
+  </Style>
+  <Style Selector="DataGrid.cleanupGrid DataGridRow">
+    <Setter Property="Background" Value="Transparent" />
   </Style>
 
   <Style Selector="ScrollViewer">
