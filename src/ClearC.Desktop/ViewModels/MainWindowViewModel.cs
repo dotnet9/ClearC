@@ -56,6 +56,12 @@ public sealed class MainWindowViewModel : ReactiveObject
         ConfirmCleanupCommand = ReactiveCommand.CreateFromTask(ConfirmCleanupAsync);
         ClearLogsCommand = ReactiveCommand.Create(ClearLogs);
 
+        TitleBar = new TitleBarViewModel();
+        Workspace = new CleanupWorkspaceViewModel(this);
+        LogPanel = new LogPanelViewModel(this);
+        StatusBar = new StatusBarViewModel(this);
+        Overlay = new WorkflowOverlayViewModel(this);
+
         State = WorkflowState.Idle;
         AddLog("OK", "ClearC 引擎初始化完成 · v0.1.0");
         AddLog("INFO", $"挂载磁盘 {_disk.DriveName} · {_disk.DriveFormat} · {ByteSizeFormatter.Format(_disk.TotalBytes)}");
@@ -68,6 +74,12 @@ public sealed class MainWindowViewModel : ReactiveObject
     public ObservableCollection<CleanupItemViewModel> SelectedItems { get; } = [];
     public ObservableCollection<CategoryFilterViewModel> Filters { get; }
     public ObservableCollection<LogEntryViewModel> Logs { get; } = [];
+
+    public TitleBarViewModel TitleBar { get; }
+    public CleanupWorkspaceViewModel Workspace { get; }
+    public LogPanelViewModel LogPanel { get; }
+    public StatusBarViewModel StatusBar { get; }
+    public WorkflowOverlayViewModel Overlay { get; }
 
     public ICommand PrimaryCommand { get; }
     public ICommand SecondaryCommand { get; }

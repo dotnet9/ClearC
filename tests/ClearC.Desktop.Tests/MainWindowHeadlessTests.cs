@@ -30,6 +30,11 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture) : I
             Assert.Equal(700, window.Height);
             Assert.Single(window.GetVisualDescendants().OfType<DiskDonut>());
             Assert.Contains(window.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "⌕  扫描分析"));
+            Assert.IsType<TitleBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<TitleBarView>()).DataContext);
+            Assert.IsType<CleanupWorkspaceViewModel>(Assert.Single(window.GetVisualDescendants().OfType<CleanupWorkspaceView>()).DataContext);
+            Assert.IsType<LogPanelViewModel>(Assert.Single(window.GetVisualDescendants().OfType<LogPanelView>()).DataContext);
+            Assert.IsType<StatusBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<StatusBarView>()).DataContext);
+            Assert.IsType<WorkflowOverlayViewModel>(Assert.Single(window.GetVisualDescendants().OfType<WorkflowOverlayView>()).DataContext);
 
             window.Close();
         }, TestContext.Current.CancellationToken);

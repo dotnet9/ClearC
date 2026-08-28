@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ClearC.Desktop.ViewModels"
+             x:Class="ClearC.Desktop.Views.TitleBarView"
+             x:DataType="vm:TitleBarViewModel">
+  <Border Background="#80111B2E"
+          BorderBrush="{DynamicResource ClearCLine}"
+          BorderThickness="0,0,0,1"
+          PointerPressed="TitleBar_OnPointerPressed">
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Margin="14,0,0,0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+        <Image Width="24" Height="24" Source="avares://ClearC.Desktop/Assets/logo.png" />
+        <TextBlock VerticalAlignment="Center" FontFamily="{DynamicResource ClearCMonoFont}"
+                   FontSize="13" FontWeight="Bold" LetterSpacing="2.5"
+                   Foreground="{DynamicResource ClearCCyanBright}" Text="{Binding ProductName}" />
+        <TextBlock VerticalAlignment="Center" FontFamily="{DynamicResource ClearCMonoFont}"
+                   FontSize="11" Foreground="{DynamicResource ClearCText2}" Text="{Binding Tagline}" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal">
+        <Button Classes="titleButton" Click="Minimize_OnClick" ToolTip.Tip="最小化" Content="−" />
+        <Button Classes="titleButton" Click="Maximize_OnClick" ToolTip.Tip="最大化或还原" Content="□" />
+        <Button Classes="titleButton close" Click="Close_OnClick" ToolTip.Tip="关闭" Content="×" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>
