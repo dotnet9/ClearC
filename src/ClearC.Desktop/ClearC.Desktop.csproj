@@ -5,6 +5,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ApplicationIcon>..\..\logo.ico</ApplicationIcon>
     <PublishAot Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishAot>
     <PublishTrimmed Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishTrimmed>
   </PropertyGroup>
@@ -27,5 +28,10 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="ClearC.Desktop.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="..\..\logo.png" Link="Assets\logo.png" />
+    <AvaloniaResource Include="..\..\logo.ico" Link="Assets\logo.ico" />
   </ItemGroup>
 </Project>

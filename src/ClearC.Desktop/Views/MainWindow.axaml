@@ -5,6 +5,7 @@
         x:Class="ClearC.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="ClearC"
+        Icon="avares://ClearC.Desktop/Assets/logo.ico"
         Width="1060"
         Height="700"
         MinWidth="960"
@@ -25,12 +26,7 @@
               PointerPressed="TitleBar_OnPointerPressed">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Margin="14,0,0,0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <Border Width="24" Height="24" CornerRadius="6"
-                    Background="#1A22D3EE" BorderBrush="{DynamicResource ClearCLineStrong}" BorderThickness="1">
-              <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                         FontFamily="{DynamicResource ClearCMonoFont}" FontSize="13"
-                         Foreground="{DynamicResource ClearCCyanBright}" Text="✦" />
-            </Border>
+            <Image Width="24" Height="24" Source="avares://ClearC.Desktop/Assets/logo.png" />
             <TextBlock VerticalAlignment="Center" FontFamily="{DynamicResource ClearCMonoFont}"
                        FontSize="13" FontWeight="Bold" LetterSpacing="2.5"
                        Foreground="{DynamicResource ClearCCyanBright}" Text="CLEARC" />
