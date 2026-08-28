@@ -21,6 +21,10 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(1024, viewModel.SelectedBytes);
         Assert.True(viewModel.Items.Single(item => item.Id == "low").IsSelected);
         Assert.False(viewModel.Items.Single(item => item.Id == "medium").IsSelected);
+        var codex = viewModel.Items.Single(item => item.Id == "codex-data");
+        Assert.False(codex.IsSelected);
+        Assert.True(codex.CanSelect);
+        Assert.Contains("不连接 Codex", codex.SelectionToolTip);
     }
 
     [Fact]
@@ -57,6 +61,21 @@ public sealed class MainWindowViewModelTests
         Assert.Contains("中高风险", viewModel.ConfirmationWarning);
     }
 
+    [Fact]
+    public async Task CodexSelection_RequiresClosingCodexInConfirmation()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
+        viewModel.Items.Single(item => item.Id == "codex-data").IsSelected = true;
+
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Confirming);
+
+        Assert.True(viewModel.HasCodexConversationSelection);
+        Assert.Contains("请先关闭 Codex", viewModel.ConfirmationWarning);
+    }
+
     private static MainWindowViewModel CreateViewModel() => new(
         new FakeScanner(),
         new FakeExecutor(),
@@ -83,7 +102,7 @@ public sealed class MainWindowViewModelTests
             {
                 new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 1024, 2, "", "user-temp"),
                 new("medium", "Medium", @"C:\Cache", CleanupCategory.PackageCache, CleanupRisk.Medium, 2048, 3, "", "nuget-global"),
-                new("protected", "Protected", @"C:\Users\test\.codex", CleanupCategory.ApplicationData, CleanupRisk.High, 4096, 4, "", null, IsProtected: true)
+                new("codex-data", "Codex 会话记录", @"C:\Users\test\.codex", CleanupCategory.ApplicationData, CleanupRisk.High, 4096, 4, "", "codex-conversations")
             };
             progress?.Report(new(3, 3, "扫描完成"));
             return Task.FromResult(new ScanResult(new("C:", "NTFS", 100_000, 40_000), items, TimeSpan.FromSeconds(1)));

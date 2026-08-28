@@ -6,6 +6,17 @@ namespace ClearC.Desktop.Tests;
 public sealed class WindowsCleanupScannerTests
 {
     [Fact]
+    public void Catalog_CodexTargetScansOnlyConversationDirectories()
+    {
+        var target = new WindowsCleanupTargetCatalog().GetTargets().Single(item => item.Id == "codex-data");
+
+        Assert.Equal("codex-conversations", target.CleanerKey);
+        Assert.Equal(CleanupRisk.High, target.Risk);
+        Assert.False(target.IsProtected);
+        Assert.Equal(["sessions", "archived_sessions"], target.Paths.Select(Path.GetFileName));
+    }
+
+    [Fact]
     public async Task ScanAsync_CombinesCatalogTargetsAndRecycleBin()
     {
         var target = new CleanupTargetDefinition(

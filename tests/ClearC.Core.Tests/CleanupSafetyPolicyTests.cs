@@ -37,6 +37,41 @@ public sealed class CleanupSafetyPolicyTests
     }
 
     [Fact]
+    public void Evaluate_AllowsOnlyAcknowledgedCodexConversationCleaner()
+    {
+        var item = new CleanupItem(
+            "codex-data",
+            "Codex 会话记录",
+            @"C:\Users\test\.codex",
+            CleanupCategory.ApplicationData,
+            CleanupRisk.High,
+            1,
+            1,
+            "description",
+            "codex-conversations");
+
+        Assert.Equal(SafetyDecisionKind.ConfirmationRequired, _policy.Evaluate(item, false).Kind);
+        Assert.Equal(SafetyDecisionKind.Allowed, _policy.Evaluate(item, true).Kind);
+    }
+
+    [Fact]
+    public void Evaluate_DeniesCodexCleanerKeyOnUnrecognizedItem()
+    {
+        var item = new CleanupItem(
+            "other",
+            "Other",
+            @"C:\Users\test\.codex",
+            CleanupCategory.ApplicationData,
+            CleanupRisk.High,
+            1,
+            1,
+            "description",
+            "codex-conversations");
+
+        Assert.Equal(SafetyDecisionKind.Denied, _policy.Evaluate(item, true).Kind);
+    }
+
+    [Fact]
     public void BuildPlan_RejectsUnacknowledgedRisk()
     {
         var item = CreateItem(@"C:\Users\test\.nuget\packages", CleanupRisk.Medium);

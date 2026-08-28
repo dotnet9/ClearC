@@ -62,11 +62,14 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
                 "Edge 与 Chrome 的网页、代码和 GPU 缓存，不包含历史记录、登录信息或收藏夹。",
                 "browser-cache"),
             new(
-                "codex-data", "Codex 工作数据", Path.Combine(userProfile, ".codex"),
-                [Path.Combine(userProfile, ".codex")],
+                "codex-data", "Codex 会话记录", Path.Combine(userProfile, ".codex"),
+                [
+                    Path.Combine(userProfile, ".codex", "sessions"),
+                    Path.Combine(userProfile, ".codex", "archived_sessions")
+                ],
                 CleanupCategory.ApplicationData, CleanupRisk.High,
-                "包含会话、技能和工作数据，仅展示占用，ClearC 永不清理。",
-                null, IsProtected: true),
+                "仅统计 Codex 活动与归档会话。勾选后将永久删除全部会话文件；检测到 Codex 正在运行时会整项跳过。",
+                "codex-conversations"),
             new(
                 "windows-old", "旧版系统 Windows.old", Path.Combine(Path.GetPathRoot(windows) ?? @"C:\", "Windows.old"),
                 [Path.Combine(Path.GetPathRoot(windows) ?? @"C:\", "Windows.old")],

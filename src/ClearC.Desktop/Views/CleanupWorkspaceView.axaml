@@ -136,7 +136,7 @@
                 <ToggleButton AutomationProperties.AutomationId="CleanupResultRow"
                               Classes="cleanupRow" IsChecked="{Binding IsExpanded}">
                   <Grid ColumnDefinitions="22,34,12,*,82,140,92,78,14">
-                    <CheckBox Grid.Column="0" VerticalAlignment="Center"
+                    <CheckBox Grid.Column="0" VerticalAlignment="Center" ToolTip.Tip="{Binding SelectionToolTip}"
                               IsEnabled="{Binding CanSelect}" IsChecked="{Binding IsSelected}" />
                     <Border Grid.Column="1" Width="34" Height="34" CornerRadius="8"
                             Background="#1422D3EE" BorderBrush="{Binding AccentBrush}" BorderThickness="1">

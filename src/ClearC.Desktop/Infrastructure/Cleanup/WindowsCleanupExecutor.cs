@@ -20,6 +20,7 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
     private readonly IGuardedDirectoryCleaner _directoryCleaner;
     private readonly ICacheLockDetector _lockDetector;
     private readonly IRecycleBinCleaner _recycleBinCleaner;
+    private readonly ICodexConversationCleaner _codexConversationCleaner;
 
     public WindowsCleanupExecutor()
         : this(
@@ -27,7 +28,8 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
             new ProcessRunner(),
             new GuardedDirectoryCleaner(),
             new CacheLockDetector(),
-            new RecycleBinCleaner())
+            new RecycleBinCleaner(),
+            new CodexConversationCleaner())
     {
     }
 
@@ -36,13 +38,15 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
         IProcessRunner processRunner,
         IGuardedDirectoryCleaner directoryCleaner,
         ICacheLockDetector lockDetector,
-        IRecycleBinCleaner recycleBinCleaner)
+        IRecycleBinCleaner recycleBinCleaner,
+        ICodexConversationCleaner codexConversationCleaner)
     {
         _targets = catalog.GetTargets().ToDictionary(target => target.Id, StringComparer.Ordinal);
         _processRunner = processRunner;
         _directoryCleaner = directoryCleaner;
         _lockDetector = lockDetector;
         _recycleBinCleaner = recycleBinCleaner;
+        _codexConversationCleaner = codexConversationCleaner;
     }
 
     public async Task<CleanupResult> CleanAsync(
@@ -103,6 +107,34 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
         if (!_targets.TryGetValue(item.Id, out var target) || target.CleanerKey != item.CleanerKey)
         {
             return new(item.Id, CleanupOutcome.Skipped, 0, "目标不在本次启动生成的清理白名单中。");
+        }
+
+        if (item.CleanerKey == "codex-conversations")
+        {
+            var cleanup = await _codexConversationCleaner.CleanAsync(target.Paths, cancellationToken);
+            if (cleanup.FatalError is not null)
+            {
+                return new(item.Id, CleanupOutcome.Failed, 0, cleanup.FatalError);
+            }
+
+            if (cleanup.CodexIsRunning)
+            {
+                return new(
+                    item.Id,
+                    CleanupOutcome.Skipped,
+                    0,
+                    "检测到 Codex 正在运行。为避免破坏当前会话，已跳过；请关闭 Codex 后重新扫描清理。");
+            }
+
+            if (cleanup.DeletedFiles == 0)
+            {
+                return new(item.Id, CleanupOutcome.Skipped, 0, "没有可删除的 Codex 会话文件。");
+            }
+
+            var message = cleanup.SkippedFiles == 0
+                ? $"已永久删除 {cleanup.DeletedFiles:N0} 个 Codex 会话文件。"
+                : $"已永久删除 {cleanup.DeletedFiles:N0} 个 Codex 会话文件，跳过 {cleanup.SkippedFiles:N0} 个占用、无权限或重解析点文件。";
+            return new(item.Id, CleanupOutcome.Completed, cleanup.FreedBytes, message);
         }
 
         if (item.CleanerKey == "nuget-global")

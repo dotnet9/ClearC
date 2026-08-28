@@ -8,7 +8,8 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 - 实时分析系统盘容量及常见开发缓存占用。
 - 扫描 NuGet、npm、用户临时目录、Edge/Chrome 缓存和回收站。
-- 只展示 `.codex`、`Windows.old`、休眠文件、页面文件和内存转储，不提供删除入口。
+- Codex 会话记录默认不选；用户主动勾选且 Codex 已关闭时，仅清理 `sessions` 与 `archived_sessions`。
+- 只展示 `Windows.old`、休眠文件、页面文件和内存转储，不提供删除入口。
 - NuGet 与 npm 优先调用各自官方清理命令。
 - 清理 NuGet 全局包前检查已加载的缓存 DLL，发现 IDE/MSBuild 占用时整项跳过。
 - 临时文件仅清理超过 7 天未修改的文件；占用或无权限文件会跳过并记录。
@@ -24,7 +25,8 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 | npm 缓存 | 是 | `npm cache clean --force` | 命令失败时保留错误信息 |
 | Edge / Chrome 缓存 | 是 | 仅清理明确的 Cache / Code Cache / GPUCache 等目录 | 不触碰历史、登录数据和收藏夹 |
 | 回收站 | 否 | Windows Shell API | 清空后不可恢复，需单独确认 |
-| `.codex`、用户文档、下载、桌面、源码仓库 | 否 | 不提供清理器 | 永不由 ClearC 删除 |
+| Codex 会话记录 | 否 | ClearC 本地清理固定的 `sessions` / `archived_sessions` | 高风险二次确认；Codex 运行时整项跳过 |
+| `.codex` 其他数据、用户文档、下载、桌面、源码仓库 | 否 | 不提供清理器 | 永不由 ClearC 删除 |
 | Windows.old、hiberfil.sys、pagefile.sys、MEMORY.DMP | 否 | 仅分析 | 交给 Windows 设置或系统工具管理 |
 
 ClearC 不会自动结束 IDE、`dotnet`、MSBuild 或浏览器进程。遇到占用时应关闭相关程序后重新扫描。

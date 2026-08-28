@@ -24,7 +24,8 @@ public sealed class CleanupSafetyPolicy
             return new(SafetyDecisionKind.Denied, "此项目仅供分析，未提供清理操作。");
         }
 
-        if (item.IsProtected || ContainsProtectedDirectory(item.Location))
+        if (item.IsProtected ||
+            ContainsProtectedDirectory(item.Location) && !IsCodexConversationCleaner(item))
         {
             return new(SafetyDecisionKind.Denied, "路径属于用户数据或源码保护范围。");
         }
@@ -74,4 +75,13 @@ public sealed class CleanupSafetyPolicy
 
         return segments.Any(segment => ProtectedDirectoryNames.Contains(segment, StringComparer.OrdinalIgnoreCase));
     }
+
+    private static bool IsCodexConversationCleaner(CleanupItem item) =>
+        item.Id == "codex-data" &&
+        item.CleanerKey == "codex-conversations" &&
+        item.Risk == CleanupRisk.High &&
+        string.Equals(
+            Path.GetFileName(item.Location.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+            ".codex",
+            StringComparison.OrdinalIgnoreCase);
 }

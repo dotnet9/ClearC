@@ -180,7 +180,10 @@ public sealed class MainWindowViewModel : ReactiveObject
     public bool IsListVisible => Items.Count > 0;
     public bool IsConfirmationVisible => State == WorkflowState.Confirming;
     public bool HasRiskSelection => SelectedItems.Any(item => item.Model.Risk != CleanupRisk.Low);
-    public string ConfirmationWarning => HasRiskSelection
+    public bool HasCodexConversationSelection => SelectedItems.Any(item => item.Model.CleanerKey == "codex-conversations");
+    public string ConfirmationWarning => HasCodexConversationSelection
+        ? "Codex 活动与归档会话文件将被永久删除。请先关闭 Codex；检测到 Codex 运行时会跳过。此操作无法恢复。"
+        : HasRiskSelection
         ? "包含中高风险项目，清理后可能无法恢复或需要重新下载，请确认。"
         : "清理会永久删除所选缓存内容，请确认后继续。";
     public string ConfirmationTotal => ByteSizeFormatter.Format(SelectedBytes);
@@ -428,6 +431,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
 
         this.RaisePropertyChanged(nameof(HasRiskSelection));
+        this.RaisePropertyChanged(nameof(HasCodexConversationSelection));
         this.RaisePropertyChanged(nameof(ConfirmationWarning));
         this.RaisePropertyChanged(nameof(ConfirmationTotal));
     }

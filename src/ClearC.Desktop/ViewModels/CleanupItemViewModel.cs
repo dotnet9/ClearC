@@ -44,11 +44,16 @@ public sealed class CleanupItemViewModel : ReactiveObject
     public string SizeText => ByteSizeFormatter.Format(Model.SizeBytes);
     public string FileCountText => $"{Model.FileCount:N0} 个文件";
     public string RiskText => Model.Risk switch { CleanupRisk.Low => "低风险", CleanupRisk.Medium => "中风险", _ => "高风险" };
-    public string Recommendation => !Model.CanClean
+    public string Recommendation => Model.CleanerKey == "codex-conversations"
+        ? "默认不选择。请先关闭 Codex；配置、登录信息、技能、插件、数据库和诊断日志不会删除。"
+        : !Model.CanClean
         ? "由系统或应用管理，ClearC 不执行删除"
         : Model.Risk == CleanupRisk.Low
             ? "可安全清理，缓存会在需要时自动重建"
             : "清理后不可恢复或需要重新下载，请确认影响";
+    public string? SelectionToolTip => Model.CleanerKey == "codex-conversations"
+        ? "默认不选择。ClearC 仅在本地删除 Codex 活动与归档会话文件，不连接 Codex；检测到 Codex 正在运行时会跳过。"
+        : null;
     public string IconGlyph => Model.Category switch
     {
         CleanupCategory.PackageCache => "▣",

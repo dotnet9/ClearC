@@ -26,7 +26,8 @@ dotnet test tests/ClearC.Desktop.Tests/ClearC.Desktop.Tests.csproj --no-build
 - 符号链接和重解析点默认跳过。
 - 文件占用、无权限和路径变化不会中断整次任务。
 - 影响可恢复性或需要重新下载的目标不是默认选择。
-- 用户文档、下载、桌面、源码仓库和 `.codex` 数据不得加入清理白名单。
+- 用户文档、下载、桌面、源码仓库和整个 `.codex` 目录不得加入通用文件清理白名单。
+- Codex 会话清理只能使用专用清理器，固定处理 `.codex\sessions` 与 `.codex\archived_sessions`；不得调用或连接 Codex，检测到 Codex 进程时必须整项跳过。
 - 不自动终止进程；如确有必要，必须设计独立的显式确认流程。
 
 每个新增目标都应有扫描测试、清理白名单测试、拒绝路径测试和失败结果测试。
