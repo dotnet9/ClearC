@@ -27,6 +27,18 @@ public sealed class CleanupSelectionTests
         Assert.Equal(300, selection.SelectedBytes);
     }
 
+    [Fact]
+    public void Constructor_DoesNotSelectEmptyCaches()
+    {
+        var emptyItem = new CleanupItem(
+            "empty", "Empty", @"C:\Cache", CleanupCategory.PackageCache,
+            CleanupRisk.Low, 0, 0, "", "cache");
+
+        var selection = new CleanupSelection([emptyItem]);
+
+        Assert.Empty(selection.SelectedIds);
+    }
+
     private static CleanupItem[] CreateItems() =>
     [
         new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 100, 1, "", "temp"),

@@ -240,7 +240,8 @@ public sealed class MainWindowViewModel : ReactiveObject
         var progress = new CallbackProgress<ScanProgress>(value =>
         {
             ProgressValue = value.Ratio * 100;
-            ProgressText = $"{value.Completed:00}/{value.Total:00} · {value.CurrentTarget}";
+            var displayIndex = value.Completed >= value.Total ? value.Total : value.Completed + 1;
+            ProgressText = $"{displayIndex:00}/{value.Total:00} · {value.CurrentTarget}";
             if (value.Completed < value.Total)
             {
                 AddLog("INFO", $"[{value.Completed + 1:00}/{value.Total:00}] 扫描 {value.CurrentTarget}");
@@ -313,7 +314,8 @@ public sealed class MainWindowViewModel : ReactiveObject
         var progress = new CallbackProgress<CleanupProgress>(value =>
         {
             ProgressValue = value.Ratio * 100;
-            ProgressText = $"{Math.Min(value.Completed + 1, value.Total):00}/{value.Total:00} · {value.Item.DisplayName}";
+            var displayIndex = value.Result is null ? value.Completed + 1 : value.Completed;
+            ProgressText = $"{Math.Min(displayIndex, value.Total):00}/{value.Total:00} · {value.Item.DisplayName}";
             var row = Items.FirstOrDefault(item => item.Id == value.Item.Id);
             foreach (var item in Items)
             {
@@ -329,6 +331,7 @@ public sealed class MainWindowViewModel : ReactiveObject
                 row.ApplyResult(value.Result);
                 _freedBytes += value.Result.FreedBytes;
                 this.RaisePropertyChanged(nameof(HeroValue));
+                RefreshSelectionProperties();
                 AddLog(value.Result.Outcome switch
                 {
                     CleanupOutcome.Completed => "OK",

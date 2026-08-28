@@ -15,5 +15,5 @@ public sealed record CleanupItem(
 {
     public bool CanClean => CleanerKey is not null && !IsProtected;
 
-    public bool IsRecommended => CanClean && Risk == CleanupRisk.Low;
+    public bool IsRecommended => CanClean && SizeBytes > 0 && Risk == CleanupRisk.Low;
 }
