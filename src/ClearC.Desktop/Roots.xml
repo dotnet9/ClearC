@@ -1,0 +1,15 @@
+<linker>
+  <assembly fullname="ClearC.Desktop" preserve="all" />
+  <assembly fullname="ClearC.Core" preserve="all" />
+  <assembly fullname="ReactiveUI" preserve="all" />
+  <assembly fullname="System.Reactive" preserve="all" />
+  <assembly fullname="Semi.Avalonia" preserve="all" />
+  <assembly fullname="Avalonia" preserve="all" />
+  <assembly fullname="Avalonia.Base" preserve="all" />
+  <assembly fullname="Avalonia.Controls" preserve="all" />
+  <assembly fullname="Avalonia.Desktop" preserve="all" />
+  <assembly fullname="Avalonia.Markup" preserve="all" />
+  <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
+  <assembly fullname="Avalonia.Skia" preserve="all" />
+  <assembly fullname="Avalonia.Win32" preserve="all" />
+</linker>

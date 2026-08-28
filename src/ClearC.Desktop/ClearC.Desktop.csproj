@@ -5,7 +5,13 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PublishAot Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishAot>
+    <PublishTrimmed Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishTrimmed>
   </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="Roots.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" />

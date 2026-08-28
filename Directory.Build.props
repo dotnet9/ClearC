@@ -5,7 +5,8 @@
     <Nullable>enable</Nullable>
     <Version>0.1.0</Version>
     <Deterministic>true</Deterministic>
-    <Authors>ClearC contributors</Authors>
+    <Authors>Dotnet9 and ClearC contributors</Authors>
+    <Copyright>Copyright (c) 2026 Dotnet9</Copyright>
     <RepositoryUrl>https://github.com/dotnet9/ClearC</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/dotnet9/ClearC</PackageProjectUrl>
