@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Color x:Key="ClearCBg0Color">#060A12</Color>
+  <Color x:Key="ClearCBg1Color">#0A101C</Color>
+  <Color x:Key="ClearCPanelColor">#0D1524</Color>
+  <Color x:Key="ClearCPanel2Color">#111B2E</Color>
+  <Color x:Key="ClearCTextColor">#DBE9F8</Color>
+  <Color x:Key="ClearCText2Color">#93A9C9</Color>
+  <Color x:Key="ClearCText3Color">#647C9F</Color>
+  <Color x:Key="ClearCCyanColor">#22D3EE</Color>
+  <Color x:Key="ClearCCyanBrightColor">#67E8F9</Color>
+  <Color x:Key="ClearCBlueColor">#3B82F6</Color>
+  <Color x:Key="ClearCGreenColor">#34D399</Color>
+  <Color x:Key="ClearCAmberColor">#FBBF24</Color>
+  <Color x:Key="ClearCRedColor">#F87171</Color>
+
+  <SolidColorBrush x:Key="ClearCBg0" Color="{StaticResource ClearCBg0Color}" />
+  <SolidColorBrush x:Key="ClearCBg1" Color="{StaticResource ClearCBg1Color}" />
+  <SolidColorBrush x:Key="ClearCPanel" Color="{StaticResource ClearCPanelColor}" />
+  <SolidColorBrush x:Key="ClearCPanel2" Color="{StaticResource ClearCPanel2Color}" />
+  <SolidColorBrush x:Key="ClearCText" Color="{StaticResource ClearCTextColor}" />
+  <SolidColorBrush x:Key="ClearCText2" Color="{StaticResource ClearCText2Color}" />
+  <SolidColorBrush x:Key="ClearCText3" Color="{StaticResource ClearCText3Color}" />
+  <SolidColorBrush x:Key="ClearCCyan" Color="{StaticResource ClearCCyanColor}" />
+  <SolidColorBrush x:Key="ClearCCyanBright" Color="{StaticResource ClearCCyanBrightColor}" />
+  <SolidColorBrush x:Key="ClearCBlue" Color="{StaticResource ClearCBlueColor}" />
+  <SolidColorBrush x:Key="ClearCGreen" Color="{StaticResource ClearCGreenColor}" />
+  <SolidColorBrush x:Key="ClearCAmber" Color="{StaticResource ClearCAmberColor}" />
+  <SolidColorBrush x:Key="ClearCRed" Color="{StaticResource ClearCRedColor}" />
+  <SolidColorBrush x:Key="ClearCLine" Color="#2438BDF8" />
+  <SolidColorBrush x:Key="ClearCLineStrong" Color="#4D38BDF8" />
+</ResourceDictionary>

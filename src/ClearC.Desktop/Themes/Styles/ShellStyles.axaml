@@ -1,0 +1,107 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="{DynamicResource ClearCSansFont}" />
+    <Setter Property="FontSize" Value="{DynamicResource ClearCFontBase}" />
+    <Setter Property="Background" Value="{DynamicResource ClearCBg0}" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
+  </Style>
+
+  <Style Selector="Button.primary">
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="18,0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Background">
+      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#0891B2" />
+        <GradientStop Offset="1" Color="#2563EB" />
+      </LinearGradientBrush>
+    </Setter>
+    <Setter Property="BorderBrush" Value="#5967E8F9" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Opacity" Value="0.92" />
+  </Style>
+
+  <Style Selector="Button.ghost">
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="18,0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCCyanBright}" />
+    <Setter Property="Background" Value="#0D22D3EE" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLineStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Button.titleButton">
+    <Setter Property="Width" Value="44" />
+    <Setter Property="Height" Value="42" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
+  </Style>
+  <Style Selector="Button.titleButton:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1422D3EE" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCCyanBright}" />
+  </Style>
+  <Style Selector="Button.titleButton.close:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#26F87171" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCRed}" />
+  </Style>
+
+  <Style Selector="Button.chip">
+    <Setter Property="Height" Value="25" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
+    <Setter Property="Background" Value="#990D1524" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.chip.active">
+    <Setter Property="Foreground" Value="{DynamicResource ClearCCyanBright}" />
+    <Setter Property="Background" Value="#1422D3EE" />
+    <Setter Property="BorderBrush" Value="#7322D3EE" />
+  </Style>
+
+  <Style Selector="Button.mini">
+    <Setter Property="Padding" Value="10,2" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCText3}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="ToggleButton.cleanupRow">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="12,8" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="MinHeight" Value="52" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="ToggleButton.cleanupRow:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#0B22D3EE" />
+  </Style>
+  <Style Selector="ToggleButton.cleanupRow:checked /template/ ContentPresenter">
+    <Setter Property="Background" Value="#090D1524" />
+  </Style>
+
+  <Style Selector="ScrollViewer">
+    <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+  </Style>
+</Styles>

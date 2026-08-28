@@ -122,13 +122,13 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
         if (NuGetCacheNames.TryGetValue(item.CleanerKey, out var cacheName))
         {
             var command = await _processRunner.RunAsync(
-                "dotnet", ["nuget", "locals", cacheName, "--clear"], cancellationToken);
+                "dotnet", ["nuget", "locals", cacheName, "--clear"], CancellationToken.None);
             return FromCommand(item, command, $"NuGet {cacheName} 已通过官方命令清理。");
         }
 
         if (item.CleanerKey == "npm-cache")
         {
-            var command = await _processRunner.RunAsync("npm", ["cache", "clean", "--force"], cancellationToken);
+            var command = await _processRunner.RunAsync("npm", ["cache", "clean", "--force"], CancellationToken.None);
             return FromCommand(item, command, "npm 缓存已通过官方命令清理。");
         }
 
