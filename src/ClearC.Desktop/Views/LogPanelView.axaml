@@ -15,7 +15,7 @@
           </StackPanel>
         </Grid>
       </Border>
-      <Border Grid.Row="1" Padding="14,8,14,10" Background="#F4F7FA">
+      <Border Grid.Row="1" Padding="14,8,14,10" Background="#04070D">
         <log:LogView FontFamily="{DynamicResource ClearCMonoFont}"
                      FontSize="11.5"
                      LogLineHeightMultiplier="1.35"

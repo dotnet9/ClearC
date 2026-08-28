@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using ClearC.Core.Models;
 using ClearC.Core.Safety;
@@ -36,7 +37,9 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture) : I
             Assert.Equal(700, window.Height);
             Assert.Single(window.GetVisualDescendants().OfType<DiskDonut>());
             Assert.Single(window.GetVisualDescendants().OfType<DataGrid>());
-            Assert.Single(window.GetVisualDescendants().OfType<LogView>());
+            var logView = Assert.Single(window.GetVisualDescendants().OfType<LogView>());
+            Assert.Equal(Color.Parse("#8EA0B8"), Assert.IsAssignableFrom<ISolidColorBrush>(logView.TimestampForeground).Color);
+            Assert.Equal(Color.Parse("#D7E2F0"), Assert.IsAssignableFrom<ISolidColorBrush>(logView.ContentForeground).Color);
             Assert.Contains(window.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "⌕  扫描分析"));
             Assert.IsType<TitleBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<TitleBarView>()).DataContext);
             Assert.IsType<CleanupWorkspaceViewModel>(Assert.Single(window.GetVisualDescendants().OfType<CleanupWorkspaceView>()).DataContext);
