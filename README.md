@@ -63,13 +63,21 @@ dotnet test tests/ClearC.Desktop.Tests/ClearC.Desktop.Tests.csproj
 publish_win-x64.bat --no-pause
 ```
 
+通用入口支持一次发布一个或多个平台：
+
+```bat
+publish.bat "win-x64 win-x86" --no-pause
+publish_all.bat --no-pause
+publish_win-x86.bat --no-pause
+```
+
 自包含程序输出到：
 
 ```text
 artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 ```
 
-目标机器不需要预装 .NET Runtime。发布脚本默认生成 NativeAOT、裁剪后的 Windows x64 程序。
+目标机器不需要预装 .NET Runtime。Windows x64/x86 发布生成 NativeAOT、裁剪后的自包含程序；Linux x64/arm64 发布生成裁剪后的单文件程序。所有平台都会剥离 PDB/XML 符号文件。
 
 ## 项目结构
 

@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
+    <BuiltInComInteropSupport Condition="'$(TargetFramework)' == 'net10.0-windows'">true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <ApplicationIcon>..\..\logo.ico</ApplicationIcon>
-    <PublishAot Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishAot>
-    <PublishTrimmed Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishTrimmed>
+    <PublishAot Condition="'$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86'">true</PublishAot>
+    <PublishTrimmed Condition="'$(RuntimeIdentifier)' != ''">true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>

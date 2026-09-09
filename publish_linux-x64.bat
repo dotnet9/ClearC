@@ -1,4 +1,4 @@
 @echo off
 setlocal
-call "%~dp0publish.bat" "win-x64" %*
+call "%~dp0publish.bat" "linux-x64" %*
 exit /b %errorlevel%
