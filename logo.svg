@@ -1,12 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect x="8" y="8" width="496" height="496" rx="96" fill="#060A12"/>
-  <path
-    d="M 354 158 A 140 140 0 1 0 354 354"
-    fill="none"
-    stroke="#22D3EE"
-    stroke-width="54"
-    stroke-linecap="round"/>
-  <path
-    d="M 386 203 C 389 224 397 232 418 235 C 397 238 389 246 386 267 C 383 246 375 238 354 235 C 375 232 383 224 386 203 Z"
-    fill="#E6FCFF"/>
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2F6BFF"/>
+      <stop offset="1" stop-color="#7C5CFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#lg)"/>
+  <rect x="108" y="360" width="280" height="46" rx="23" fill="#FFFFFF"/>
+  <rect x="108" y="286" width="280" height="46" rx="23" fill="#FFFFFF"/>
+  <rect x="140" y="169" width="252" height="46" rx="23" fill="#FFFFFF" transform="rotate(-12 266 192)"/>
+  <path d="M 424 102
+           Q 430.4 125.6 454 132
+           Q 430.4 138.4 424 162
+           Q 417.6 138.4 394 132
+           Q 417.6 125.6 424 102 Z"
+        fill="#FFFFFF"/>
 </svg>

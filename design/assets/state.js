@@ -20,6 +20,7 @@
   /* ─────────── SVG 图标库注入 ─────────── */
   const ICONS = `
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none"><defs>
+    <symbol id="i-logo" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><rect x="5.1" y="16.9" width="13.1" height="2.3" rx="1.15"/><rect x="5.1" y="13.4" width="13.1" height="2.3" rx="1.15"/><rect x="6.6" y="7.9" width="11.8" height="2.3" rx="1.15" transform="rotate(-12 12.5 9)"/><path d="M19.9 4.8Q20.2 5.9 21.3 6.2Q20.2 6.5 19.9 7.6Q19.6 6.5 18.5 6.2Q19.6 5.9 19.9 4.8Z"/></g></symbol>
     <symbol id="i-clean" viewBox="0 0 24 24"><path d="M11 3l1.7 4.6 4.6 1.7-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
     <symbol id="i-min" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
     <symbol id="i-max" viewBox="0 0 24 24"><path d="M7.5 6h9A1.5 1.5 0 0 1 18 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 16.5v-9A1.5 1.5 0 0 1 7.5 6z"/></symbol>
@@ -49,21 +50,21 @@
 
   /* ─────────── 模拟扫描数据（与真实扫描器输出字段一一对应） ─────────── */
   const ITEMS = [
-    { id: 'temp',       name: '临时文件',              icon: 'i-file',    color: '#22d3ee', cat: 'temp',    path: 'C:\\Users\\liu64\\AppData\\Local\\Temp',                        files: 1284,  size: 1.24e9,  access: '今天 09:12', cleanable: true,  risk: 'low',  desc: '程序运行产生的临时文件，关闭相关程序后可安全删除。' },
-    { id: 'windowsold', name: '旧版系统 Windows.old',  icon: 'i-window',  color: '#0891b2', cat: 'cache',   path: 'C:\\Windows.old',                                                files: 48000, size: 12.6e9,  access: '30 天前',   cleanable: true,  risk: 'high', desc: '系统升级前的完整备份，删除后将无法回滚到旧版本。' },
-    { id: 'wu',         name: 'Windows 更新缓存',      icon: 'i-refresh', color: '#38bdf8', cat: 'cache',   path: 'C:\\Windows\\SoftwareDistribution\\Download',                    files: 5102,  size: 2.38e9,  access: '5 天前',    cleanable: true,  risk: 'low',  desc: '已安装更新的下载残留，可安全删除。' },
-    { id: 'hiberfil',   name: '休眠文件 hiberfil.sys', icon: 'i-moon',    color: '#a78bfa', cat: 'sys',     path: 'C:\\hiberfil.sys',                                               files: 1,     size: 8.21e9,  access: '—',         cleanable: false, risk: 'mid',  desc: '休眠功能的内存镜像，需管理员运行 powercfg /h off 关闭后方可删除。' },
-    { id: 'wechat',     name: '微信文件缓存',          icon: 'i-chat',    color: '#34d399', cat: 'user',    path: 'C:\\Users\\liu64\\Documents\\WeChat Files',                      files: 12800, size: 2.15e9,  access: '今天 09:47', cleanable: true,  risk: 'low',  desc: '聊天图片、视频与文件缓存，删除后文字聊天记录仍保留。' },
-    { id: 'downloads',  name: '下载文件夹安装包',      icon: 'i-download',color: '#4ade80', cat: 'user',    path: 'C:\\Users\\liu64\\Downloads',                                    files: 87,    size: 1.76e9,  access: '今天 10:01', cleanable: true,  risk: 'mid',  desc: '下载目录中的 exe / zip 安装包，请确认不再需要后删除。' },
-    { id: 'pagefile',   name: '页面文件 pagefile.sys', icon: 'i-db',      color: '#2dd4bf', cat: 'sys',     path: 'C:\\pagefile.sys',                                               files: 1,     size: 6.14e9,  access: '—',         cleanable: false, risk: 'mid',  desc: '虚拟内存交换文件，系统运行时锁定占用，不可直接清理。' },
-    { id: 'recycle',    name: '回收站',                icon: 'i-trash',   color: '#94a3b8', cat: 'recycle', path: 'C:\\$Recycle.Bin',                                               files: 312,   size: 856e6,   access: '昨天 22:40', cleanable: true,  risk: 'low',  desc: '已删除文件的暂存区，清空后将无法恢复。' },
-    { id: 'restore',    name: '系统还原点',            icon: 'i-clock',   color: '#fb923c', cat: 'cache',   path: 'C:\\System Volume Information',                                  files: 3,     size: 5.43e9,  access: '7 天前',    cleanable: true,  risk: 'mid',  desc: '系统还原快照，由系统还原机制管理。' },
-    { id: 'browser',    name: '浏览器缓存',            icon: 'i-globe',   color: '#818cf8', cat: 'browser', path: 'C:\\Users\\liu64\\AppData\\Local\\Microsoft\\Edge\\User Data',   files: 8905,  size: 468e6,   access: '今天 08:55', cleanable: true,  risk: 'low',  desc: 'Edge / Chrome 网页缓存，删除后首次访问网页稍慢。' },
-    { id: 'thumbcache', name: '缩略图缓存',            icon: 'i-image',   color: '#f472b6', cat: 'cache',   path: 'C:\\Users\\liu64\\AppData\\Local\\Microsoft\\Windows\\Explorer',  files: 6210,  size: 342e6,   access: '3 天前',    cleanable: true,  risk: 'low',  desc: '资源管理器缩略图，删除后打开文件夹时自动重建。' },
-    { id: 'memorydmp',  name: '系统内存转储',          icon: 'i-chip',    color: '#fb7185', cat: 'cache',   path: 'C:\\Windows\\MEMORY.DMP',                                        files: 1,     size: 1.82e9,  access: '12 天前',   cleanable: true,  risk: 'low',  desc: '蓝屏内存转储，排查完故障后可删除。' },
-    { id: 'prefetch',   name: '预取文件 Prefetch',     icon: 'i-bolt',    color: '#fbbf24', cat: 'cache',   path: 'C:\\Windows\\Prefetch',                                          files: 412,   size: 96e6,    access: '今天 07:30', cleanable: true,  risk: 'low',  desc: '程序启动预读数据，删除后首批启动稍慢，之后自动重建。' },
-    { id: 'wer',        name: '错误报告 WER',          icon: 'i-alert',   color: '#f87171', cat: 'cache',   path: 'C:\\ProgramData\\Microsoft\\Windows\\WER',                       files: 1540,  size: 218e6,   access: '6 天前',    cleanable: true,  risk: 'low',  desc: '程序崩溃诊断报告，可安全删除。' },
-    { id: 'logs',       name: '系统日志',              icon: 'i-doc',     color: '#64748b', cat: 'cache',   path: 'C:\\Windows\\Logs',                                              files: 1096,  size: 174e6,   access: '2 天前',    cleanable: true,  risk: 'mid',  desc: '系统组件日志（CBS / ETL），删除不影响系统稳定性。' }
+    { id: 'temp',       name: '临时文件',              icon: 'i-file',    color: '#2f6bff', cat: 'temp',    path: 'C:\\Users\\liu64\\AppData\\Local\\Temp',                        files: 1284,  size: 1.24e9,  access: '今天 09:12', cleanable: true,  risk: 'low',  desc: '程序运行产生的临时文件，关闭相关程序后可安全删除。' },
+    { id: 'windowsold', name: '旧版系统 Windows.old',  icon: 'i-window',  color: '#7c5cff', cat: 'cache',   path: 'C:\\Windows.old',                                                files: 48000, size: 12.6e9,  access: '30 天前',   cleanable: true,  risk: 'high', desc: '系统升级前的完整备份，删除后将无法回滚到旧版本。' },
+    { id: 'wu',         name: 'Windows 更新缓存',      icon: 'i-refresh', color: '#2563eb', cat: 'cache',   path: 'C:\\Windows\\SoftwareDistribution\\Download',                    files: 5102,  size: 2.38e9,  access: '5 天前',    cleanable: true,  risk: 'low',  desc: '已安装更新的下载残留，可安全删除。' },
+    { id: 'hiberfil',   name: '休眠文件 hiberfil.sys', icon: 'i-moon',    color: '#8b5cf6', cat: 'sys',     path: 'C:\\hiberfil.sys',                                               files: 1,     size: 8.21e9,  access: '—',         cleanable: false, risk: 'mid',  desc: '休眠功能的内存镜像，需管理员运行 powercfg /h off 关闭后方可删除。' },
+    { id: 'wechat',     name: '微信文件缓存',          icon: 'i-chat',    color: '#10b981', cat: 'user',    path: 'C:\\Users\\liu64\\Documents\\WeChat Files',                      files: 12800, size: 2.15e9,  access: '今天 09:47', cleanable: true,  risk: 'low',  desc: '聊天图片、视频与文件缓存，删除后文字聊天记录仍保留。' },
+    { id: 'downloads',  name: '下载文件夹安装包',      icon: 'i-download',color: '#059669', cat: 'user',    path: 'C:\\Users\\liu64\\Downloads',                                    files: 87,    size: 1.76e9,  access: '今天 10:01', cleanable: true,  risk: 'mid',  desc: '下载目录中的 exe / zip 安装包，请确认不再需要后删除。' },
+    { id: 'pagefile',   name: '页面文件 pagefile.sys', icon: 'i-db',      color: '#0d9488', cat: 'sys',     path: 'C:\\pagefile.sys',                                               files: 1,     size: 6.14e9,  access: '—',         cleanable: false, risk: 'mid',  desc: '虚拟内存交换文件，系统运行时锁定占用，不可直接清理。' },
+    { id: 'recycle',    name: '回收站',                icon: 'i-trash',   color: '#64748b', cat: 'recycle', path: 'C:\\$Recycle.Bin',                                               files: 312,   size: 856e6,   access: '昨天 22:40', cleanable: true,  risk: 'low',  desc: '已删除文件的暂存区，清空后将无法恢复。' },
+    { id: 'restore',    name: '系统还原点',            icon: 'i-clock',   color: '#ea580c', cat: 'cache',   path: 'C:\\System Volume Information',                                  files: 3,     size: 5.43e9,  access: '7 天前',    cleanable: true,  risk: 'mid',  desc: '系统还原快照，由系统还原机制管理。' },
+    { id: 'browser',    name: '浏览器缓存',            icon: 'i-globe',   color: '#6366f1', cat: 'browser', path: 'C:\\Users\\liu64\\AppData\\Local\\Microsoft\\Edge\\User Data',   files: 8905,  size: 468e6,   access: '今天 08:55', cleanable: true,  risk: 'low',  desc: 'Edge / Chrome 网页缓存，删除后首次访问网页稍慢。' },
+    { id: 'thumbcache', name: '缩略图缓存',            icon: 'i-image',   color: '#db2777', cat: 'cache',   path: 'C:\\Users\\liu64\\AppData\\Local\\Microsoft\\Windows\\Explorer',  files: 6210,  size: 342e6,   access: '3 天前',    cleanable: true,  risk: 'low',  desc: '资源管理器缩略图，删除后打开文件夹时自动重建。' },
+    { id: 'memorydmp',  name: '系统内存转储',          icon: 'i-chip',    color: '#e11d48', cat: 'cache',   path: 'C:\\Windows\\MEMORY.DMP',                                        files: 1,     size: 1.82e9,  access: '12 天前',   cleanable: true,  risk: 'low',  desc: '蓝屏内存转储，排查完故障后可删除。' },
+    { id: 'prefetch',   name: '预取文件 Prefetch',     icon: 'i-bolt',    color: '#d97706', cat: 'cache',   path: 'C:\\Windows\\Prefetch',                                          files: 412,   size: 96e6,    access: '今天 07:30', cleanable: true,  risk: 'low',  desc: '程序启动预读数据，删除后首批启动稍慢，之后自动重建。' },
+    { id: 'wer',        name: '错误报告 WER',          icon: 'i-alert',   color: '#dc2626', cat: 'cache',   path: 'C:\\ProgramData\\Microsoft\\Windows\\WER',                       files: 1540,  size: 218e6,   access: '6 天前',    cleanable: true,  risk: 'low',  desc: '程序崩溃诊断报告，可安全删除。' },
+    { id: 'logs',       name: '系统日志',              icon: 'i-doc',     color: '#475569', cat: 'cache',   path: 'C:\\Windows\\Logs',                                              files: 1096,  size: 174e6,   access: '2 天前',    cleanable: true,  risk: 'mid',  desc: '系统组件日志（CBS / ETL），删除不影响系统稳定性。' }
   ];
   const CATS = [
     { key: 'all', label: '全部' }, { key: 'temp', label: '临时文件' },
@@ -284,20 +285,49 @@
     }
   }
 
-  /* 筛选 chips */
-  function renderChips() {
+  /* 分组列表（Expander + ItemsControl 结构） */
+  const GROUPS = CATS.slice(1);
+  function renderGroups() {
+    const list = el('list');
+    if (!state.filled) {
+      list.innerHTML =
+        '<div class="empty"><div class="empty-inner">' +
+        '<div class="empty-icon">' + ico('i-folder') + '</div>' +
+        '<div class="empty-title">尚未分析</div>' +
+        '<div class="empty-sub">等待扫描指令 · 点击「扫描分析」开始</div>' +
+        '</div></div>';
+      return;
+    }
     const rows = ITEMS.slice(0, state.filled);
-    const n = { all: rows.length };
-    CATS.slice(1).forEach(c => { n[c.key] = rows.filter(i => i.cat === c.key).length; });
-    el('chips').innerHTML = CATS.map(c =>
-      '<button class="chip' + (c.key === 'all' ? ' on' : '') + '" data-cat="' + c.key + '">' +
-      c.label + '<em>' + (rows.length ? n[c.key] : '') + '</em></button>').join('');
-    el('chips').addEventListener('click', (e) => {
-      const b = e.target.closest('.chip'); if (!b) return;
-      $$('.chip', el('chips')).forEach(x => x.classList.toggle('on', x === b));
-      const cat = b.dataset.cat;
-      $$('.row', el('list')).forEach(r => {
-        r.style.display = (cat === 'all' || r.dataset.cat === cat) ? '' : 'none';
+    let html = '';
+    GROUPS.forEach(g => {
+      const items = rows.filter(i => i.cat === g.key);
+      if (!items.length) return;
+      const subtotal = items.reduce((s, i) => s + i.size, 0);
+      html +=
+        '<div class="group" data-cat="' + g.key + '">' +
+          '<div class="g-head">' + ico('i-chev') +
+            '<span class="g-title">' + g.label + '</span>' +
+            '<span class="g-count">' + items.length + ' 项</span>' +
+            '<span class="g-size">' + fmtSize(subtotal) + '</span>' +
+          '</div>' +
+          '<div class="g-body">' + items.map(rowHTML).join('') + '</div>' +
+        '</div>';
+    });
+    if (state.ghost) {
+      html += '<div class="row ghost"><div class="row-main">' +
+        '<span class="tile" style="background:rgba(47,107,255,.08);border-color:rgba(47,107,255,.3);color:var(--acc)">' + ico('i-search') + '</span>' +
+        '<div class="row-info"><div class="ghost-txt">▍ 正在扫描 ' + esc(state.ghost) + ' …</div></div>' +
+        '</div></div>';
+    }
+    list.innerHTML = html;
+    $$('.g-head', list).forEach((h) => {
+      h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed'));
+    });
+    $$('.row-main', list).forEach((m) => {
+      m.addEventListener('click', (e) => {
+        if (e.target.closest('.chk')) return;
+        m.parentElement.classList.toggle('expanded');
       });
     });
   }
@@ -337,33 +367,6 @@
           '<div><span class="d-label">建议</span>' + (item.cleanable ? (item.risk === 'high' ? '谨慎清理：删除后不可恢复' : item.risk === 'mid' ? '清理前请确认内容不再需要' : '可安全清理') : '由系统管理，不建议手动删除') + '</div>' +
         '</div>' +
       '</div>');
-  }
-
-  function renderList() {
-    const list = el('list');
-    if (!state.filled) {
-      list.innerHTML =
-        '<div class="empty"><div class="empty-inner">' +
-        '<div class="empty-icon">' + ico('i-folder') + '</div>' +
-        '<div class="empty-title">尚未分析</div>' +
-        '<div class="empty-sub">// 等待扫描指令 · 点击「扫描分析」</div>' +
-        '</div></div>';
-      return;
-    }
-    let html = ITEMS.slice(0, state.filled).map(rowHTML).join('');
-    if (state.ghost) {
-      html += '<div class="row ghost"><div class="row-main">' +
-        '<span class="tile" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.35);color:var(--cyan)">' + ico('i-search') + '</span>' +
-        '<div class="row-info"><div class="ghost-txt">▍ 正在扫描 ' + esc(state.ghost) + ' …</div></div>' +
-        '</div></div>';
-    }
-    list.innerHTML = html;
-    $$('.row-main', list).forEach((m) => {
-      m.addEventListener('click', (e) => {
-        if (e.target.closest('.chk')) return;
-        m.parentElement.classList.toggle('expanded');
-      });
-    });
   }
 
   function renderBar() {
@@ -411,7 +414,7 @@
     const targets = ITEMS.filter(i => i.cleanable);
     el('mTitle').textContent = '确认清理';
     el('mBody').innerHTML =
-      '即将清理以下 <b style="color:var(--cyan-b)">' + targets.length + '</b> 个项目：' +
+      '即将清理以下 <b style="color:var(--acc)">' + targets.length + '</b> 个项目：' +
       '<div class="m-list">' + targets.map(i =>
         '<div><span>' + esc(i.name) + '</span><b>' + fmtSize(i.size) + '</b></div>').join('') + '</div>' +
       '<div class="m-total"><span>合计释放</span><span>' + fmtSize(CLEANABLE_SUM) + '</span></div>' +
@@ -489,8 +492,7 @@
   /* ─────────── 启动 ─────────── */
   renderDisk();
   renderHero();
-  renderChips();
-  renderList();
+  renderGroups();
   renderBar();
   renderLogs();
   renderModal();
