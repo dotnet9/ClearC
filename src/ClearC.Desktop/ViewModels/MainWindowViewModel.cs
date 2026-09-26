@@ -813,7 +813,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         {
             if (!_groupCache.TryGetValue(group, out var groupViewModel))
             {
-                groupViewModel = new CleanupGroupViewModel(group);
+                groupViewModel = new CleanupGroupViewModel(group, CollapseOtherGroups);
                 _groupCache[group] = groupViewModel;
             }
 
@@ -825,6 +825,18 @@ public sealed class MainWindowViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsEmptyVisible));
         this.RaisePropertyChanged(nameof(CanSelectAll));
         this.RaisePropertyChanged(nameof(IsAllSelected));
+    }
+
+    /// <summary>手风琴：展开一个分组时折叠其余分组（默认全部折叠）。</summary>
+    private void CollapseOtherGroups(CleanupGroupViewModel expanded)
+    {
+        foreach (var group in Groups)
+        {
+            if (!ReferenceEquals(group, expanded))
+            {
+                group.IsExpanded = false;
+            }
+        }
     }
 
     private void UpdateRowSelectability()

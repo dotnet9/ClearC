@@ -8,13 +8,15 @@ namespace ClearC.Desktop.ViewModels;
 /// <summary>结果列表里的一个展示分组（原型 <c>.group</c>）：吸顶组头 + 行集合。</summary>
 public sealed class CleanupGroupViewModel : ReactiveObject
 {
-    private bool _isExpanded = true;
+    private readonly Action<CleanupGroupViewModel>? _onExpanded;
+    private bool _isExpanded;
     private long _subtotalBytes;
 
-    public CleanupGroupViewModel(CleanupDisplayGroup group)
+    public CleanupGroupViewModel(CleanupDisplayGroup group, Action<CleanupGroupViewModel>? onExpanded = null)
     {
         Group = group;
         Name = group.ToDisplayName();
+        _onExpanded = onExpanded;
     }
 
     public CleanupDisplayGroup Group { get; }
@@ -39,6 +41,10 @@ public sealed class CleanupGroupViewModel : ReactiveObject
 
     public string SubtotalText => ByteSizeFormatter.Format(SubtotalBytes);
 
+    /// <summary>
+    /// 默认全部折叠，展开一个即折叠其余（手风琴）：
+    /// 约 120 个目标一次铺开会淹没首屏，分组头已经给出项数与小计。
+    /// </summary>
     public bool IsExpanded
     {
         get => _isExpanded;
@@ -48,6 +54,10 @@ public sealed class CleanupGroupViewModel : ReactiveObject
             {
                 this.RaiseAndSetIfChanged(ref _isExpanded, value);
                 this.RaisePropertyChanged(nameof(ChevronRotation));
+                if (value)
+                {
+                    _onExpanded?.Invoke(this);
+                }
             }
         }
     }
