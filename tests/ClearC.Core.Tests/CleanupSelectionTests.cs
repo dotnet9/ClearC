@@ -32,7 +32,7 @@ public sealed class CleanupSelectionTests
     {
         var emptyItem = new CleanupItem(
             "empty", "Empty", @"C:\Cache", CleanupCategory.PackageCache,
-            CleanupRisk.Low, 0, 0, "", "cache");
+            CleanupRisk.Low, 0, 0, "", "cache", CleanerKind: CleanerKind.DirectoryContents);
 
         var selection = new CleanupSelection([emptyItem]);
 
@@ -41,8 +41,8 @@ public sealed class CleanupSelectionTests
 
     private static CleanupItem[] CreateItems() =>
     [
-        new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 100, 1, "", "temp"),
-        new("medium", "Medium", @"C:\Cache", CleanupCategory.PackageCache, CleanupRisk.Medium, 200, 1, "", "cache"),
-        new("protected", "Protected", @"C:\Users\test\Documents", CleanupCategory.ApplicationData, CleanupRisk.Low, 300, 1, "", null, IsProtected: true)
+        new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 100, 1, "", "temp", CleanerKind: CleanerKind.DirectoryContents),
+        new("medium", "Medium", @"C:\Cache", CleanupCategory.PackageCache, CleanupRisk.Medium, 200, 1, "", "cache", CleanerKind: CleanerKind.DirectoryContents),
+        new("protected", "Protected", @"C:\Users\test\Documents", CleanupCategory.ApplicationData, CleanupRisk.Low, 300, 1, "", null, IsProtected: true, CleanerKind: CleanerKind.DirectoryContents)
     ];
 }
