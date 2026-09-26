@@ -1,7 +1,6 @@
 <linker>
   <assembly fullname="ClearC.Desktop" preserve="all" />
   <assembly fullname="ClearC.Core" preserve="all" />
-  <assembly fullname="CodeWF.Log.Avalonia" preserve="all" />
   <assembly fullname="CodeWF.Log.Core" preserve="all" />
   <assembly fullname="CodeWF.Tools.Core" preserve="all" />
   <assembly fullname="ReactiveUI" preserve="all" />
@@ -10,11 +9,11 @@
   <assembly fullname="Avalonia" preserve="all" />
   <assembly fullname="Avalonia.Base" preserve="all" />
   <assembly fullname="Avalonia.Controls" preserve="all" />
-  <assembly fullname="Avalonia.Controls.DataGrid" preserve="all" />
   <assembly fullname="Avalonia.Desktop" preserve="all" />
   <assembly fullname="Avalonia.Markup" preserve="all" />
   <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
   <assembly fullname="Avalonia.Skia" preserve="all" />
   <assembly fullname="Avalonia.Win32" preserve="all" />
-  <assembly fullname="Semi.Avalonia.DataGrid" preserve="all" />
+  <!-- 提权判断（WindowsPrincipal.IsInRole）在 AOT 下需要保留。 -->
+  <assembly fullname="System.Security.Principal.Windows" preserve="all" />
 </linker>

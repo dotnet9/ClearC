@@ -6,6 +6,4 @@ public sealed record ScanResult(
     TimeSpan Elapsed)
 {
     public long TotalBytes => Items.Sum(item => item.SizeBytes);
-
-    public long RecommendedBytes => Items.Where(item => item.IsRecommended).Sum(item => item.SizeBytes);
 }

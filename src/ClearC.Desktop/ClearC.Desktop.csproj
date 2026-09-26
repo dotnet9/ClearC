@@ -6,6 +6,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <ApplicationIcon>..\..\logo.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <PublishAot Condition="'$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86'">true</PublishAot>
     <PublishTrimmed Condition="'$(RuntimeIdentifier)' != ''">true</PublishTrimmed>
   </PropertyGroup>
@@ -16,11 +17,9 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="CodeWF.Log.Avalonia" />
+    <PackageReference Include="CodeWF.Log.Core" />
     <PackageReference Include="Semi.Avalonia" />
-    <PackageReference Include="Semi.Avalonia.DataGrid" />
     <PackageReference Include="ReactiveUI" />
     <PackageReference Include="System.Reactive" />
   </ItemGroup>
@@ -34,7 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="..\..\logo.png" Link="Assets\logo.png" />
     <AvaloniaResource Include="..\..\logo.ico" Link="Assets\logo.ico" />
   </ItemGroup>
 </Project>

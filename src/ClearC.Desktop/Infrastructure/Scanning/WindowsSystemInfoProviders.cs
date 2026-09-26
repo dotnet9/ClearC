@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using ClearC.Core.Models;
+using ClearC.Desktop.Infrastructure.Windows;
 
 namespace ClearC.Desktop.Infrastructure.Scanning;
 
@@ -21,12 +22,26 @@ internal sealed class WindowsDiskInfoProvider : IDiskInfoProvider
 
 internal interface IRecycleBinInfoProvider
 {
-    DirectorySize GetInfo(string driveRoot);
+    Task<DirectorySize> GetInfoAsync(string driveRoot, CancellationToken cancellationToken = default);
 }
 
 internal sealed class WindowsRecycleBinInfoProvider : IRecycleBinInfoProvider
 {
-    public DirectorySize GetInfo(string driveRoot)
+    private readonly IPlatform _platform;
+
+    public WindowsRecycleBinInfoProvider()
+        : this(SystemPlatform.Instance)
+    {
+    }
+
+    internal WindowsRecycleBinInfoProvider(IPlatform platform) => _platform = platform;
+
+    public Task<DirectorySize> GetInfoAsync(string driveRoot, CancellationToken cancellationToken = default) =>
+        _platform.IsWindows
+            ? Task.Run(() => Query(driveRoot), cancellationToken)
+            : Task.FromResult(default(DirectorySize));
+
+    private static DirectorySize Query(string driveRoot)
     {
         var info = new ShQueryRbInfo { Size = Marshal.SizeOf<ShQueryRbInfo>() };
         return SHQueryRecycleBin(driveRoot, ref info) == 0

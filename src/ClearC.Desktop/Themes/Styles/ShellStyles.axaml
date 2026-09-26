@@ -1,112 +1,326 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ClearC.Desktop.Controls">
+  <Styles.Resources>
+    <!-- ═══ 按钮（自绘模板，避免与 Semi 默认样式冲突） ═══ -->
+    <ControlTemplate x:Key="ClearCButtonTemplate" TargetType="Button">
+      <Border Name="PART_Root"
+              Padding="{TemplateBinding Padding}"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
+        <ContentPresenter Name="PART_ContentPresenter"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                          Content="{TemplateBinding Content}"
+                          ContentTemplate="{TemplateBinding ContentTemplate}" />
+      </Border>
+    </ControlTemplate>
+
+    <ControlTheme x:Key="ClearCPrimaryButtonTheme" TargetType="Button">
+      <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
+      <Setter Property="Background" Value="{DynamicResource ClearCAccentGradient}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Style Selector="^ /template/ Border#PART_Root">
+        <Setter Property="BoxShadow" Value="0 6 16 0 #522F6BFF" />
+      </Style>
+      <Style Selector="^:pointerover /template/ Border#PART_Root">
+        <Setter Property="BoxShadow" Value="0 8 22 0 #732F6BFF" />
+      </Style>
+      <Style Selector="^:pressed /template/ Border#PART_Root">
+        <Setter Property="RenderTransform" Value="translateY(1px)" />
+      </Style>
+      <Style Selector="^:disabled /template/ Border#PART_Root">
+        <Setter Property="Opacity" Value="0.45" />
+      </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ClearCGhostButtonTheme" TargetType="Button">
+      <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
+      <Setter Property="Background" Value="{DynamicResource ClearCWin}" />
+      <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine2}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Style Selector="^:pointerover /template/ Border#PART_Root">
+        <Setter Property="Background" Value="#f6f9ff" />
+        <Setter Property="BorderBrush" Value="#b9c8ff" />
+      </Style>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCAccent}" />
+      </Style>
+      <Style Selector="^:pressed /template/ Border#PART_Root">
+        <Setter Property="RenderTransform" Value="translateY(1px)" />
+      </Style>
+      <Style Selector="^:disabled /template/ Border#PART_Root">
+        <Setter Property="Opacity" Value="0.45" />
+      </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ClearCDangerButtonTheme" TargetType="Button">
+      <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
+      <Setter Property="Background" Value="{DynamicResource ClearCDangerGradient}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Style Selector="^ /template/ Border#PART_Root">
+        <Setter Property="BoxShadow" Value="0 6 16 0 #47EF4444" />
+      </Style>
+      <Style Selector="^:disabled /template/ Border#PART_Root">
+        <Setter Property="Opacity" Value="0.45" />
+      </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ClearCMiniButtonTheme" TargetType="Button">
+      <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
+      <Setter Property="Height" Value="{DynamicResource ClearCMiniHeight}" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="CornerRadius" Value="{DynamicResource ClearCRadiusMini}" />
+      <Setter Property="FontSize" Value="{DynamicResource ClearCFontMini}" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="Background" Value="{DynamicResource ClearCWin}" />
+      <Setter Property="Foreground" Value="{DynamicResource ClearCText3}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine2}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Style Selector="^:pointerover /template/ Border#PART_Root">
+        <Setter Property="BorderBrush" Value="#b9c8ff" />
+      </Style>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCAccent}" />
+      </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ClearCTitleButtonTheme" TargetType="Button">
+      <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
+      <Setter Property="Width" Value="44" />
+      <Setter Property="Height" Value="{DynamicResource ClearCTitleBarHeight}" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource ClearCText3}" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Style Selector="^:pointerover /template/ Border#PART_Root">
+        <Setter Property="Background" Value="{DynamicResource ClearCTitleHover}" />
+      </Style>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCText2}" />
+      </Style>
+      <Style Selector="^:pointerover /template/ Border#PART_Root controls|IconGlyph">
+        <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
+      </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ClearCTitleCloseButtonTheme" TargetType="Button"
+                  BasedOn="{StaticResource ClearCTitleButtonTheme}">
+      <Style Selector="^:pointerover /template/ Border#PART_Root">
+        <Setter Property="Background" Value="{DynamicResource ClearCTitleCloseHover}" />
+      </Style>
+      <Style Selector="^:pointerover /template/ Border#PART_Root controls|IconGlyph">
+        <Setter Property="Foreground" Value="{DynamicResource ClearCRed}" />
+      </Style>
+    </ControlTheme>
+
+    <!-- ═══ 结果行 ═══ -->
+    <ControlTheme x:Key="ClearCRowMainTheme" TargetType="ToggleButton">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="MinHeight" Value="52" />
+      <Setter Property="CornerRadius" Value="{DynamicResource ClearCRadiusButton}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="PART_Root"
+                  Padding="{TemplateBinding Padding}"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter Name="PART_ContentPresenter"
+                              HorizontalContentAlignment="Stretch"
+                              VerticalContentAlignment="Center"
+                              Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <!-- ═══ 分组头 ═══ -->
+    <ControlTheme x:Key="ClearCGroupHeadTheme" TargetType="ToggleButton">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="CornerRadius" Value="{DynamicResource ClearCRadiusButton}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="PART_Root"
+                  Padding="{TemplateBinding Padding}"
+                  Background="{TemplateBinding Background}"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter Name="PART_ContentPresenter"
+                              HorizontalContentAlignment="Stretch"
+                              VerticalContentAlignment="Center"
+                              Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <!-- ═══ 复选框（自绘 16px、圆角 5、勾选后蓝底白勾） ═══ -->
+    <ControlTheme x:Key="{x:Type CheckBox}" TargetType="CheckBox">
+      <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
+      <Setter Property="FontSize" Value="{DynamicResource ClearCFontBase}" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <StackPanel Background="Transparent" Orientation="Horizontal" Spacing="7">
+            <Border Name="PART_Box"
+                    Width="16"
+                    Height="16"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource ClearCWin}"
+                    BorderBrush="#c6d2e5"
+                    BorderThickness="1.5"
+                    CornerRadius="{DynamicResource ClearCRadiusMini}">
+              <controls:IconGlyph Width="10"
+                                  Height="10"
+                                  Data="{StaticResource ClearCIconCheck}"
+                                  Foreground="White"
+                                  Opacity="0"
+                                  StrokeThickness="3" />
+            </Border>
+            <ContentPresenter Name="PART_ContentPresenter"
+                              VerticalAlignment="Center"
+                              Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              Foreground="{TemplateBinding Foreground}" />
+          </StackPanel>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:checked /template/ Border#PART_Box">
+        <Setter Property="Background" Value="{DynamicResource ClearCAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ClearCAccent}" />
+      </Style>
+      <Style Selector="^:checked /template/ controls|IconGlyph">
+        <Setter Property="Opacity" Value="1" />
+      </Style>
+      <Style Selector="^:pointerover /template/ Border#PART_Box">
+        <Setter Property="BorderBrush" Value="{DynamicResource ClearCAccent}" />
+      </Style>
+      <Style Selector="^:disabled /template/ Border#PART_Box">
+        <Setter Property="Opacity" Value="0.35" />
+      </Style>
+    </ControlTheme>
+
+    <!-- ═══ 滚动条（宽 9、圆角 99、无轨道底色） ═══ -->
+    <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent">
+            <Track Name="PART_Track" Orientation="{TemplateBinding Orientation}">
+              <Track.Thumb>
+                <Thumb Name="PART_Thumb">
+                  <Thumb.Template>
+                    <ControlTemplate>
+                      <Border Margin="2"
+                              Background="{DynamicResource ClearCScrollThumb}"
+                              CornerRadius="99" />
+                    </ControlTemplate>
+                  </Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+            </Track>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </Styles.Resources>
+
+  <!-- ═══ 基础 ═══ -->
   <Style Selector="Window">
     <Setter Property="FontFamily" Value="{DynamicResource ClearCSansFont}" />
-    <Setter Property="FontSize" Value="{DynamicResource ClearCFontBase}" />
-    <Setter Property="Background" Value="{DynamicResource ClearCBg0}" />
+    <Setter Property="FontSize" Value="{DynamicResource ClearCFontBody}" />
     <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
+    <Setter Property="Background" Value="Transparent" />
   </Style>
 
+  <Style Selector="TextBlock.mono">
+    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
+  </Style>
+
+  <!-- ═══ 按钮 ═══ -->
+  <Style Selector="Button.btn">
+    <Setter Property="Height" Value="{DynamicResource ClearCButtonHeight}" />
+    <Setter Property="Padding" Value="20,0" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ClearCRadiusButton}" />
+    <Setter Property="FontSize" Value="{DynamicResource ClearCFontBody}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
   <Style Selector="Button.primary">
-    <Setter Property="Height" Value="34" />
-    <Setter Property="Padding" Value="18,0" />
-    <Setter Property="CornerRadius" Value="6" />
-    <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Foreground" Value="White" />
-    <Setter Property="Background">
-      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-        <GradientStop Offset="0" Color="#0891B2" />
-        <GradientStop Offset="1" Color="#2563EB" />
-      </LinearGradientBrush>
-    </Setter>
-    <Setter Property="BorderBrush" Value="#5967E8F9" />
-    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Theme" Value="{DynamicResource ClearCPrimaryButtonTheme}" />
   </Style>
-  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-    <Setter Property="Opacity" Value="0.92" />
-  </Style>
-
   <Style Selector="Button.ghost">
-    <Setter Property="Height" Value="34" />
-    <Setter Property="Padding" Value="18,0" />
-    <Setter Property="CornerRadius" Value="6" />
-    <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Foreground" Value="{DynamicResource ClearCCyanBright}" />
-    <Setter Property="Background" Value="#0D22D3EE" />
-    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLineStrong}" />
-    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Theme" Value="{DynamicResource ClearCGhostButtonTheme}" />
   </Style>
-
-  <Style Selector="Button.titleButton">
-    <Setter Property="Width" Value="44" />
-    <Setter Property="Height" Value="42" />
-    <Setter Property="Padding" Value="0" />
-    <Setter Property="CornerRadius" Value="0" />
-    <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
+  <Style Selector="Button.danger">
+    <Setter Property="Theme" Value="{DynamicResource ClearCDangerButtonTheme}" />
   </Style>
-  <Style Selector="Button.titleButton:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#1422D3EE" />
-    <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCCyanBright}" />
-  </Style>
-  <Style Selector="Button.titleButton.close:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#26F87171" />
-    <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCRed}" />
-  </Style>
-
-  <Style Selector="Button.chip">
-    <Setter Property="Height" Value="25" />
-    <Setter Property="Padding" Value="10,0" />
-    <Setter Property="CornerRadius" Value="4" />
-    <Setter Property="FontSize" Value="12" />
-    <Setter Property="Foreground" Value="{DynamicResource ClearCText2}" />
-    <Setter Property="Background" Value="#990D1524" />
-    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
-    <Setter Property="BorderThickness" Value="1" />
-  </Style>
-  <Style Selector="Button.chip.active">
-    <Setter Property="Foreground" Value="{DynamicResource ClearCCyanBright}" />
-    <Setter Property="Background" Value="#1422D3EE" />
-    <Setter Property="BorderBrush" Value="#7322D3EE" />
-  </Style>
-
   <Style Selector="Button.mini">
-    <Setter Property="Padding" Value="10,2" />
-    <Setter Property="CornerRadius" Value="4" />
-    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
-    <Setter Property="FontSize" Value="11" />
-    <Setter Property="Foreground" Value="{DynamicResource ClearCText3}" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
-    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Theme" Value="{DynamicResource ClearCMiniButtonTheme}" />
+  </Style>
+  <Style Selector="Button.titleButton">
+    <Setter Property="Theme" Value="{DynamicResource ClearCTitleButtonTheme}" />
+  </Style>
+  <Style Selector="Button.titleButton.close">
+    <Setter Property="Theme" Value="{DynamicResource ClearCTitleCloseButtonTheme}" />
   </Style>
 
-  <Style Selector="ToggleButton.cleanupRow">
-    <Setter Property="HorizontalAlignment" Value="Stretch" />
-    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-    <Setter Property="Padding" Value="12,8" />
-    <Setter Property="Margin" Value="0" />
-    <Setter Property="MinHeight" Value="52" />
-    <Setter Property="CornerRadius" Value="7" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
-    <Setter Property="BorderBrush" Value="Transparent" />
-    <Setter Property="BorderThickness" Value="1" />
+  <!-- ═══ 结果行 / 分组头 ═══ -->
+  <Style Selector="ToggleButton.rowMain">
+    <Setter Property="Theme" Value="{DynamicResource ClearCRowMainTheme}" />
   </Style>
-  <Style Selector="ToggleButton.cleanupRow:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#0B22D3EE" />
+  <Style Selector="ToggleButton.rowMain:pointerover">
+    <Setter Property="Background" Value="{DynamicResource ClearCRowHover}" />
   </Style>
-  <Style Selector="ToggleButton.cleanupRow:checked /template/ ContentPresenter">
-    <Setter Property="Background" Value="#090D1524" />
+  <Style Selector="ToggleButton.rowMain.current">
+    <Setter Property="Background" Value="{DynamicResource ClearCRowCurrentBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCRowCurrentBorder}" />
   </Style>
 
-  <Style Selector="DataGrid.cleanupGrid">
-    <Setter Property="RowBackground" Value="Transparent" />
+  <Style Selector="ToggleButton.ghead">
+    <Setter Property="Theme" Value="{DynamicResource ClearCGroupHeadTheme}" />
   </Style>
-  <Style Selector="DataGrid.cleanupGrid DataGridRow">
-    <Setter Property="Background" Value="Transparent" />
+  <Style Selector="ToggleButton.ghead:pointerover">
+    <Setter Property="Background" Value="{DynamicResource ClearCRowHover}" />
+  </Style>
+
+  <!-- ═══ 滚动条方向尺寸 ═══ -->
+  <Style Selector="ScrollBar:vertical">
+    <Setter Property="Width" Value="9" />
+    <Setter Property="MinWidth" Value="9" />
+  </Style>
+  <Style Selector="ScrollBar:horizontal">
+    <Setter Property="Height" Value="9" />
+    <Setter Property="MinHeight" Value="9" />
+  </Style>
+  <Style Selector="Thumb:pointerover /template/ Border">
+    <Setter Property="Background" Value="{DynamicResource ClearCScrollThumbHover}" />
   </Style>
 
   <Style Selector="ScrollViewer">

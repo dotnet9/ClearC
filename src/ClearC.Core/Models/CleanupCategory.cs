@@ -7,5 +7,8 @@ public enum CleanupCategory
     BrowserCache,
     RecycleBin,
     ApplicationData,
-    SystemFiles
+    SystemFiles,
+    SystemLogs,
+    SystemUpdate,
+    GraphicsAndGameCache
 }

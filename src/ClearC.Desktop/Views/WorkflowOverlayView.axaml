@@ -1,59 +1,177 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:ClearC.Desktop.Controls"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
              x:Class="ClearC.Desktop.Views.WorkflowOverlayView"
-             x:DataType="vm:WorkflowOverlayViewModel"
-             IsHitTestVisible="{Binding IsConfirmationVisible}">
+             x:DataType="vm:WorkflowOverlayViewModel">
   <Grid>
-    <Border Background="#B503060C" IsVisible="{Binding IsConfirmationVisible}">
-      <Border Width="420" MaxHeight="510" Padding="22,20,22,18" HorizontalAlignment="Center" VerticalAlignment="Center"
-              CornerRadius="10" Background="{DynamicResource ClearCBg1}"
-              BorderBrush="{DynamicResource ClearCLineStrong}" BorderThickness="1">
-        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
-          <TextBlock Grid.Row="0" FontSize="15" FontWeight="Bold" Text="确认清理" />
-          <Border Grid.Row="1" Width="34" Height="2" Margin="0,7,0,10" HorizontalAlignment="Left"
-                  Background="{DynamicResource ClearCCyan}" />
-          <StackPanel Grid.Row="2" Spacing="9">
-            <TextBlock FontSize="12.5" Foreground="{DynamicResource ClearCText2}" Text="即将清理以下项目：" />
-            <Border MaxHeight="220" Padding="12,7" CornerRadius="6"
-                    Background="#990D1524" BorderBrush="{DynamicResource ClearCLine}" BorderThickness="1">
-              <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding SelectedItems}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:CleanupItemViewModel">
-                      <Grid Margin="0,4" ColumnDefinitions="*,Auto">
-                        <TextBlock Foreground="{DynamicResource ClearCText2}" Text="{Binding DisplayName}" />
-                        <TextBlock Grid.Column="1" FontFamily="{DynamicResource ClearCMonoFont}" FontWeight="SemiBold"
-                                   Text="{Binding SizeText}" />
-                      </Grid>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </ScrollViewer>
-            </Border>
-          </StackPanel>
-          <Grid Grid.Row="3" Margin="0,10,0,0" ColumnDefinitions="*,Auto">
-            <TextBlock FontWeight="SemiBold" Text="合计释放" />
-            <TextBlock Grid.Column="1" FontFamily="{DynamicResource ClearCMonoFont}" FontWeight="Bold"
-                       Foreground="{DynamicResource ClearCCyanBright}" Text="{Binding ConfirmationTotal}" />
-          </Grid>
-          <Border Grid.Row="4" Margin="0,10,0,0" Padding="10" CornerRadius="6"
-                  Background="#14FBBF24" BorderBrush="#4DFBBF24" BorderThickness="1">
-            <TextBlock FontSize="12" Foreground="{DynamicResource ClearCAmber}"
-                       Text="{Binding ConfirmationWarning}" TextWrapping="Wrap" />
-          </Border>
-          <StackPanel Grid.Row="5" Margin="0,16,0,0" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Right">
-            <Button Classes="ghost" Command="{Binding CancelConfirmationCommand}" Content="取消" />
-            <Button Classes="primary" Command="{Binding ConfirmCleanupCommand}" Content="开始清理" />
-          </StackPanel>
-        </Grid>
-      </Border>
+    <!-- ═══ 遮罩 ═══ -->
+    <Border Background="{DynamicResource ClearCMask}"
+            IsVisible="{Binding IsConfirmationVisible}">
+      <Border.Effect>
+        <BlurEffect Radius="3" />
+      </Border.Effect>
+    </Border>
+    <Border Background="{DynamicResource ClearCMask}"
+            IsVisible="{Binding IsCloseConfirmationVisible}">
+      <Border.Effect>
+        <BlurEffect Radius="3" />
+      </Border.Effect>
     </Border>
 
-    <Border Margin="0,0,18,18" Padding="16,11" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-            CornerRadius="7" Background="{DynamicResource ClearCBg1}" BorderBrush="{DynamicResource ClearCGreen}"
-            BorderThickness="3,1,1,1" IsVisible="{Binding IsToastVisible}">
-      <TextBlock FontFamily="{DynamicResource ClearCMonoFont}" FontSize="11.5" Text="{Binding ToastText}" />
+    <!-- ═══ 确认清理 ═══ -->
+    <Border Classes="modalCard"
+            Classes.open="{Binding IsConfirmationVisible}"
+            Width="420" MaxHeight="560" Padding="22,20,22,18"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource ClearCWin}"
+            BorderBrush="{DynamicResource ClearCLine2}"
+            BorderThickness="1"
+            BoxShadow="0 30 80 0 #47172B63"
+            CornerRadius="{DynamicResource ClearCRadiusWindow}"
+            IsVisible="{Binding IsConfirmationVisible}">
+      <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" FontSize="15" FontWeight="Bold" Text="确认清理" />
+        <Border Grid.Row="1" Width="32" Height="3" Margin="0,8,0,12" HorizontalAlignment="Left"
+                Background="{DynamicResource ClearCAccentGradient}"
+                CornerRadius="{DynamicResource ClearCRadiusPill}" />
+
+        <StackPanel Grid.Row="2" Spacing="10">
+          <TextBlock FontSize="12.5" Foreground="{DynamicResource ClearCText2}">
+            <Run Text="即将清理以下" />
+            <Run FontWeight="Bold" Foreground="{DynamicResource ClearCAccent}" Text="{Binding SelectedItems.Count}" />
+            <Run Text="个项目：" />
+          </TextBlock>
+          <Border MaxHeight="180" Padding="12,4"
+                  Background="{DynamicResource ClearCPanel}"
+                  BorderBrush="{DynamicResource ClearCLine}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource ClearCRadiusButton}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding SelectedItems}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:CleanupItemViewModel">
+                    <StackPanel Margin="0,5" Spacing="2">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource ClearCText2}" />
+                        <TextBlock Grid.Column="1" Margin="12,0,0,0" FontSize="12" FontWeight="SemiBold"
+                                   FontFamily="{DynamicResource ClearCMonoFont}"
+                                   Text="{Binding SizeText}" />
+                      </Grid>
+                      <TextBlock FontSize="11" TextWrapping="Wrap"
+                                 Foreground="{DynamicResource ClearCRed}"
+                                 IsVisible="{Binding IsDenied}"
+                                 Text="{Binding DeniedReason}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Border>
+          <Button Classes="mini" HorizontalAlignment="Left"
+                  Command="{Binding ClearDeniedCommand}"
+                  IsVisible="{Binding HasDeniedItems}"
+                  Content="取消选择这些项" />
+        </StackPanel>
+
+        <Border Grid.Row="3" Margin="0,12,0,0" Padding="0,10,0,0"
+                BorderBrush="{DynamicResource ClearCLine2}"
+                BorderThickness="0,1,0,0">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock FontWeight="SemiBold" Text="合计释放" />
+            <TextBlock Grid.Column="1" FontWeight="Bold"
+                       FontFamily="{DynamicResource ClearCMonoFont}"
+                       Foreground="{DynamicResource ClearCAccent}" Text="{Binding ConfirmationTotal}" />
+          </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="4" Margin="0,10,0,0" FontSize="11.5"
+                   Foreground="{DynamicResource ClearCText3}"
+                   IsVisible="{Binding IsPendingNoteVisible}"
+                   Text="{Binding ConfirmationPendingNote}" TextWrapping="Wrap" />
+
+        <Border Grid.Row="5" Margin="0,10,0,0" Padding="9,11"
+                Background="{DynamicResource ClearCWarnBg}"
+                BorderBrush="{DynamicResource ClearCWarnBorder}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource ClearCRadiusButton}"
+                IsVisible="{Binding IsConfirmationWarningVisible}">
+          <Grid ColumnDefinitions="Auto,*">
+            <controls:IconGlyph Grid.Column="0" Width="15" Height="15" VerticalAlignment="Top"
+                                Data="{StaticResource ClearCIconAlert}"
+                                Foreground="{DynamicResource ClearCWarnText}" />
+            <TextBlock Grid.Column="1" Margin="9,0,0,0" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ClearCWarnText}" Text="{Binding ConfirmationWarning}" />
+          </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="6" Margin="0,16,0,0" Orientation="Horizontal" Spacing="9"
+                    HorizontalAlignment="Right">
+          <Button Classes="btn ghost" Command="{Binding CancelConfirmationCommand}" Content="取消" />
+          <Button Classes="btn primary" Command="{Binding ConfirmCleanupCommand}"
+                  IsEnabled="{Binding IsConfirmEnabled}" Content="开始清理" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ═══ 关闭保护（§3.2） ═══ -->
+    <Border Classes="modalCard"
+            Classes.open="{Binding IsCloseConfirmationVisible}"
+            Width="420" Padding="22,20,22,18"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource ClearCWin}"
+            BorderBrush="{DynamicResource ClearCLine2}"
+            BorderThickness="1"
+            BoxShadow="0 30 80 0 #47172B63"
+            CornerRadius="{DynamicResource ClearCRadiusWindow}"
+            IsVisible="{Binding IsCloseConfirmationVisible}">
+      <StackPanel Spacing="12">
+        <TextBlock FontSize="15" FontWeight="Bold" Text="确认关闭" />
+        <Border Width="32" Height="3" HorizontalAlignment="Left"
+                Background="{DynamicResource ClearCAccentGradient}"
+                CornerRadius="{DynamicResource ClearCRadiusPill}" />
+        <TextBlock FontSize="12.5" TextWrapping="Wrap"
+                   Foreground="{DynamicResource ClearCText2}" Text="{Binding CloseConfirmationText}" />
+        <Border Padding="9,11"
+                Background="{DynamicResource ClearCWarnBg}"
+                BorderBrush="{DynamicResource ClearCWarnBorder}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource ClearCRadiusButton}">
+          <Grid ColumnDefinitions="Auto,*">
+            <controls:IconGlyph Grid.Column="0" Width="15" Height="15" VerticalAlignment="Top"
+                                Data="{StaticResource ClearCIconAlert}"
+                                Foreground="{DynamicResource ClearCWarnText}" />
+            <TextBlock Grid.Column="1" Margin="9,0,0,0" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ClearCWarnText}"
+                       Text="「停止并退出」会先取消任务，并等待已启动的官方命令安全结束。" />
+          </Grid>
+        </Border>
+        <StackPanel Orientation="Horizontal" Spacing="9" HorizontalAlignment="Right">
+          <Button Classes="btn ghost" Command="{Binding CancelCloseCommand}" Content="取消" />
+          <Button Classes="btn danger" Command="{Binding ConfirmCloseCommand}" Content="停止并退出" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- ═══ Toast ═══ -->
+    <Border Classes="toast"
+            Classes.open="{Binding IsToastVisible}"
+            Margin="0,0,26,32"
+            HorizontalAlignment="Right" VerticalAlignment="Bottom"
+            Background="{DynamicResource ClearCWin}"
+            BorderBrush="{DynamicResource ClearCLine2}"
+            BorderThickness="1"
+            BoxShadow="0 16 44 0 #2E172B63"
+            ClipToBounds="True"
+            CornerRadius="{DynamicResource ClearCRadiusButton}"
+            IsHitTestVisible="False"
+            IsVisible="{Binding IsToastVisible}">
+      <Grid ColumnDefinitions="3,*">
+        <Border Grid.Column="0" Background="{DynamicResource ClearCGreen}" IsVisible="{Binding IsToastSuccess}" />
+        <Border Grid.Column="0" Background="{DynamicResource ClearCAmber}" IsVisible="{Binding !IsToastSuccess}" />
+        <TextBlock Grid.Column="1" Margin="15,12" FontSize="13" Text="{Binding ToastText}" />
+      </Grid>
     </Border>
   </Grid>
 </UserControl>

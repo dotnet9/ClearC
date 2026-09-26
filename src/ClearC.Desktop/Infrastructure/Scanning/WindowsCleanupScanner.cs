@@ -1,35 +1,60 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using ClearC.Core.Models;
 using ClearC.Core.Services;
+using ClearC.Desktop.Infrastructure.Cleanup;
+using ClearC.Desktop.Infrastructure.Windows;
 
 namespace ClearC.Desktop.Infrastructure.Scanning;
 
 public sealed class WindowsCleanupScanner : ICleanupScanner
 {
+    private const int FastParallelism = 4;
+    private const int SlowParallelism = 2;
+
     private readonly ICleanupTargetCatalog _catalog;
-    private readonly IDirectorySizeCalculator _sizeCalculator;
+    private readonly ScanProbeRegistry _probes;
     private readonly IDiskInfoProvider _diskInfoProvider;
     private readonly IRecycleBinInfoProvider _recycleBinInfoProvider;
+    private readonly IPlatform _platform;
 
     public WindowsCleanupScanner()
         : this(
             new WindowsCleanupTargetCatalog(),
-            new DirectorySizeCalculator(),
+            CreateProbes(),
             new WindowsDiskInfoProvider(),
-            new WindowsRecycleBinInfoProvider())
+            new WindowsRecycleBinInfoProvider(),
+            SystemPlatform.Instance)
     {
+    }
+
+    private static ScanProbeRegistry CreateProbes()
+    {
+        var sizeCalculator = new DirectorySizeCalculator();
+        var processRunner = new ProcessRunner();
+        var elevation = new ElevationService();
+        return new ScanProbeRegistry(
+        [
+            new DirectorySizeProbe(sizeCalculator),
+            new FilePatternProbe(sizeCalculator),
+            new SingleFileProbe(sizeCalculator),
+            new DismProbe(sizeCalculator, processRunner, elevation),
+            new VssProbe(processRunner, elevation)
+        ]);
     }
 
     internal WindowsCleanupScanner(
         ICleanupTargetCatalog catalog,
-        IDirectorySizeCalculator sizeCalculator,
+        ScanProbeRegistry probes,
         IDiskInfoProvider diskInfoProvider,
-        IRecycleBinInfoProvider recycleBinInfoProvider)
+        IRecycleBinInfoProvider recycleBinInfoProvider,
+        IPlatform platform)
     {
         _catalog = catalog;
-        _sizeCalculator = sizeCalculator;
+        _probes = probes;
         _diskInfoProvider = diskInfoProvider;
         _recycleBinInfoProvider = recycleBinInfoProvider;
+        _platform = platform;
     }
 
     public async Task<ScanResult> ScanAsync(
@@ -38,49 +63,123 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
     {
         var stopwatch = Stopwatch.StartNew();
         var disk = _diskInfoProvider.GetSystemDrive();
-        var targets = _catalog.GetTargets();
-        var items = new List<CleanupItem>(targets.Count + 1);
+        var targets = _platform.IsWindows
+            ? await _catalog.ResolveTargetsAsync(cancellationToken)
+            : [];
+        var total = targets.Count + 1;
+        var items = new ConcurrentDictionary<string, CleanupItem>(StringComparer.Ordinal);
+        var completed = 0;
+        var slowGate = new SemaphoreSlim(1, 1);
 
-        for (var index = 0; index < targets.Count; index++)
+        // 快档：缓存、日志、临时目录与单文件，先出首屏结果。
+        await RunTierAsync(targets.Where(target => target.Tier == ScanTier.Fast).ToArray(), FastParallelism, slowGate);
+
+        // 慢档：DISM、大树与 Store 应用，后台补齐。
+        await RunTierAsync(targets.Where(target => target.Tier == ScanTier.Slow).ToArray(), SlowParallelism, slowGate);
+
+        progress?.Report(new(Volatile.Read(ref completed), total, "回收站"));
+        items["recycle-bin"] = await ScanRecycleBinAsync(disk, cancellationToken);
+        Interlocked.Increment(ref completed);
+
+        progress?.Report(new(Volatile.Read(ref completed), total, "扫描完成"));
+        stopwatch.Stop();
+
+        var ordered = targets
+            .Select(target => items.TryGetValue(target.Id, out var item) ? item : null)
+            .Where(item => item is not null)
+            .Select(item => item!)
+            .Append(items["recycle-bin"])
+            .ToArray();
+        return new(disk, ordered, stopwatch.Elapsed);
+
+        async Task RunTierAsync(
+            IReadOnlyList<CleanupTargetDefinition> tier,
+            int parallelism,
+            SemaphoreSlim gate)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var target = targets[index];
-            progress?.Report(new(index, targets.Count + 1, target.DisplayName));
-            DateTimeOffset? cutoff = target.MinimumAge is null
-                ? null
-                : DateTimeOffset.UtcNow - target.MinimumAge.Value;
-            var size = await _sizeCalculator.CalculateAsync(target.Paths, cutoff, cancellationToken);
-            items.Add(ToItem(target, size));
-        }
+            if (tier.Count == 0)
+            {
+                return;
+            }
 
-        progress?.Report(new(targets.Count, targets.Count + 1, "回收站"));
-        var recycle = _recycleBinInfoProvider.GetInfo($"{disk.DriveName}\\");
-        items.Add(new(
+            await Parallel.ForEachAsync(
+                tier,
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = parallelism,
+                    CancellationToken = cancellationToken
+                },
+                async (target, token) =>
+                {
+                    // 幽灵行跟随当前目标：先报“正在分析”，完成后带最终大小再报一次。
+                    progress?.Report(new(Volatile.Read(ref completed), total, target.DisplayName, target.Tier));
+
+                    // DISM / vssadmin 子进程必须串行，同时运行会互相锁住。
+                    var serialized = target.ScanKind is ScanKind.DismAnalyze or ScanKind.VssQuery;
+                    if (serialized)
+                    {
+                        await gate.WaitAsync(token);
+                    }
+
+                    CleanupItem item;
+                    try
+                    {
+                        item = await ProbeAsync(target, token);
+                    }
+                    finally
+                    {
+                        if (serialized)
+                        {
+                            gate.Release();
+                        }
+                    }
+
+                    items[target.Id] = item;
+                    var done = Interlocked.Increment(ref completed);
+                    progress?.Report(new(done, total, target.DisplayName, target.Tier, item));
+                });
+        }
+    }
+
+    private async Task<CleanupItem> ProbeAsync(CleanupTargetDefinition target, CancellationToken cancellationToken)
+    {
+        var probe = _probes.Resolve(target);
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutSource.CancelAfter(target.EffectiveScanTimeout);
+
+        try
+        {
+            var result = await probe.ProbeAsync(target, timeoutSource.Token);
+            return target.ToItem(result.Bytes, result.FileCount, result.LastWriteTimeUtc, result.Note);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return target.ToItem(0, 0, null, "分析超时");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            return target.ToItem(0, 0, null, $"分析失败：{exception.Message}");
+        }
+    }
+
+    private async Task<CleanupItem> ScanRecycleBinAsync(DiskSnapshot disk, CancellationToken cancellationToken)
+    {
+        var size = _platform.IsWindows
+            ? await _recycleBinInfoProvider.GetInfoAsync($"{disk.DriveName}\\", cancellationToken)
+            : default;
+        return new(
             "recycle-bin",
             "回收站",
             $"{disk.DriveName}\\$Recycle.Bin",
             CleanupCategory.RecycleBin,
             CleanupRisk.Medium,
-            recycle.Bytes,
-            recycle.FileCount,
+            size.Bytes,
+            size.FileCount,
             "清空后文件无法从回收站恢复，执行前必须单独确认。",
-            "recycle-bin"));
-
-        progress?.Report(new(targets.Count + 1, targets.Count + 1, "扫描完成"));
-        stopwatch.Stop();
-        return new(disk, items, stopwatch.Elapsed);
+            "recycle-bin",
+            CleanerKind: CleanerKind.RecycleBin,
+            Paths: [$"{disk.DriveName}\\$Recycle.Bin"],
+            Icon: "i-trash",
+            Accent: "#64748b");
     }
-
-    private static CleanupItem ToItem(CleanupTargetDefinition target, DirectorySize size) => new(
-        target.Id,
-        target.DisplayName,
-        target.Location,
-        target.Category,
-        target.Risk,
-        size.Bytes,
-        size.FileCount,
-        target.Description,
-        target.CleanerKey,
-        target.RequiresElevation,
-        target.IsProtected);
 }

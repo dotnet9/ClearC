@@ -5,8 +5,10 @@
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="/Themes/Tokens/ClearCPalette.axaml" />
         <ResourceInclude Source="/Themes/Tokens/ClearCMetrics.axaml" />
+        <ResourceInclude Source="/Themes/Icons/ClearCIcons.axaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Styles.Resources>
   <StyleInclude Source="/Themes/Styles/ShellStyles.axaml" />
+  <StyleInclude Source="/Themes/Styles/Animations.axaml" />
 </Styles>

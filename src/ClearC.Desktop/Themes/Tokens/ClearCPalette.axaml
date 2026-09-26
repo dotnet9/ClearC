@@ -1,32 +1,69 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Color x:Key="ClearCBg0Color">#060A12</Color>
-  <Color x:Key="ClearCBg1Color">#0A101C</Color>
-  <Color x:Key="ClearCPanelColor">#0D1524</Color>
-  <Color x:Key="ClearCPanel2Color">#111B2E</Color>
-  <Color x:Key="ClearCTextColor">#DBE9F8</Color>
-  <Color x:Key="ClearCText2Color">#93A9C9</Color>
-  <Color x:Key="ClearCText3Color">#647C9F</Color>
-  <Color x:Key="ClearCCyanColor">#22D3EE</Color>
-  <Color x:Key="ClearCCyanBrightColor">#67E8F9</Color>
-  <Color x:Key="ClearCBlueColor">#3B82F6</Color>
-  <Color x:Key="ClearCGreenColor">#34D399</Color>
-  <Color x:Key="ClearCAmberColor">#FBBF24</Color>
-  <Color x:Key="ClearCRedColor">#F87171</Color>
+  <!-- 唯一色板：值与 design/assets/theme.css 的 :root 一一对应。 -->
 
-  <SolidColorBrush x:Key="ClearCBg0" Color="{StaticResource ClearCBg0Color}" />
-  <SolidColorBrush x:Key="ClearCBg1" Color="{StaticResource ClearCBg1Color}" />
-  <SolidColorBrush x:Key="ClearCPanel" Color="{StaticResource ClearCPanelColor}" />
-  <SolidColorBrush x:Key="ClearCPanel2" Color="{StaticResource ClearCPanel2Color}" />
-  <SolidColorBrush x:Key="ClearCText" Color="{StaticResource ClearCTextColor}" />
-  <SolidColorBrush x:Key="ClearCText2" Color="{StaticResource ClearCText2Color}" />
-  <SolidColorBrush x:Key="ClearCText3" Color="{StaticResource ClearCText3Color}" />
-  <SolidColorBrush x:Key="ClearCCyan" Color="{StaticResource ClearCCyanColor}" />
-  <SolidColorBrush x:Key="ClearCCyanBright" Color="{StaticResource ClearCCyanBrightColor}" />
-  <SolidColorBrush x:Key="ClearCBlue" Color="{StaticResource ClearCBlueColor}" />
-  <SolidColorBrush x:Key="ClearCGreen" Color="{StaticResource ClearCGreenColor}" />
-  <SolidColorBrush x:Key="ClearCAmber" Color="{StaticResource ClearCAmberColor}" />
-  <SolidColorBrush x:Key="ClearCRed" Color="{StaticResource ClearCRedColor}" />
-  <SolidColorBrush x:Key="ClearCLine" Color="#2438BDF8" />
-  <SolidColorBrush x:Key="ClearCLineStrong" Color="#4D38BDF8" />
+  <SolidColorBrush x:Key="ClearCBg" Color="#eef2f9" />
+  <SolidColorBrush x:Key="ClearCWin" Color="#ffffff" />
+  <SolidColorBrush x:Key="ClearCPanel" Color="#f7f9fc" />
+  <SolidColorBrush x:Key="ClearCLine" Color="#e8edf5" />
+  <SolidColorBrush x:Key="ClearCLine2" Color="#dbe3ef" />
+  <SolidColorBrush x:Key="ClearCText" Color="#1e293b" />
+  <SolidColorBrush x:Key="ClearCText2" Color="#5b6b84" />
+  <SolidColorBrush x:Key="ClearCText3" Color="#8a99b5" />
+
+  <SolidColorBrush x:Key="ClearCAccent" Color="#2f6bff" />
+  <SolidColorBrush x:Key="ClearCAccent2" Color="#7c5cff" />
+  <SolidColorBrush x:Key="ClearCGreen" Color="#10b981" />
+  <SolidColorBrush x:Key="ClearCAmber" Color="#f59e0b" />
+  <SolidColorBrush x:Key="ClearCRed" Color="#ef4444" />
+
+  <LinearGradientBrush x:Key="ClearCAccentGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+    <GradientStop Offset="0" Color="#2f6bff" />
+    <GradientStop Offset="1" Color="#7c5cff" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="ClearCTextGradient" StartPoint="0%,0%" EndPoint="100%,0%">
+    <GradientStop Offset="0" Color="#2f6bff" />
+    <GradientStop Offset="1" Color="#7c5cff" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="ClearCDangerGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+    <GradientStop Offset="0" Color="#ef4444" />
+    <GradientStop Offset="1" Color="#dc2626" />
+  </LinearGradientBrush>
+
+  <SolidColorBrush x:Key="ClearCDonutTrack" Color="#e9eef7" />
+  <SolidColorBrush x:Key="ClearCProgressTrack" Color="#e9eef7" />
+
+  <SolidColorBrush x:Key="ClearCWindowBorder" Color="#e3e9f4" />
+  <SolidColorBrush x:Key="ClearCTitleHover" Color="#f1f5fa" />
+  <SolidColorBrush x:Key="ClearCTitleCloseHover" Color="#fdecec" />
+  <SolidColorBrush x:Key="ClearCRowHover" Color="#f4f7fd" />
+  <SolidColorBrush x:Key="ClearCRowCurrentBg" Color="#f3f7ff" />
+  <SolidColorBrush x:Key="ClearCRowCurrentBorder" Color="#b9c8ff" />
+  <SolidColorBrush x:Key="ClearCDividerSoft" Color="#f1f5f9" />
+  <SolidColorBrush x:Key="ClearCTagBg" Color="#f1f5f9" />
+  <SolidColorBrush x:Key="ClearCCountBg" Color="#eef3ff" />
+  <SolidColorBrush x:Key="ClearCStatusBg" Color="#fbfcfe" />
+  <SolidColorBrush x:Key="ClearCConsoleBg" Color="#f8fafd" />
+
+  <SolidColorBrush x:Key="ClearCRiskLowText" Color="#059669" />
+  <SolidColorBrush x:Key="ClearCRiskLowBg" Color="#e6f7f0" />
+  <SolidColorBrush x:Key="ClearCRiskMidText" Color="#b45309" />
+  <SolidColorBrush x:Key="ClearCRiskMidBg" Color="#fdf3e3" />
+  <SolidColorBrush x:Key="ClearCRiskHighText" Color="#dc2626" />
+  <SolidColorBrush x:Key="ClearCRiskHighBg" Color="#fdecec" />
+
+  <SolidColorBrush x:Key="ClearCLogText" Color="#475569" />
+  <SolidColorBrush x:Key="ClearCLogTime" Color="#9aa8bf" />
+  <SolidColorBrush x:Key="ClearCLogInfo" Color="#2563eb" />
+  <SolidColorBrush x:Key="ClearCLogOk" Color="#059669" />
+  <SolidColorBrush x:Key="ClearCLogWarn" Color="#b45309" />
+  <SolidColorBrush x:Key="ClearCLogErr" Color="#dc2626" />
+
+  <SolidColorBrush x:Key="ClearCMask" Color="#521e2948" />
+  <SolidColorBrush x:Key="ClearCWarnBg" Color="#fff8eb" />
+  <SolidColorBrush x:Key="ClearCWarnBorder" Color="#f6e3b8" />
+  <SolidColorBrush x:Key="ClearCWarnText" Color="#92600a" />
+
+  <SolidColorBrush x:Key="ClearCScrollThumb" Color="#cdd7e6" />
+  <SolidColorBrush x:Key="ClearCScrollThumbHover" Color="#b3c1d8" />
 </ResourceDictionary>

@@ -1,10 +1,38 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- 唯一度量表：值与 design/assets/theme.css 对齐。 -->
+
   <FontFamily x:Key="ClearCSansFont">Segoe UI, Microsoft YaHei UI, Microsoft YaHei</FontFamily>
   <FontFamily x:Key="ClearCMonoFont">Cascadia Code, JetBrains Mono, Consolas</FontFamily>
+
   <x:Double x:Key="ClearCFontTiny">10.5</x:Double>
+  <x:Double x:Key="ClearCFontMini">11</x:Double>
   <x:Double x:Key="ClearCFontSmall">11.5</x:Double>
-  <x:Double x:Key="ClearCFontBase">13</x:Double>
-  <CornerRadius x:Key="ClearCRadiusSmall">4</CornerRadius>
+  <x:Double x:Key="ClearCFontBase">12</x:Double>
+  <x:Double x:Key="ClearCFontBase2">12.5</x:Double>
+  <x:Double x:Key="ClearCFontBody">13</x:Double>
+  <x:Double x:Key="ClearCFontTitle">15</x:Double>
+  <x:Double x:Key="ClearCFontDonut">23</x:Double>
+  <x:Double x:Key="ClearCFontHero">26</x:Double>
+
+  <CornerRadius x:Key="ClearCRadiusMini">5</CornerRadius>
   <CornerRadius x:Key="ClearCRadius">7</CornerRadius>
+  <CornerRadius x:Key="ClearCRadiusButton">8</CornerRadius>
+  <CornerRadius x:Key="ClearCRadiusTile">9</CornerRadius>
+  <CornerRadius x:Key="ClearCRadiusWindow">12</CornerRadius>
+  <CornerRadius x:Key="ClearCRadiusPill">99</CornerRadius>
+
+  <x:Double x:Key="ClearCTitleBarHeight">44</x:Double>
+  <x:Double x:Key="ClearCButtonHeight">36</x:Double>
+  <x:Double x:Key="ClearCConsoleHeaderHeight">34</x:Double>
+  <x:Double x:Key="ClearCStatusBarHeight">28</x:Double>
+  <x:Double x:Key="ClearCMiniHeight">25</x:Double>
+  <x:Double x:Key="ClearCConsoleHeight">160</x:Double>
+
+  <!-- 结果行固定列宽（原型 .row-meta / .row-size / .row-status） -->
+  <x:Double x:Key="ClearCColumnMetaWidth">158</x:Double>
+  <x:Double x:Key="ClearCColumnSizeWidth">92</x:Double>
+  <x:Double x:Key="ClearCColumnStatusWidth">64</x:Double>
+  <x:Double x:Key="ClearCColumnChevronWidth">14</x:Double>
+  <x:Double x:Key="ClearCTileSize">34</x:Double>
 </ResourceDictionary>

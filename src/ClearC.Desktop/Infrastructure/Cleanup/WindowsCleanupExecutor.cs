@@ -2,51 +2,44 @@ using System.Diagnostics;
 using ClearC.Core.Models;
 using ClearC.Core.Services;
 using ClearC.Desktop.Infrastructure.Scanning;
+using ClearC.Desktop.Infrastructure.Windows;
 
 namespace ClearC.Desktop.Infrastructure.Cleanup;
 
 public sealed class WindowsCleanupExecutor : ICleanupExecutor
 {
-    private static readonly IReadOnlyDictionary<string, string> NuGetCacheNames = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["nuget-global"] = "global-packages",
-        ["nuget-http"] = "http-cache",
-        ["nuget-temp"] = "temp",
-        ["nuget-plugins"] = "plugins-cache"
-    };
-
-    private readonly IReadOnlyDictionary<string, CleanupTargetDefinition> _targets;
-    private readonly IProcessRunner _processRunner;
-    private readonly IGuardedDirectoryCleaner _directoryCleaner;
-    private readonly ICacheLockDetector _lockDetector;
-    private readonly IRecycleBinCleaner _recycleBinCleaner;
-    private readonly ICodexConversationCleaner _codexConversationCleaner;
+    private readonly ICleanupTargetCatalog _catalog;
+    private readonly CleanupHandlerRegistry _handlers;
+    private readonly IElevationService _elevation;
 
     public WindowsCleanupExecutor()
-        : this(
-            new WindowsCleanupTargetCatalog(),
-            new ProcessRunner(),
-            new GuardedDirectoryCleaner(),
-            new CacheLockDetector(),
-            new RecycleBinCleaner(),
-            new CodexConversationCleaner())
+        : this(new WindowsCleanupTargetCatalog(), CreateHandlers(), new ElevationService())
     {
+    }
+
+    private static CleanupHandlerRegistry CreateHandlers()
+    {
+        var processRunner = new ProcessRunner();
+        var directoryCleaner = new GuardedDirectoryCleaner();
+        var lockDetector = new CacheLockDetector();
+        return new CleanupHandlerRegistry(
+        [
+            new DirectoryContentsHandler(directoryCleaner),
+            new FilePatternHandler(directoryCleaner),
+            new CommandHandler(processRunner, lockDetector),
+            new RecycleBinHandler(new RecycleBinCleaner()),
+            new CodexConversationsHandler(new CodexConversationCleaner())
+        ]);
     }
 
     internal WindowsCleanupExecutor(
         ICleanupTargetCatalog catalog,
-        IProcessRunner processRunner,
-        IGuardedDirectoryCleaner directoryCleaner,
-        ICacheLockDetector lockDetector,
-        IRecycleBinCleaner recycleBinCleaner,
-        ICodexConversationCleaner codexConversationCleaner)
+        CleanupHandlerRegistry handlers,
+        IElevationService elevation)
     {
-        _targets = catalog.GetTargets().ToDictionary(target => target.Id, StringComparer.Ordinal);
-        _processRunner = processRunner;
-        _directoryCleaner = directoryCleaner;
-        _lockDetector = lockDetector;
-        _recycleBinCleaner = recycleBinCleaner;
-        _codexConversationCleaner = codexConversationCleaner;
+        _catalog = catalog;
+        _handlers = handlers;
+        _elevation = elevation;
     }
 
     public async Task<CleanupResult> CleanAsync(
@@ -58,16 +51,20 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
         var stopwatch = Stopwatch.StartNew();
         var results = new List<CleanupItemResult>(plan.Count);
 
+        // 与扫描同一代目录状态：执行前重新解析一次目录/探测结果。
+        var targets = BuildTargetMap(await _catalog.ResolveTargetsAsync(cancellationToken));
+
         for (var index = 0; index < plan.Count; index++)
         {
-            cancellationToken.ThrowIfCancellationRequested();
             var item = plan[index];
             progress?.Report(new(index, plan.Count, item));
 
             CleanupItemResult result;
             try
             {
-                result = await CleanItemAsync(item, cancellationToken);
+                // 取消检查放在 try 内：取消时仍为当前项留下 Cancelled 结果，已完成项的结果不会丢。
+                cancellationToken.ThrowIfCancellationRequested();
+                result = await CleanItemAsync(item, targets, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -89,116 +86,77 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
         return new(results, stopwatch.Elapsed);
     }
 
-    private async Task<CleanupItemResult> CleanItemAsync(CleanupItem item, CancellationToken cancellationToken)
+    private IReadOnlyDictionary<string, CleanupTargetDefinition> BuildTargetMap(
+        IReadOnlyList<CleanupTargetDefinition> discovered)
     {
-        if (item.CleanerKey is null)
+        var map = _catalog.GetTargets().ToDictionary(target => target.Id, StringComparer.Ordinal);
+        foreach (var target in discovered)
+        {
+            // 探测到的路径优先：用户改了 GRADLE_USER_HOME / 换了 Steam 库时按最新路径校验。
+            map[target.Id] = target;
+        }
+
+        return map;
+    }
+
+    private async Task<CleanupItemResult> CleanItemAsync(
+        CleanupItem item,
+        IReadOnlyDictionary<string, CleanupTargetDefinition> targets,
+        CancellationToken cancellationToken)
+    {
+        if (item.CleanerKind == CleanerKind.None)
         {
             return new(item.Id, CleanupOutcome.Skipped, 0, "此项目仅供分析。");
         }
 
-        if (item.Id == "recycle-bin" && item.CleanerKey == "recycle-bin")
-        {
-            var driveRoot = Path.GetPathRoot(item.Location) ?? @"C:\";
-            return _recycleBinCleaner.Empty(driveRoot, out var error)
-                ? new(item.Id, CleanupOutcome.Completed, item.SizeBytes, "回收站已清空。")
-                : new(item.Id, CleanupOutcome.Failed, 0, error);
-        }
-
-        if (!_targets.TryGetValue(item.Id, out var target) || target.CleanerKey != item.CleanerKey)
+        if (!targets.TryGetValue(item.Id, out var target))
         {
             return new(item.Id, CleanupOutcome.Skipped, 0, "目标不在本次启动生成的清理白名单中。");
         }
 
-        if (item.CleanerKey == "codex-conversations")
+        if (target.CleanerKind != item.CleanerKind)
         {
-            var cleanup = await _codexConversationCleaner.CleanAsync(target.Paths, cancellationToken);
-            if (cleanup.FatalError is not null)
-            {
-                return new(item.Id, CleanupOutcome.Failed, 0, cleanup.FatalError);
-            }
-
-            if (cleanup.CodexIsRunning)
-            {
-                return new(
-                    item.Id,
-                    CleanupOutcome.Skipped,
-                    0,
-                    "检测到 Codex 正在运行。为避免破坏当前会话，已跳过；请关闭 Codex 后重新扫描清理。");
-            }
-
-            if (cleanup.DeletedFiles == 0)
-            {
-                return new(item.Id, CleanupOutcome.Skipped, 0, "没有可删除的 Codex 会话文件。");
-            }
-
-            var message = cleanup.SkippedFiles == 0
-                ? $"已永久删除 {cleanup.DeletedFiles:N0} 个 Codex 会话文件。"
-                : $"已永久删除 {cleanup.DeletedFiles:N0} 个 Codex 会话文件，跳过 {cleanup.SkippedFiles:N0} 个占用、无权限或重解析点文件。";
-            return new(item.Id, CleanupOutcome.Completed, cleanup.FreedBytes, message);
+            return new(item.Id, CleanupOutcome.Skipped, 0, "目标清理方式与本次启动的白名单不一致。");
         }
 
-        if (item.CleanerKey == "nuget-global")
+        var outside = item.CleanRoots.FirstOrDefault(root => !IsAllowed(root, target.EffectiveAllowedRoots));
+        if (outside is not null)
         {
-            var locks = target.Paths.SelectMany(_lockDetector.FindLoadedModules).ToArray();
-            if (locks.Length > 0)
-            {
-                var processes = string.Join("、", locks.Select(entry => $"{entry.ProcessName} (PID {entry.ProcessId})").Distinct());
-                return new(
-                    item.Id,
-                    CleanupOutcome.Skipped,
-                    0,
-                    $"检测到 {processes} 正在加载 NuGet 缓存 DLL。为避免半清理已跳过；关闭相关 IDE 后重新扫描。");
-            }
+            return new(item.Id, CleanupOutcome.Skipped, 0, $"路径不在允许的清理范围内：{outside}");
         }
 
-        if (NuGetCacheNames.TryGetValue(item.CleanerKey, out var cacheName))
+        if (target.RequiresElevation && !_elevation.IsElevated)
         {
-            var command = await _processRunner.RunAsync(
-                "dotnet", ["nuget", "locals", cacheName, "--clear"], CancellationToken.None);
-            return FromCommand(item, command, $"NuGet {cacheName} 已通过官方命令清理。");
+            return new(item.Id, CleanupOutcome.Skipped, 0, "需要管理员权限：请点击「以管理员重启」后重试。");
         }
 
-        if (item.CleanerKey == "npm-cache")
-        {
-            var command = await _processRunner.RunAsync("npm", ["cache", "clean", "--force"], CancellationToken.None);
-            return FromCommand(item, command, "npm 缓存已通过官方命令清理。");
-        }
-
-        if (item.CleanerKey is "user-temp" or "browser-cache")
-        {
-            DateTimeOffset? cutoff = target.MinimumAge is null
-                ? null
-                : DateTimeOffset.UtcNow - target.MinimumAge.Value;
-            var result = await _directoryCleaner.CleanContentsAsync(target.Paths, cutoff, cancellationToken);
-            var message = result.SkippedFiles == 0
-                ? $"已删除 {result.DeletedFiles:N0} 个文件。"
-                : $"已删除 {result.DeletedFiles:N0} 个文件，跳过 {result.SkippedFiles:N0} 个占用或无权限文件。";
-            return new(item.Id, CleanupOutcome.Completed, result.FreedBytes, message);
-        }
-
-        return new(item.Id, CleanupOutcome.Skipped, 0, "没有匹配的安全清理器。");
+        var handler = _handlers.Resolve(item.CleanerKind);
+        return await handler.CleanAsync(new CleanupRequest(item, target), cancellationToken);
     }
 
-    private static CleanupItemResult FromCommand(CleanupItem item, ProcessRunResult command, string successMessage)
+    private static bool IsAllowed(string candidate, IReadOnlyList<string> allowedRoots)
     {
-        if (command.Succeeded)
+        if (string.IsNullOrWhiteSpace(candidate) || !Path.IsPathFullyQualified(candidate))
         {
-            return new(item.Id, CleanupOutcome.Completed, item.SizeBytes, successMessage);
+            return false;
         }
 
-        var details = string.Join(" ", new[] { command.StandardError, command.StandardOutput }
-            .Where(value => !string.IsNullOrWhiteSpace(value)))
-            .ReplaceLineEndings(" ")
-            .Trim();
-        if (details.Length > 300)
+        var normalized = Path.TrimEndingDirectorySeparator(Path.GetFullPath(candidate));
+        foreach (var root in allowedRoots)
         {
-            details = details[..300] + "...";
+            if (string.IsNullOrWhiteSpace(root) || !Path.IsPathFullyQualified(root))
+            {
+                continue;
+            }
+
+            var normalizedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+            if (string.Equals(normalized, normalizedRoot, StringComparison.OrdinalIgnoreCase) ||
+                normalized.StartsWith(normalizedRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
         }
 
-        return new(
-            item.Id,
-            CleanupOutcome.Failed,
-            0,
-            string.IsNullOrWhiteSpace(details) ? $"清理命令失败，退出代码 {command.ExitCode}。" : details);
+        return false;
     }
 }

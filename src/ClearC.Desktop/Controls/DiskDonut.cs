@@ -1,19 +1,56 @@
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 
 namespace ClearC.Desktop.Controls;
 
+/// <summary>
+/// 磁盘占用环图。逻辑尺寸 150×150、半径 56、线宽 9、起始 -90°、圆角端点；
+/// 进度变化按 1s 缓动补间（原型 <c>cubic-bezier(.3,.7,.3,1)</c>）。
+/// </summary>
 public sealed class DiskDonut : Control
 {
+    /// <summary>半径相对控件短边的比例（56 / 150）。</summary>
+    private const double RadiusRatio = 56.0 / 150.0;
+
     public static readonly StyledProperty<double> UsedRatioProperty = AvaloniaProperty.Register<DiskDonut, double>(
         nameof(UsedRatio),
         0,
         validate: value => value is >= 0 and <= 1);
 
+    public static readonly StyledProperty<double> AnimatedRatioProperty = AvaloniaProperty.Register<DiskDonut, double>(
+        nameof(AnimatedRatio));
+
+    public static readonly StyledProperty<IBrush?> TrackBrushProperty = AvaloniaProperty.Register<DiskDonut, IBrush?>(
+        nameof(TrackBrush));
+
+    public static readonly StyledProperty<IBrush?> AccentBrushProperty = AvaloniaProperty.Register<DiskDonut, IBrush?>(
+        nameof(AccentBrush));
+
+    public static readonly StyledProperty<double> StrokeThicknessProperty = AvaloniaProperty.Register<DiskDonut, double>(
+        nameof(StrokeThickness),
+        9);
+
     static DiskDonut()
     {
-        AffectsRender<DiskDonut>(UsedRatioProperty);
+        AffectsRender<DiskDonut>(AnimatedRatioProperty, TrackBrushProperty, AccentBrushProperty, StrokeThicknessProperty);
+        UsedRatioProperty.Changed.AddClassHandler<DiskDonut>((donut, args) =>
+            donut.SetCurrentValue(AnimatedRatioProperty, (double)(args.NewValue ?? 0d)));
+    }
+
+    public DiskDonut()
+    {
+        Transitions = new Transitions
+        {
+            new DoubleTransition
+            {
+                Property = AnimatedRatioProperty,
+                Duration = TimeSpan.FromSeconds(1),
+                Easing = new CubicEaseOut()
+            }
+        };
     }
 
     public double UsedRatio
@@ -22,57 +59,76 @@ public sealed class DiskDonut : Control
         set => SetValue(UsedRatioProperty, value);
     }
 
+    public double AnimatedRatio => GetValue(AnimatedRatioProperty);
+
+    public IBrush? TrackBrush
+    {
+        get => GetValue(TrackBrushProperty);
+        set => SetValue(TrackBrushProperty, value);
+    }
+
+    public IBrush? AccentBrush
+    {
+        get => GetValue(AccentBrushProperty);
+        set => SetValue(AccentBrushProperty, value);
+    }
+
+    public double StrokeThickness
+    {
+        get => GetValue(StrokeThicknessProperty);
+        set => SetValue(StrokeThicknessProperty, value);
+    }
+
     public override void Render(DrawingContext context)
     {
         base.Render(context);
-        var center = new Point(Bounds.Width / 2, Bounds.Height / 2);
-        var radius = Math.Max(0, Math.Min(Bounds.Width, Bounds.Height) / 2 - 15);
-        var accent = new SolidColorBrush(Color.Parse("#22D3EE"));
-        var blue = new SolidColorBrush(Color.Parse("#3B82F6"));
-        var track = new SolidColorBrush(Color.Parse("#1F334C"));
-        var decoration = new SolidColorBrush(Color.Parse("#4D67E8F9"));
 
-        for (var index = 0; index < 36; index++)
-        {
-            var angle = index * Math.PI * 2 / 36;
-            var inner = PointOnCircle(center, radius + 12, angle);
-            var outer = PointOnCircle(center, radius + (index % 3 == 0 ? 16 : 14), angle);
-            context.DrawLine(new Pen(decoration, index % 3 == 0 ? 1.2 : 0.7), inner, outer);
-        }
-
-        context.DrawEllipse(null, new Pen(track, 9), center, radius, radius);
-        if (UsedRatio <= 0)
+        var size = Math.Min(Bounds.Width, Bounds.Height);
+        var thickness = StrokeThickness;
+        var radius = size / 2 * RadiusRatio;
+        if (radius <= thickness)
         {
             return;
         }
 
-        var sweep = Math.Min(UsedRatio, 0.9999) * Math.PI * 2;
+        var center = new Point(Bounds.Width / 2, Bounds.Height / 2);
+        var track = TrackBrush ?? Brushes.LightGray;
+        context.DrawEllipse(null, new Pen(track, thickness), center, radius, radius);
+
+        var ratio = Math.Clamp(AnimatedRatio, 0, 1);
+        if (ratio <= 0)
+        {
+            return;
+        }
+
+        var accent = AccentBrush;
+        if (accent is null)
+        {
+            return;
+        }
+
+        // 满环时用整圆，避免 ArcTo 起点与终点重合导致整段不渲染。
+        if (ratio >= 0.9999)
+        {
+            context.DrawEllipse(null, new Pen(accent, thickness), center, radius, radius);
+            return;
+        }
+
+        var sweep = ratio * Math.PI * 2;
         var startAngle = -Math.PI / 2;
-        var start = PointOnCircle(center, radius, startAngle);
-        var end = PointOnCircle(center, radius, startAngle + sweep);
         var geometry = new StreamGeometry();
         using (var geometryContext = geometry.Open())
         {
-            geometryContext.BeginFigure(start, false);
+            geometryContext.BeginFigure(PointOnCircle(center, radius, startAngle), false);
             geometryContext.ArcTo(
-                end,
+                PointOnCircle(center, radius, startAngle + sweep),
                 new Size(radius, radius),
                 0,
                 sweep > Math.PI,
                 SweepDirection.Clockwise);
         }
 
-        var brush = new LinearGradientBrush
-        {
-            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-            EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-            GradientStops =
-            {
-                new GradientStop(accent.Color, 0),
-                new GradientStop(blue.Color, 1)
-            }
-        };
-        context.DrawGeometry(null, new Pen(brush, 9, lineCap: PenLineCap.Round), geometry);
+        context.DrawGeometry(null, new Pen(accent, thickness, lineCap: PenLineCap.Round), geometry);
     }
 
     private static Point PointOnCircle(Point center, double radius, double angle) => new(

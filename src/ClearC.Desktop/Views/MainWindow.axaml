@@ -10,15 +10,17 @@
         Height="700"
         MinWidth="960"
         MinHeight="620"
+        Background="Transparent"
         WindowDecorations="None"
-        WindowStartupLocation="CenterScreen"
-        Background="Transparent">
-  <Border Background="#FA060A12"
-          BorderBrush="{DynamicResource ClearCLineStrong}"
+        WindowStartupLocation="CenterScreen">
+  <Border Classes="windowRoot"
+          Background="{DynamicResource ClearCWin}"
+          BorderBrush="{DynamicResource ClearCWindowBorder}"
           BorderThickness="1"
-          CornerRadius="10"
-          ClipToBounds="True">
-    <Grid RowDefinitions="42,*,160,28">
+          BoxShadow="0 30 80 0 #29172B63, 0 2 8 0 #0F172B63"
+          ClipToBounds="True"
+          CornerRadius="{DynamicResource ClearCRadiusWindow}">
+    <Grid RowDefinitions="44,*,160,28">
       <views:TitleBarView Grid.Row="0" DataContext="{Binding TitleBar}" />
       <views:CleanupWorkspaceView Grid.Row="1" DataContext="{Binding Workspace}" />
       <views:LogPanelView Grid.Row="2" DataContext="{Binding LogPanel}" />

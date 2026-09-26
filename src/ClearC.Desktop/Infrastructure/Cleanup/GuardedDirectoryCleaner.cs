@@ -1,34 +1,42 @@
 namespace ClearC.Desktop.Infrastructure.Cleanup;
 
-internal readonly record struct DirectoryCleanupResult(long FreedBytes, long DeletedFiles, long SkippedFiles);
+internal readonly record struct DirectoryCleanupResult(
+    long FreedBytes,
+    long DeletedFiles,
+    long SkippedFiles,
+    long LeftoverDirectories = 0);
+
+internal sealed record DirectoryCleanupRequest(
+    IReadOnlyList<string> ApprovedRoots,
+    DateTimeOffset? ModifiedBefore = null,
+    IReadOnlyList<string>? IncludePatterns = null,
+    bool DeleteEmptyDirectories = true);
 
 internal interface IGuardedDirectoryCleaner
 {
     Task<DirectoryCleanupResult> CleanContentsAsync(
-        IReadOnlyList<string> approvedRoots,
-        DateTimeOffset? modifiedBefore,
+        DirectoryCleanupRequest request,
         CancellationToken cancellationToken);
 }
 
 internal sealed class GuardedDirectoryCleaner : IGuardedDirectoryCleaner
 {
     public Task<DirectoryCleanupResult> CleanContentsAsync(
-        IReadOnlyList<string> approvedRoots,
-        DateTimeOffset? modifiedBefore,
+        DirectoryCleanupRequest request,
         CancellationToken cancellationToken) => Task.Run(
-        () => CleanContents(approvedRoots, modifiedBefore, cancellationToken),
+        () => CleanContents(request, cancellationToken),
         cancellationToken);
 
     private static DirectoryCleanupResult CleanContents(
-        IReadOnlyList<string> approvedRoots,
-        DateTimeOffset? modifiedBefore,
+        DirectoryCleanupRequest request,
         CancellationToken cancellationToken)
     {
         long freedBytes = 0;
         long deletedFiles = 0;
         long skippedFiles = 0;
+        long leftoverDirectories = 0;
 
-        foreach (var root in approvedRoots.Distinct(StringComparer.OrdinalIgnoreCase))
+        foreach (var root in request.ApprovedRoots.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var normalizedRoot = ValidateRoot(root);
@@ -37,17 +45,17 @@ internal sealed class GuardedDirectoryCleaner : IGuardedDirectoryCleaner
                 continue;
             }
 
-            var directories = new Stack<string>();
-            var visitedDirectories = new List<string>();
-            directories.Push(normalizedRoot);
+            var directories = new Stack<(string Path, int Depth)>();
+            var visitedDirectories = new List<(string Path, int Depth)>();
+            directories.Push((normalizedRoot, 0));
 
-            while (directories.TryPop(out var directory))
+            while (directories.TryPop(out var current))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                visitedDirectories.Add(directory);
+                visitedDirectories.Add(current);
                 try
                 {
-                    foreach (var entry in Directory.EnumerateFileSystemEntries(directory))
+                    foreach (var entry in Directory.EnumerateFileSystemEntries(current.Path))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         try
@@ -59,11 +67,11 @@ internal sealed class GuardedDirectoryCleaner : IGuardedDirectoryCleaner
                             }
                             else if ((attributes & FileAttributes.Directory) != 0)
                             {
-                                directories.Push(entry);
+                                directories.Push((entry, current.Depth + 1));
                             }
-                            else
+                            else if (ShouldDelete(entry, request))
                             {
-                                DeleteFile(entry, modifiedBefore, ref freedBytes, ref deletedFiles, ref skippedFiles);
+                                DeleteFile(entry, request.ModifiedBefore, ref freedBytes, ref deletedFiles, ref skippedFiles);
                             }
                         }
                         catch (Exception exception) when (IsExpectedFileSystemException(exception))
@@ -78,16 +86,31 @@ internal sealed class GuardedDirectoryCleaner : IGuardedDirectoryCleaner
                 }
             }
 
-            foreach (var directory in visitedDirectories
-                         .Where(directory => !string.Equals(directory, normalizedRoot, StringComparison.OrdinalIgnoreCase))
-                         .OrderByDescending(directory => directory.Length))
+            if (request.DeleteEmptyDirectories)
             {
-                TryDeleteEmptyDirectory(directory);
+                // 显式深度排序：先删最深的目录，浅层空目录才有机会随子目录一起被移除。
+                foreach (var directory in visitedDirectories
+                             .Where(entry => entry.Depth > 0)
+                             .OrderByDescending(entry => entry.Depth)
+                             .ThenByDescending(entry => entry.Path.Length))
+                {
+                    if (!TryDeleteEmptyDirectory(directory.Path))
+                    {
+                        leftoverDirectories++;
+                    }
+                }
             }
         }
 
-        return new(freedBytes, deletedFiles, skippedFiles);
+        return new(freedBytes, deletedFiles, skippedFiles, leftoverDirectories);
     }
+
+    private static bool ShouldDelete(string path, DirectoryCleanupRequest request) =>
+        request.IncludePatterns is not { Count: > 0 } patterns ||
+        patterns.Any(pattern => System.IO.Enumeration.FileSystemName.MatchesSimpleExpression(
+            pattern,
+            Path.GetFileName(path),
+            ignoreCase: true));
 
     private static string ValidateRoot(string root)
     {
@@ -132,14 +155,17 @@ internal sealed class GuardedDirectoryCleaner : IGuardedDirectoryCleaner
         }
     }
 
-    private static void TryDeleteEmptyDirectory(string path)
+    private static bool TryDeleteEmptyDirectory(string path)
     {
         try
         {
+            // 目录非空时 Directory.Delete(..., false) 抛 IOException，说明还有内容需要保留。
             Directory.Delete(path, false);
+            return true;
         }
         catch (Exception exception) when (IsExpectedFileSystemException(exception))
         {
+            return false;
         }
     }
 

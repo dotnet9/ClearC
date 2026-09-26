@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace ClearC.Desktop.Infrastructure.Cleanup;
 
@@ -58,8 +58,7 @@ internal sealed class CodexConversationCleaner : ICodexConversationCleaner
             }
 
             var result = await _directoryCleaner.CleanContentsAsync(
-                validatedRoots,
-                modifiedBefore: null,
+                new DirectoryCleanupRequest(validatedRoots, ModifiedBefore: null),
                 cancellationToken);
             return new(result.FreedBytes, result.DeletedFiles, result.SkippedFiles);
         }

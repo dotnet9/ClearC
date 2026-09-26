@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:ClearC.Desktop.Controls"
+             xmlns:vm="using:ClearC.Desktop.ViewModels"
+             xmlns:views="using:ClearC.Desktop.Views"
+             x:Class="ClearC.Desktop.Views.CleanupListView"
+             x:DataType="vm:CleanupWorkspaceViewModel">
+  <Grid Margin="16,0,16,10">
+    <!-- 空状态 -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8"
+                IsVisible="{Binding IsEmptyVisible}">
+      <Border Width="56" Height="56" CornerRadius="14"
+              Background="#f6f9ff" BorderBrush="#c9d6f5" BorderThickness="1.5">
+        <controls:IconGlyph Width="25" Height="25"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Data="{StaticResource ClearCIconFolder}"
+                            Foreground="{DynamicResource ClearCAccent}"
+                            StrokeThickness="1.4" />
+      </Border>
+      <TextBlock HorizontalAlignment="Center" FontSize="13.5" FontWeight="SemiBold"
+                 Foreground="{DynamicResource ClearCText2}" Text="尚未分析" />
+      <TextBlock HorizontalAlignment="Center" FontSize="11"
+                 Foreground="{DynamicResource ClearCText3}" Text="等待扫描指令 · 点击「扫描分析」开始" />
+    </StackPanel>
+
+    <!-- 分组列表 + 幽灵行 -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsListVisible}">
+      <StackPanel Margin="0,0,10,0">
+        <ItemsControl ItemsSource="{Binding Groups}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:CleanupGroupViewModel">
+              <views:CleanupGroupView />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 幽灵行：同一时刻只有一条，跟随当前扫描目标（§6.4） -->
+        <Border Margin="0,2,0,4" Padding="12,9"
+                BorderBrush="{DynamicResource ClearCLine2}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource ClearCRadiusButton}"
+                IsVisible="{Binding IsGhostVisible}">
+          <Grid ColumnDefinitions="22,34,12,*,12">
+            <Border Grid.Column="1" Width="34" Height="34" VerticalAlignment="Center"
+                    Background="#142f6bff" BorderBrush="#4D2f6bff" BorderThickness="1"
+                    CornerRadius="{DynamicResource ClearCRadiusTile}">
+              <controls:IconGlyph Width="17" Height="17"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Data="{StaticResource ClearCIconSearch}"
+                                  Foreground="{DynamicResource ClearCAccent}" />
+            </Border>
+            <TextBlock Grid.Column="3" Classes="ghostText" VerticalAlignment="Center"
+                       FontSize="11.5" TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource ClearCAccent}" Text="{Binding GhostText}" />
+          </Grid>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- 扫描光带（仅扫描态） -->
+    <Border Classes="scanSweep" Margin="0,0,10,0"
+            Height="80" VerticalAlignment="Top"
+            BorderBrush="#472f6bff" BorderThickness="0,0,0,1"
+            IsHitTestVisible="False"
+            IsVisible="{Binding IsSweepVisible}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Offset="0" Color="#002f6bff" />
+          <GradientStop Offset="0.45" Color="#0D2f6bff" />
+          <GradientStop Offset="0.5" Color="#1C7c5cff" />
+          <GradientStop Offset="0.55" Color="#0D2f6bff" />
+          <GradientStop Offset="1" Color="#002f6bff" />
+        </LinearGradientBrush>
+      </Border.Background>
+    </Border>
+  </Grid>
+</UserControl>

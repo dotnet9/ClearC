@@ -1,0 +1,172 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    9 组动效（§6.7）。集中在这里，便于整体开关。
+    一次性动效（winIn / popIn / toastIn / fade）用 Transitions 或单次 Animation，
+    循环动效用 Animation + IterationCount="INFINITE"。
+  -->
+
+  <!-- winIn：窗口入场 0.3s -->
+  <Style Selector="Border.windowRoot">
+    <Style.Animations>
+      <Animation Duration="0:0:0.3" IterationCount="1" Easing="CubicEaseOut" FillMode="Forward">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- popIn：模态 0.16s（Transitions 触发，避免 IsVisible 翻转时闪帧） -->
+  <Style Selector="Border.modalCard">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="RenderTransform" Value="scale(0.95)" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.16" Easing="CubicEaseOut" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="CubicEaseOut" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.modalCard.open">
+    <Setter Property="Opacity" Value="1" />
+    <Setter Property="RenderTransform" Value="scale(1)" />
+  </Style>
+
+  <!-- toastIn：右下角滑入 0.25s -->
+  <Style Selector="Border.toast">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="RenderTransform" Value="translateX(18px)" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.25" Easing="CubicEaseOut" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.toast.open">
+    <Setter Property="Opacity" Value="1" />
+    <Setter Property="RenderTransform" Value="translateX(0px)" />
+  </Style>
+
+  <!-- fade：行详情展开 0.18s -->
+  <Style Selector="Border.rowDetail">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.rowDetail.open">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+  <!-- sweep：扫描光带 2.8s -->
+  <Style Selector="Border.scanSweep">
+    <Style.Animations>
+      <Animation Duration="0:0:2.8" IterationCount="INFINITE" Easing="CubicEaseInOut">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0" />
+          <Setter Property="Margin" Value="0,-100,0,0" />
+        </KeyFrame>
+        <KeyFrame Cue="12%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+        <KeyFrame Cue="88%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="0" />
+          <Setter Property="Margin" Value="0,430,0,0" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- flow：幽灵行文字 2s（原型是渐变文字流动，这里用呼吸明暗等价呈现） -->
+  <Style Selector="TextBlock.ghostText">
+    <Style.Animations>
+      <Animation Duration="0:0:2" IterationCount="INFINITE" Easing="CubicEaseInOut">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0.45" />
+        </KeyFrame>
+        <KeyFrame Cue="50%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="0.45" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- btnGlow：Idle 主按钮呼吸 2.8s（外发光用背后的色块透明度呈现） -->
+  <Style Selector="Border.btnGlow">
+    <Style.Animations>
+      <Animation Duration="0:0:2.8" IterationCount="INFINITE" Easing="CubicEaseInOut">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0.10" />
+        </KeyFrame>
+        <KeyFrame Cue="50%">
+          <Setter Property="Opacity" Value="0.42" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="0.10" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- rowPulse：当前清理行 1.6s -->
+  <Style Selector="Border.pulseBar">
+    <Style.Animations>
+      <Animation Duration="0:0:1.6" IterationCount="INFINITE" Easing="CubicEaseInOut">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0.25" />
+        </KeyFrame>
+        <KeyFrame Cue="50%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="0.25" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- blink：状态点 1.2s / 日志光标 1s -->
+  <Style Selector="Ellipse.blinkDot">
+    <Style.Animations>
+      <Animation Duration="0:0:1.2" IterationCount="INFINITE">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+        <KeyFrame Cue="50%">
+          <Setter Property="Opacity" Value="0.15" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+  <Style Selector="Border.logCursor">
+    <Style.Animations>
+      <Animation Duration="0:0:1" IterationCount="INFINITE">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+        <KeyFrame Cue="50%">
+          <Setter Property="Opacity" Value="0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+</Styles>

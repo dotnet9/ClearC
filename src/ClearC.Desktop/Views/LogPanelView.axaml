@@ -1,28 +1,58 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:log="https://codewf.com"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
              x:Class="ClearC.Desktop.Views.LogPanelView"
              x:DataType="vm:LogPanelViewModel">
-  <Border Background="#04070D" BorderBrush="{DynamicResource ClearCLine}" BorderThickness="0,1,0,0">
+  <Border Background="{DynamicResource ClearCConsoleBg}"
+          BorderBrush="{DynamicResource ClearCLine}"
+          BorderThickness="0,1,0,0">
     <Grid RowDefinitions="34,*">
-      <Border Grid.Row="0" Background="#66111B2E" BorderBrush="#1A38BDF8" BorderThickness="0,0,0,1">
-        <Grid Margin="14,0,8,0">
-          <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-            <Rectangle Width="7" Height="7" Fill="{DynamicResource ClearCCyan}" />
-            <TextBlock FontFamily="{DynamicResource ClearCMonoFont}" FontSize="11.5" LetterSpacing="1"
+      <Border Grid.Row="0" BorderBrush="{DynamicResource ClearCLine}" BorderThickness="0,0,0,1">
+        <Grid Margin="14,0,8,0" ColumnDefinitions="*,Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+            <Ellipse Width="7" Height="7" Fill="{DynamicResource ClearCAccent}" />
+            <TextBlock FontSize="12" FontWeight="SemiBold"
                        Foreground="{DynamicResource ClearCText2}" Text="运行日志" />
+            <Border Padding="8,0" VerticalAlignment="Center"
+                    Background="{DynamicResource ClearCCountBg}"
+                    CornerRadius="{DynamicResource ClearCRadiusPill}">
+              <TextBlock FontSize="12" FontWeight="SemiBold"
+                         FontFamily="{DynamicResource ClearCMonoFont}"
+                         Foreground="{DynamicResource ClearCAccent}" Text="{Binding LogCountText}" />
+            </Border>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="mini" Click="Copy_OnClick" Content="复制" />
+            <Button Classes="mini" Click="Export_OnClick" Content="导出" />
+            <Button Classes="mini" Command="{Binding ClearLogCommand}" Content="清空" />
           </StackPanel>
         </Grid>
       </Border>
-      <Border Grid.Row="1" Padding="14,8,14,10" Background="#04070D">
-        <log:LogView FontFamily="{DynamicResource ClearCMonoFont}"
-                     FontSize="11.5"
-                     LogLineHeightMultiplier="1.35"
-                     MaxDisplayCount="1000"
-                     MaximumLevel="Critical"
-                     MinimumLevel="Information"
-                     TimestampFormat="HH:mm:ss" />
+
+      <Border Grid.Row="1" Padding="14,8,14,10">
+        <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto">
+          <StackPanel>
+            <ItemsControl ItemsSource="{Binding Entries}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LogEntryViewModel">
+                  <Grid Margin="0,0,0,2" ColumnDefinitions="Auto,Auto,*">
+                    <TextBlock Grid.Column="0" Margin="0,0,10,0" FontSize="11.5"
+                               FontFamily="{DynamicResource ClearCMonoFont}"
+                               Foreground="{DynamicResource ClearCLogTime}" Text="{Binding Timestamp}" />
+                    <TextBlock Grid.Column="1" Margin="0,0,10,0" FontSize="11.5" FontWeight="Bold"
+                               FontFamily="{DynamicResource ClearCMonoFont}"
+                               Foreground="{Binding LevelBrush}" Text="{Binding Level}" />
+                    <TextBlock Grid.Column="2" FontSize="11.5" TextWrapping="Wrap"
+                               FontFamily="{DynamicResource ClearCMonoFont}"
+                               Foreground="{DynamicResource ClearCLogText}" Text="{Binding Message}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Classes="logCursor" Width="7" Height="12" HorizontalAlignment="Left"
+                    Background="{DynamicResource ClearCAccent}" />
+          </StackPanel>
+        </ScrollViewer>
       </Border>
     </Grid>
   </Border>
