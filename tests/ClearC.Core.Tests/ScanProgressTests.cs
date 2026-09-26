@@ -68,6 +68,23 @@ public sealed class ScanProgressTests
 
         Assert.Equal("10/10 · 完成", progress.DisplayText);
     }
+
+    /// <summary>幽灵行显示真实路径，让用户知道正在分析哪里（体验：慢档不再像卡住）。</summary>
+    [Fact]
+    public void GhostText_PrefersTheRealPathOverTheDisplayName()
+    {
+        var progress = new ScanProgress(2, 10, "浏览器缓存", ScanTier.Fast, null, @"C:\Users\test\AppData\Local\Microsoft\Edge\User Data");
+
+        Assert.Equal(@"▍ 正在扫描 C:\Users\test\AppData\Local\Microsoft\Edge\User Data …", progress.GhostText);
+    }
+
+    [Fact]
+    public void GhostText_FallsBackToTheDisplayNameWithoutAPath()
+    {
+        var progress = new ScanProgress(2, 10, "浏览器缓存");
+
+        Assert.Equal("▍ 正在扫描 浏览器缓存 …", progress.GhostText);
+    }
 }
 
 public sealed class RelativeTimeFormatterTests

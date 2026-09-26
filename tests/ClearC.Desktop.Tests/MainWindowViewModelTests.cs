@@ -95,6 +95,62 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         Assert.Equal(0, viewModel.SelectedCount);
     });
 
+    /// <summary>详情里的"打开位置"用第一个清理根，失败原因回显在详情里。</summary>
+    [Fact]
+    public Task RowDetail_OpensTheFirstCleanRootAndReportsFailures() => RunAsync(async () =>
+    {
+        var opener = new FakeLocationOpener("路径已不存在，可能已被清理");
+        var viewModel = CreateViewModel(locationOpener: opener);
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
+        var row = Row(viewModel, "low");
+
+        Assert.False(row.HasLocationHint);
+
+        row.OpenLocationCommand.Execute(null);
+
+        Assert.Equal(@"C:\Temp", opener.LastPath);
+        Assert.True(row.HasLocationHint);
+        Assert.Equal("路径已不存在，可能已被清理", row.LocationHint);
+    });
+
+    [Fact]
+    public Task RowDetail_KeepsTheHintEmptyWhenTheLocationOpened() => RunAsync(async () =>
+    {
+        var opener = new FakeLocationOpener(null);
+        var viewModel = CreateViewModel(locationOpener: opener);
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
+
+        Row(viewModel, "low").OpenLocationCommand.Execute(null);
+
+        Assert.Equal(@"C:\Temp", opener.LastPath);
+        Assert.False(Row(viewModel, "low").HasLocationHint);
+    });
+
+    /// <summary>Esc 关闭当前模态：确认页回到结果页，关闭保护直接收起。</summary>
+    [Fact]
+    public Task Escape_DismissesTheCurrentModal() => RunAsync(async () =>
+    {
+        var viewModel = CreateViewModel();
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
+
+        Assert.False(viewModel.TryDismissModal());
+
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Confirming);
+
+        Assert.True(viewModel.TryDismissModal());
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
+        Assert.False(viewModel.IsConfirmationVisible);
+
+        viewModel.RequestCloseConfirmation();
+
+        Assert.True(viewModel.TryDismissModal());
+        Assert.False(viewModel.IsCloseConfirmationVisible);
+    });
+
     [Fact]
     public Task Cleanup_TransitionsThroughConfirmationAndDone() => RunAsync(async () =>
     {
@@ -410,14 +466,16 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         ICleanupScanner? scanner = null,
         ICleanupExecutor? executor = null,
         IElevationService? elevationService = null,
-        IToastScheduler? toastScheduler = null) => new(
+        IToastScheduler? toastScheduler = null,
+        ILocationOpener? locationOpener = null) => new(
         scanner ?? new FakeScanner(),
         executor ?? new FakeExecutor(),
         new CleanupSafetyPolicy(),
         new DiskSnapshot("C:", "NTFS", 100_000, 40_000),
         new InMemoryLogStore(NullApplicationLogger.Instance),
         elevationService ?? new FakeElevationService(true),
-        toastScheduler: toastScheduler);
+        toastScheduler: toastScheduler,
+        locationOpener: locationOpener);
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
@@ -590,6 +648,18 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
             _callback = null;
             callback();
             return true;
+        }
+    }
+
+    /// <summary>记录最后一次请求的路径，并返回固定的失败原因（<c>null</c> 表示打开成功）。</summary>
+    private sealed class FakeLocationOpener(string? reason) : ILocationOpener
+    {
+        public string? LastPath { get; private set; }
+
+        public string? TryOpen(string path)
+        {
+            LastPath = path;
+            return reason;
         }
     }
 
