@@ -399,6 +399,10 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
                 "360 / QQ / 搜狗浏览器的网页缓存（候选路径，命中才显示，仍需真机确认）。",
                 "i-globe", Fixed(cnBrowserPaths), CleanerKind.DirectoryContents,
                 PathSource: _ => "候选路径"),
+            new("inetcache", "旧版浏览器缓存 INetCache", CleanupCategory.BrowserCache, CleanupRisk.Low,
+                "IE 模式与内嵌浏览器控件共用的网页缓存（INetCache）；不含 Cookie、历史记录与表单数据。",
+                "i-globe", Fixed(environment.Under(local, "Microsoft", "Windows", "INetCache")),
+                CleanerKind.DirectoryContents, Tier: ScanTier.Slow, ScanTimeout: largeTreeTimeout),
 
             // ── G10 Electron 与桌面应用 ─────────────────────────────────────────
             new("discord-cache", "Discord 缓存", CleanupCategory.ApplicationData, CleanupRisk.Low,

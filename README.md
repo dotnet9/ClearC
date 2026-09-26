@@ -102,6 +102,7 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 | webview2-cache | `%LocalAppData%\Microsoft\EdgeWebView\*\`：`Cache`、`Code Cache`、`GPUCache`、`DawnCache` | 目录内容 | 低 | 快 | 否 |
 | chromium-family-cache | Brave / Vivaldi / Opera 同构目录 | 目录内容 | 低 | 快 | 否 |
 | cn-browser-cache | 360 / QQ / 搜狗（待真机确认，探测不到不显示） | 目录内容 | 低 | 快 | 否 |
+| inetcache | `%LocalAppData%\Microsoft\Windows\INetCache` | 目录内容（不含 Cookie / 历史记录） | 低 | 慢 | 否 |
 
 ### G8 开发缓存补充
 
