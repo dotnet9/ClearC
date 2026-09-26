@@ -1,7 +1,9 @@
+using System.Windows.Input;
 using Avalonia.Media;
 using ClearC.Core.Formatting;
 using ClearC.Core.Models;
 using ClearC.Desktop.Infrastructure.Logging;
+using ClearC.Desktop.Infrastructure.Windows;
 using ClearC.Desktop.Themes;
 using ReactiveUI;
 
@@ -11,23 +13,31 @@ public sealed class CleanupItemViewModel : ReactiveObject
 {
     private readonly IThemePalette _palette;
     private readonly bool _isElevated;
+    private readonly ILocationOpener? _locationOpener;
     private bool _isSelected;
     private bool _isExpanded;
     private bool _canSelect;
     private bool _isCurrent;
     private string? _deniedReason;
+    private string? _locationHint;
     private CleanupItemResult? _result;
 
-    public CleanupItemViewModel(CleanupItem model, IThemePalette? palette = null, bool isElevated = true)
+    public CleanupItemViewModel(
+        CleanupItem model,
+        IThemePalette? palette = null,
+        bool isElevated = true,
+        ILocationOpener? locationOpener = null)
     {
         Model = model;
         _palette = palette ?? ThemePalette.Instance;
         _isElevated = isElevated;
+        _locationOpener = locationOpener;
 
         var accent = ParseAccent(model.Accent);
         AccentBrush = new SolidColorBrush(accent);
         TileBackground = new SolidColorBrush(accent, 0x1f / 255d);
         TileBorder = new SolidColorBrush(accent, 0x55 / 255d);
+        OpenLocationCommand = ReactiveCommand.Create(OpenLocation);
     }
 
     public event EventHandler? SelectionChanged;
@@ -60,6 +70,27 @@ public sealed class CleanupItemViewModel : ReactiveObject
     public bool HasPathSource => !string.IsNullOrWhiteSpace(Model.PathSource);
     public string ScanNoteText => Model.ScanNote ?? string.Empty;
     public bool HasScanNote => !string.IsNullOrWhiteSpace(Model.ScanNote);
+
+    /// <summary>在资源管理器中定位第一个清理路径；失败原因显示在详情里。</summary>
+    public ICommand OpenLocationCommand { get; }
+
+    public string LocationHint
+    {
+        get => _locationHint ?? string.Empty;
+        private set
+        {
+            if (_locationHint == value)
+            {
+                return;
+            }
+
+            _locationHint = value;
+            this.RaisePropertyChanged();
+            this.RaisePropertyChanged(nameof(HasLocationHint));
+        }
+    }
+
+    public bool HasLocationHint => !string.IsNullOrEmpty(_locationHint);
 
     public string Recommendation => Model.CleanerKey == "codex-conversations"
         ? "默认不选择。请先关闭 Codex；配置、登录信息、技能、插件、数据库和诊断日志不会删除。"
@@ -200,6 +231,14 @@ public sealed class CleanupItemViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(ResultText));
         this.RaisePropertyChanged(nameof(FreedText));
         this.RaisePropertyChanged(nameof(ResultBrush));
+    }
+
+    private void OpenLocation()
+    {
+        var path = Model.CleanRoots.FirstOrDefault();
+        LocationHint = _locationOpener is null
+            ? "当前环境无法打开资源管理器"
+            : _locationOpener.TryOpen(path ?? string.Empty) ?? string.Empty;
     }
 
     private static Color ParseAccent(string? accent) =>

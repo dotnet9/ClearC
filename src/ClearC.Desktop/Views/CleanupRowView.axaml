@@ -112,8 +112,14 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <TextBlock FontSize="10.5" Foreground="{DynamicResource ClearCText3}"
-                       IsVisible="{Binding HasPathSource}" Text="{Binding PathSourceText}" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock VerticalAlignment="Center" FontSize="10.5" Foreground="{DynamicResource ClearCText3}"
+                         IsVisible="{Binding HasPathSource}" Text="{Binding PathSourceText}" />
+              <Button Classes="mini" Command="{Binding OpenLocationCommand}" Content="打开位置"
+                      ToolTip.Tip="在资源管理器中定位这个清理路径" />
+            </StackPanel>
+            <TextBlock Margin="0,2,0,0" FontSize="10.5" Foreground="{DynamicResource ClearCAmber}"
+                       IsVisible="{Binding HasLocationHint}" Text="{Binding LocationHint}" TextWrapping="Wrap" />
           </StackPanel>
         </StackPanel>
 

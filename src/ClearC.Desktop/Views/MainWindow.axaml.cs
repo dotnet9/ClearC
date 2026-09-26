@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using ClearC.Desktop.ViewModels;
 
 namespace ClearC.Desktop.Views;
@@ -11,6 +12,20 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+    }
+
+    /// <summary>Esc 关闭当前模态（确认页 / 关闭保护），减少鼠标折返。</summary>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape &&
+            DataContext is MainWindowViewModel viewModel &&
+            viewModel.TryDismissModal())
+        {
+            e.Handled = true;
+            return;
+        }
+
+        base.OnKeyDown(e);
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)

@@ -27,6 +27,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     private readonly IElevationService _elevationService;
     private readonly IThemePalette _palette;
     private readonly IToastScheduler _toastScheduler;
+    private readonly ILocationOpener _locationOpener;
     private readonly Dictionary<CleanupDisplayGroup, CleanupGroupViewModel> _groupCache = [];
     private CleanupSelection? _selection;
     private CancellationTokenSource? _operationCancellation;
@@ -56,7 +57,8 @@ public sealed class MainWindowViewModel : ReactiveObject
         InMemoryLogStore logStore,
         IElevationService? elevationService = null,
         IThemePalette? palette = null,
-        IToastScheduler? toastScheduler = null)
+        IToastScheduler? toastScheduler = null,
+        ILocationOpener? locationOpener = null)
     {
         _scanner = scanner;
         _executor = executor;
@@ -65,6 +67,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         _elevationService = elevationService ?? new ElevationService();
         _palette = palette ?? ThemePalette.Instance;
         _toastScheduler = toastScheduler ?? new DispatcherToastScheduler();
+        _locationOpener = locationOpener ?? new LocationOpener();
         _disk = initialDisk;
 
         PrimaryCommand = ReactiveCommand.CreateFromTask(HandlePrimaryAsync);
@@ -412,6 +415,27 @@ public sealed class MainWindowViewModel : ReactiveObject
     public void RequestCloseConfirmation() => IsCloseConfirmationVisible = true;
 
     /// <summary>
+    /// Esc 关闭当前模态（关闭保护优先于确认页）。
+    /// 返回 false 表示当前没有可关闭的模态，按键交给系统处理。
+    /// </summary>
+    public bool TryDismissModal()
+    {
+        if (IsCloseConfirmationVisible)
+        {
+            IsCloseConfirmationVisible = false;
+            return true;
+        }
+
+        if (IsConfirmationVisible)
+        {
+            CancelConfirmation();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// 系统关机/注销路径：不能阻塞 UI 线程等待，只取消进行中的任务并停掉 Toast 定时器（§3.2）。
     /// </summary>
     public void PrepareForShutdown()
@@ -671,9 +695,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         _scanCompleted = value.Completed;
         ProgressValue = value.Ratio * 100;
         ProgressText = value.DisplayText;
-        GhostText = value.Item is null
-            ? $"▍ 正在扫描 {value.CurrentTarget} …"
-            : string.Empty;
+        GhostText = value.Item is null ? value.GhostText : string.Empty;
 
         if (value.Tier == ScanTier.Slow)
         {
@@ -717,7 +739,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             return existing;
         }
 
-        var row = new CleanupItemViewModel(normalized, _palette, _elevationService.IsElevated)
+        var row = new CleanupItemViewModel(normalized, _palette, _elevationService.IsElevated, _locationOpener)
         {
             CanSelect = CanInteractWithList
         };

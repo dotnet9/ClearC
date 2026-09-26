@@ -9,11 +9,15 @@ public sealed record ScanProgress(
     int Total,
     string CurrentTarget,
     ScanTier Tier = ScanTier.Fast,
-    CleanupItem? Item = null)
+    CleanupItem? Item = null,
+    string? TargetPath = null)
 {
     public double Ratio => Total <= 0 ? 0 : Math.Clamp((double)Completed / Total, 0, 1);
 
     public bool IsItemCompleted => Item is not null;
+
+    /// <summary>幽灵行文案：优先显示正在分析的真实路径，取不到时退回目标名。</summary>
+    public string GhostText => $"▍ 正在扫描 {TargetPath ?? CurrentTarget} …";
 
     /// <summary>原型里的进度文案：<c>NN/NN · 当前目标</c>，慢档追加“（慢速目标）”。</summary>
     public string DisplayText

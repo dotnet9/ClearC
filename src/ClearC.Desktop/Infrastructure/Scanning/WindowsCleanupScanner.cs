@@ -111,8 +111,9 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
                 },
                 async (target, token) =>
                 {
-                    // 幽灵行跟随当前目标：先报“正在分析”，完成后带最终大小再报一次。
-                    progress?.Report(new(Volatile.Read(ref completed), total, target.DisplayName, target.Tier));
+                    // 幽灵行跟随当前目标：先报"正在分析"（带真实路径），完成后带最终大小再报一次。
+                    progress?.Report(new(
+                        Volatile.Read(ref completed), total, target.DisplayName, target.Tier, null, target.Location));
 
                     // DISM / vssadmin 子进程必须串行，同时运行会互相锁住。
                     var serialized = target.ScanKind is ScanKind.DismAnalyze or ScanKind.VssQuery;
