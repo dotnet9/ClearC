@@ -8,7 +8,8 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 - 浅色技术蓝紫界面：自绘标题栏、磁盘环图、分组清理列表、行内详情、风险确认、Toast、自绘日志面板与状态栏，共六个工作流状态。
 - 清理目标从 11 个扩展到约 120 个，覆盖系统缓存、系统日志与转储、升级与安装残留、遥测、显卡与游戏缓存、Store 应用、浏览器家族、开发缓存、引擎与移动开发、OEM 残留。
-- 两档并行扫描：快档（缓存 / 日志 / 临时目录 / 单文件）4 路并发先出首屏结果，慢档（DISM、大树、Store 应用）2 路并发后台补齐；列表里只保留一条跟随当前分析目标的幽灵行，已完成行按大小插入所属分组。
+- 两档并行扫描：快档（缓存 / 日志 / 临时目录 / 单文件）4 路并发先出首屏结果，慢档（DISM、大树、Store 应用）2 路并发后台补齐；列表里只保留一条跟随当前分析目标的幽灵行（显示正在分析的真实路径），已完成行按大小插入所属分组。
+- 扫描走一次目录枚举取回类型、大小与写入时间（不再对每个条目额外查询属性），十万文件级的缓存目录实测快约 6 倍；每个目标独立超时，DISM 与 vssadmin 串行执行避免互相锁死。
 - 探测不到的目标不出现：npm / pnpm / yarn / pip / conda / Steam / Epic / GOG / Battle.net / Unity / Unreal / Android SDK 等按环境变量、注册表与 CLI 探测解析真实路径，详情里标注来源（注册表 / 环境变量 / CLI 探测 / 默认路径 / 目录探测）。
 - 释放量分两种口径：官方命令清理只报估算值（`~` 前缀 + “（估算）”），目录与回收站清理报实测值，Toast 与行内详情分别显示。
 - 未提权时顶部提示“未提权 · 部分系统缓存不可清理”并提供“以管理员重启”；需要管理员的项目显示“需管理员”且不可勾选。
@@ -18,6 +19,7 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 - 清理 NuGet 全局包前检查已加载的缓存 DLL，发现 IDE/MSBuild 占用时整项跳过。
 - 临时文件仅清理超过 7 天未修改的文件；占用或无权限文件会跳过并记录。
 - 日志在写入 `%LocalAppData%\ClearC\Logs` 与日志面板前统一脱敏（用户目录、`%APPDATA%`、`%LOCALAPPDATA%`、`%TEMP%`、`%ProgramData%`、`C:\Windows` 前缀替换为环境变量占位符），面板支持复制全部 / 导出 / 清空。
+- 行详情可一键“打开位置”，在资源管理器中定位该清理路径（路径已失效时在详情里说明原因）；`Esc` 关闭当前模态（确认页回到结果页，关闭保护直接收起）。
 
 ## 安全边界
 
@@ -136,6 +138,15 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 | office-file-cache | `%LocalAppData%\Microsoft\Office\16.0\OfficeFileCache` | 目录内容 | 低 | 快 | 否 |
 | onedrive-logs | `%LocalAppData%\Microsoft\OneDrive\logs`、`setup\logs` | 目录内容 | 低 | 快 | 否 |
 | rdp-cache | `%LocalAppData%\Microsoft\Terminal Server Client\Cache` | 目录内容 | 低 | 快 | 否 |
+| signal-cache | `%APPDATA%\Signal\`：`Cache`、`Code Cache`、`GPUCache` 等 | 目录内容 | 低 | 快 | 否 |
+| whatsapp-cache | `%APPDATA%\WhatsApp\` 同构缓存目录 | 目录内容 | 低 | 快 | 否 |
+| notion-cache | `%APPDATA%\Notion\` 同构缓存目录 | 目录内容 | 低 | 快 | 否 |
+| postman-cache | `%APPDATA%\Postman\` 同构缓存目录 | 目录内容 | 低 | 快 | 否 |
+| figma-cache | `%APPDATA%\Figma\` 同构缓存目录 | 目录内容 | 低 | 快 | 否 |
+| obsidian-cache | `%APPDATA%\obsidian\` 同构缓存目录 | 目录内容 | 低 | 快 | 否 |
+| cursor-cache | `%APPDATA%\Cursor\` 同构缓存目录 | 目录内容 | 低 | 快 | 否 |
+
+上表最后 7 项是 Electron 应用（含 VS Code 分支）的 Chromium 缓存，路径按 `<userData>\Cache|Code Cache|GPUCache|DawnCache|…` 约定生成，命中才显示；不触碰聊天记录、工作区、笔记库与设置。
 
 ### G11 OEM / 驱动安装残留（全部仅分析）
 
