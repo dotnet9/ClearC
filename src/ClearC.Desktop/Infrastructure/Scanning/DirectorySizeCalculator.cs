@@ -2,8 +2,26 @@ using System.IO.Enumeration;
 
 namespace ClearC.Desktop.Infrastructure.Scanning;
 
+/// <summary>
+/// 目录大小统计。
+/// 走 <see cref="FileSystemEnumerable{TResult}"/>：一次目录枚举就带回类型、大小与写入时间，
+/// 不再对每个条目额外调用 <c>File.GetAttributes</c> / <c>new FileInfo(...)</c>（三者合一会快数倍）。
+/// </summary>
 internal sealed class DirectorySizeCalculator : IDirectorySizeCalculator
 {
+    /// <summary>
+    /// 只跳过重解析点（符号链接 / 目录联接）。
+    /// 注意不能沿用默认的 <c>Hidden | System</c>：临时目录与休眠/页面文件恰恰是隐藏或系统文件，
+    /// 默认值会漏统计。
+    /// </summary>
+    private static readonly EnumerationOptions Options = new()
+    {
+        RecurseSubdirectories = false,
+        IgnoreInaccessible = true,
+        ReturnSpecialDirectories = false,
+        AttributesToSkip = FileAttributes.ReparsePoint
+    };
+
     public Task<DirectorySize> CalculateAsync(
         DirectorySizeRequest request,
         CancellationToken cancellationToken = default) => Task.Run(
@@ -28,7 +46,16 @@ internal sealed class DirectorySizeCalculator : IDirectorySizeCalculator
 
             if (File.Exists(path))
             {
-                AddFile(path, request, ref bytes, ref fileCount, ref lastWriteTimeUtc, ref tooLongPathFiles);
+                // 单文件目标（WSL/Docker 的 ext4.vhdx、hiberfil.sys 等）。
+                try
+                {
+                    var file = new FileInfo(path);
+                    Count(file.FullName, file.Length, new DateTimeOffset(file.LastWriteTimeUtc, TimeSpan.Zero));
+                }
+                catch (Exception exception) when (IsExpectedFileSystemException(exception))
+                {
+                    // 文件在扫描过程中被删除：跳过。
+                }
             }
             else if (Directory.Exists(path))
             {
@@ -46,33 +73,17 @@ internal sealed class DirectorySizeCalculator : IDirectorySizeCalculator
 
             try
             {
-                foreach (var entry in Directory.EnumerateFileSystemEntries(directory))
+                var entries = new FileSystemEnumerable<ScannedEntry>(directory, Select, Options);
+                foreach (var entry in entries)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    try
+                    if (entry.IsDirectory)
                     {
-                        var attributes = File.GetAttributes(entry);
-                        if ((attributes & FileAttributes.ReparsePoint) != 0)
-                        {
-                            continue;
-                        }
-
-                        if ((attributes & FileAttributes.Directory) != 0)
-                        {
-                            pendingDirectories.Push(entry);
-                        }
-                        else
-                        {
-                            AddFile(entry, request, ref bytes, ref fileCount, ref lastWriteTimeUtc, ref tooLongPathFiles);
-                        }
+                        pendingDirectories.Push(entry.Path);
                     }
-                    catch (PathTooLongException)
+                    else
                     {
-                        tooLongPathFiles++;
-                    }
-                    catch (Exception exception) when (IsExpectedFileSystemException(exception))
-                    {
-                        // A changing or protected cache entry should not abort the complete scan.
+                        Count(entry.Path, entry.Length, entry.LastWriteTimeUtc);
                     }
                 }
             }
@@ -82,55 +93,54 @@ internal sealed class DirectorySizeCalculator : IDirectorySizeCalculator
             }
             catch (Exception exception) when (IsExpectedFileSystemException(exception))
             {
-                // Continue with the remaining targets when a directory cannot be enumerated.
+                // 目录不可枚举（权限/占用/已删除）：跳过该目录，不影响其它目标。
             }
         }
 
         return new(bytes, fileCount, lastWriteTimeUtc, tooLongPathFiles);
-    }
 
-    private static void AddFile(
-        string path,
-        DirectorySizeRequest request,
-        ref long bytes,
-        ref long fileCount,
-        ref DateTimeOffset? lastWriteTimeUtc,
-        ref long tooLongPathFiles)
-    {
-        try
+        void Count(string path, long length, DateTimeOffset written)
+        {
+            try
+            {
+                if (!Matches(path, written))
+                {
+                    return;
+                }
+
+                bytes = checked(bytes + length);
+                fileCount++;
+                if (lastWriteTimeUtc is null || written > lastWriteTimeUtc)
+                {
+                    lastWriteTimeUtc = written;
+                }
+            }
+            catch (OverflowException)
+            {
+                bytes = long.MaxValue;
+            }
+            catch (Exception exception) when (IsExpectedFileSystemException(exception))
+            {
+                // 条目在枚举与读取之间消失：跳过。
+            }
+        }
+
+        bool Matches(string path, DateTimeOffset written)
         {
             if (request.IncludePatterns is { Count: > 0 } patterns &&
                 !patterns.Any(pattern => FileSystemName.MatchesSimpleExpression(pattern, Path.GetFileName(path), true)))
             {
-                return;
+                return false;
             }
 
-            var file = new FileInfo(path);
-            if (request.ModifiedBefore is not null && file.LastWriteTimeUtc >= request.ModifiedBefore.Value.UtcDateTime)
-            {
-                return;
-            }
-
-            bytes = checked(bytes + file.Length);
-            fileCount++;
-            var written = new DateTimeOffset(file.LastWriteTimeUtc, TimeSpan.Zero);
-            if (lastWriteTimeUtc is null || written > lastWriteTimeUtc)
-            {
-                lastWriteTimeUtc = written;
-            }
-        }
-        catch (PathTooLongException)
-        {
-            tooLongPathFiles++;
-        }
-        catch (Exception exception) when (IsExpectedFileSystemException(exception))
-        {
-        }
-        catch (OverflowException)
-        {
-            bytes = long.MaxValue;
+            return request.ModifiedBefore is null || written.UtcDateTime < request.ModifiedBefore.Value.UtcDateTime;
         }
     }
+
+    /// <summary>枚举转换器：只在文件上取大小与写入时间（目录上这两个字段无意义）。</summary>
+    private static ScannedEntry Select(ref FileSystemEntry entry) => entry.IsDirectory
+        ? new(true, entry.ToFullPath(), 0, default)
+        : new(false, entry.ToFullPath(), entry.Length, entry.LastWriteTimeUtc);
 
     private static bool IsExcluded(string directory, IReadOnlyList<string> excluded) =>
         excluded.Any(path => IsSameOrChild(directory, path));
@@ -161,4 +171,10 @@ internal sealed class DirectorySizeCalculator : IDirectorySizeCalculator
         FileNotFoundException or
         DirectoryNotFoundException or
         NotSupportedException;
+
+    private readonly record struct ScannedEntry(
+        bool IsDirectory,
+        string Path,
+        long Length,
+        DateTimeOffset LastWriteTimeUtc);
 }
