@@ -51,7 +51,16 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
             viewModel.Groups.Select(group => group.Group));
         Assert.Equal(4096, viewModel.Groups[0].SubtotalBytes);
         Assert.Equal(["codex-data"], viewModel.Groups[0].Items.Select(item => item.Id));
-        Assert.All(viewModel.Groups, group => Assert.True(group.IsExpanded));
+        // 默认全部折叠（手风琴），展开一个即折叠其余。
+        Assert.All(viewModel.Groups, group => Assert.False(group.IsExpanded));
+        Assert.All(viewModel.Groups, group => Assert.Equal(-90, group.ChevronRotation));
+
+        viewModel.Groups[1].IsExpanded = true;
+
+        Assert.True(viewModel.Groups[1].IsExpanded);
+        Assert.All(
+            viewModel.Groups.Where(group => !ReferenceEquals(group, viewModel.Groups[1])),
+            group => Assert.False(group.IsExpanded));
         Assert.Equal("系统缓存", viewModel.Groups[1].Name);
         Assert.Equal("1 项", viewModel.Groups[1].CountText);
     });

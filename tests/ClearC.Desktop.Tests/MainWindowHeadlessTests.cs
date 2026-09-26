@@ -88,6 +88,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             }
 
             Assert.Equal(WorkflowState.Results, viewModel.State);
+            viewModel.Groups[0].IsExpanded = true;
             window.UpdateLayout();
 
             var rows = window.GetVisualDescendants()
@@ -182,6 +183,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             }
 
             var row = viewModel.Items.Single(item => item.Id == "multi");
+            viewModel.Groups[0].IsExpanded = true;
             row.IsExpanded = true;
             window.UpdateLayout();
 
@@ -213,11 +215,19 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
             window.UpdateLayout();
             var group = viewModel.Groups[0];
-            var visibleRows = () => window.GetVisualDescendants()
-                .OfType<ToggleButton>()
-                .Count(row => row.Classes.Contains("rowMain") && row.IsEffectivelyVisible);
+            var visibleRows = () => VisibleRowCount(window);
+
+            // 默认折叠：组头在，行不在。
+            Assert.False(group.IsExpanded);
+            Assert.Equal(0, visibleRows());
+            Assert.Equal(-90, group.ChevronRotation);
+
+            group.IsExpanded = true;
+            window.UpdateLayout();
+
             var expanded = visibleRows();
             Assert.True(expanded > 0);
+            Assert.Equal(0, group.ChevronRotation);
 
             group.IsExpanded = false;
             window.UpdateLayout();
@@ -225,11 +235,43 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             Assert.Equal(0, visibleRows());
             Assert.Equal(-90, group.ChevronRotation);
 
-            group.IsExpanded = true;
+            window.Close();
+        }, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>手风琴：展开一个分组时，其它分组的行不渲染。</summary>
+    [Fact]
+    public async Task Groups_KeepOnlyOneExpandedAtATime()
+    {
+        await fixture.Session.Dispatch(async () =>
+        {
+            var viewModel = CreateViewModel(new TwoGroupScanner());
+            var window = CreateWindow(viewModel);
+            window.Show();
+
+            viewModel.PrimaryCommand.Execute(null);
+            for (var attempt = 0; attempt < 200 && viewModel.State != WorkflowState.Results; attempt++)
+            {
+                await Task.Delay(10, TestContext.Current.CancellationToken);
+            }
+
             window.UpdateLayout();
 
-            Assert.Equal(expanded, visibleRows());
-            Assert.Equal(0, group.ChevronRotation);
+            Assert.Equal(2, viewModel.Groups.Count);
+            Assert.Equal(0, VisibleRowCount(window));
+
+            viewModel.Groups[0].IsExpanded = true;
+            window.UpdateLayout();
+            var firstGroupRows = VisibleRowCount(window);
+            Assert.Equal(1, firstGroupRows);
+
+            viewModel.Groups[1].IsExpanded = true;
+            window.UpdateLayout();
+
+            Assert.False(viewModel.Groups[0].IsExpanded);
+            Assert.True(viewModel.Groups[1].IsExpanded);
+            Assert.Equal(firstGroupRows, VisibleRowCount(window));
+            Assert.Equal(["cache"], viewModel.Groups[1].Items.Select(item => item.Id));
 
             window.Close();
         }, TestContext.Current.CancellationToken);
@@ -306,6 +348,11 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
         }, TestContext.Current.CancellationToken);
     }
 
+    /// <summary>当前真正渲染出来的结果行数（折叠的分组不计）。</summary>
+    private static int VisibleRowCount(Window window) => window.GetVisualDescendants()
+        .OfType<ToggleButton>()
+        .Count(row => row.Classes.Contains("rowMain") && row.IsEffectivelyVisible);
+
     private static MainWindow CreateWindow(ICleanupScanner scanner, bool isElevated = true) =>
         CreateWindow(CreateViewModel(scanner, isElevated: isElevated));
 
@@ -355,6 +402,22 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
                     CleanerKind: CleanerKind.DirectoryContents, Paths: [@"C:\Users\test\AppData\Local\NuGet"]),
                 new("long", "A much longer cleanup result item name", @"C:\Users\test\.nuget\packages\a\b\c", CleanupCategory.TemporaryFiles, CleanupRisk.Medium, 4_096, 4_000, "", "long",
                     CleanerKind: CleanerKind.DirectoryContents, Paths: [@"C:\Users\test\.nuget\packages\a\b\c"])
+            ];
+            return Task.FromResult(new ScanResult(new("C:", "NTFS", 100_000, 40_000), items, TimeSpan.Zero));
+        }
+    }
+
+    /// <summary>两个分组各一行，用来验证手风琴（同一时刻只展开一个）。</summary>
+    private sealed class TwoGroupScanner : ICleanupScanner
+    {
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        {
+            CleanupItem[] items =
+            [
+                new("temp", "过期临时文件", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 1_024, 2, "", "temp",
+                    CleanerKind: CleanerKind.DirectoryContents, Paths: [@"C:\Temp"]),
+                new("cache", "NuGet 全局包缓存", @"C:\Users\test\.nuget\packages", CleanupCategory.PackageCache, CleanupRisk.Medium, 2_048, 3, "", "cache",
+                    CleanerKind: CleanerKind.DirectoryContents, Paths: [@"C:\Users\test\.nuget\packages"])
             ];
             return Task.FromResult(new ScanResult(new("C:", "NTFS", 100_000, 40_000), items, TimeSpan.Zero));
         }
