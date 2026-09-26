@@ -45,7 +45,8 @@ internal sealed record CleanupTargetDefinition(
     string Accent = "#2f6bff",
     string? LocationOverride = null,
     string? PathSource = null,
-    string? ScanNote = null)
+    string? ScanNote = null,
+    string? ScanLabel = null)
 {
     /// <summary>执行白名单：清理时 <see cref="CleanupItem.CleanRoots"/> 必须落在这些父目录内。</summary>
     public IReadOnlyList<string> EffectiveAllowedRoots => AllowedRoots is { Count: > 0 } ? AllowedRoots : Paths;
@@ -58,12 +59,15 @@ internal sealed record CleanupTargetDefinition(
         _ => $"{Paths[0]} 等 {Paths.Count} 个目录"
     };
 
+    /// <summary>幽灵行文案：命令类目标（vssadmin / DISM）显示可读标签，其余显示真实路径。</summary>
+    public string ScanTarget => ScanLabel ?? Location;
+
     public bool IsAnalyzeOnly => CleanerKind == CleanerKind.None;
 
-    /// <summary>每目标扫描超时：普通 60s、DISM/vssadmin 180s、大树 120s。</summary>
+    /// <summary>每目标扫描超时：普通 60s、DISM/vssadmin 90s（要拉子进程）、大树 120s。</summary>
     public TimeSpan EffectiveScanTimeout => ScanTimeout ?? ScanKind switch
     {
-        ScanKind.DismAnalyze or ScanKind.VssQuery => TimeSpan.FromSeconds(180),
+        ScanKind.DismAnalyze or ScanKind.VssQuery => TimeSpan.FromSeconds(90),
         _ => TimeSpan.FromSeconds(60)
     };
 

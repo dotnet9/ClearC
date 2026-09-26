@@ -59,13 +59,18 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
 
     public async Task<ScanResult> ScanAsync(
         IProgress<ScanProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool skipSystemAnalysis = false)
     {
         var stopwatch = Stopwatch.StartNew();
         var disk = _diskInfoProvider.GetSystemDrive();
-        var targets = _platform.IsWindows
+        var resolved = _platform.IsWindows
             ? await _catalog.ResolveTargetsAsync(cancellationToken)
             : [];
+        // 快速模式：不拉起 DISM / vssadmin 子进程，别为两个分析项让整次扫描多等几分钟。
+        var targets = skipSystemAnalysis
+            ? resolved.Where(target => !RequiresExternalAnalysis(target)).ToArray()
+            : resolved;
         var total = targets.Count + 1;
         var items = new ConcurrentDictionary<string, CleanupItem>(StringComparer.Ordinal);
         var completed = 0;
@@ -113,7 +118,7 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
                 {
                     // 幽灵行跟随当前目标：先报"正在分析"（带真实路径），完成后带最终大小再报一次。
                     progress?.Report(new(
-                        Volatile.Read(ref completed), total, target.DisplayName, target.Tier, null, target.Location));
+                        Volatile.Read(ref completed), total, target.DisplayName, target.Tier, null, target.ScanTarget));
 
                     // DISM / vssadmin 子进程必须串行，同时运行会互相锁住。
                     var serialized = target.ScanKind is ScanKind.DismAnalyze or ScanKind.VssQuery;
@@ -141,6 +146,10 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
                 });
         }
     }
+
+    /// <summary>需要拉起外部命令的分析项：DISM 组件存储与 vssadmin 卷影副本。</summary>
+    private static bool RequiresExternalAnalysis(CleanupTargetDefinition target) =>
+        target.ScanKind is ScanKind.DismAnalyze or ScanKind.VssQuery;
 
     private async Task<CleanupItem> ProbeAsync(CleanupTargetDefinition target, CancellationToken cancellationToken)
     {

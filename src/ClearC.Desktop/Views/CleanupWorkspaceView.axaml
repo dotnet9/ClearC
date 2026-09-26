@@ -109,6 +109,9 @@
                    Foreground="{DynamicResource ClearCText2}" Text="{Binding SelectedSummary}" />
         <CheckBox VerticalAlignment="Center" FontSize="11.5" Content="隐藏 0 字节项"
                   IsChecked="{Binding HideZeroByteItems}" />
+        <CheckBox VerticalAlignment="Center" FontSize="11.5" Content="快速模式"
+                  IsChecked="{Binding SkipSystemAnalysis}"
+                  ToolTip.Tip="跳过 WinSxS 与卷影副本的 DISM / vssadmin 分析（默认开）；取消勾选可查看这两项的官方数字，扫描会慢几十秒" />
       </StackPanel>
     </Grid>
 

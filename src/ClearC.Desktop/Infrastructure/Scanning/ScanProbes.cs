@@ -77,14 +77,16 @@ internal sealed class SingleFileProbe(IDirectorySizeCalculator sizeCalculator) :
 }
 
 /// <summary>
-/// WinSxS 用 DISM 官方数字；未提权 / dism 缺失 / 解析失败时回退目录扫描并标注偏差。
+/// WinSxS 用 DISM 官方数字；dism 缺失 / 超时 / 解析失败时回退目录扫描并标注偏差。
+/// 未提权时不再扫 WinSxS 目录：那是几万文件的大树，未提权大部分读不到，
+/// 既慢又偏小，直接标注"需管理员"。
 /// </summary>
 internal sealed partial class DismProbe(
     IDirectorySizeCalculator sizeCalculator,
     IProcessRunner processRunner,
     IElevationService elevationService) : IScanProbe
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(180);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(90);
 
     public ScanKind Kind => ScanKind.DismAnalyze;
 
@@ -92,7 +94,7 @@ internal sealed partial class DismProbe(
     {
         if (!elevationService.IsElevated)
         {
-            return await FallbackAsync(target, "需管理员：当前显示目录扫描数字（含硬链接，偏大）", cancellationToken);
+            return new(0, 0, null, "需管理员：WinSxS 官方数字与目录扫描都需要管理员权限");
         }
 
         var run = await processRunner.RunAsync(
@@ -168,7 +170,7 @@ internal sealed partial class DismProbe(
 /// <summary>卷影副本存储：只解析数字，不提供清理入口。</summary>
 internal sealed partial class VssProbe(IProcessRunner processRunner, IElevationService elevationService) : IScanProbe
 {
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(180);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(90);
 
     public ScanKind Kind => ScanKind.VssQuery;
 

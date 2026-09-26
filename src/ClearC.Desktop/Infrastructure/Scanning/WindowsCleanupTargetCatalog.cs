@@ -101,7 +101,8 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
                 row.Accent ?? DefaultAccent(row.Category),
                 row.LocationOverride,
                 row.PathSource?.Invoke(toolchain),
-                row.ScanNote));
+                row.ScanNote,
+                row.ScanLabel));
         }
 
         return targets;
@@ -156,7 +157,8 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
         string? Accent = null,
         string? LocationOverride = null,
         Func<IReadOnlyDictionary<string, PathResolution>, string?>? PathSource = null,
-        string? ScanNote = null);
+        string? ScanNote = null,
+        string? ScanLabel = null);
 
     private sealed record EnvironmentPaths(
         string SystemDrive,
@@ -643,7 +645,8 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
                 "组件存储占用。提权时使用 DISM 官方数字；未提权或分析失败时回退目录扫描，数字含硬链接、偏大。",
                 "i-window", Fixed(environment.Windows32("WinSxS")),
                 ScanKind: ScanKind.DismAnalyze, Tier: ScanTier.Slow, RequiresElevation: true,
-                ScanNote: "仅展示，不提供清理入口"),
+                ScanNote: "仅展示，不提供清理入口",
+                ScanLabel: "组件存储 WinSxS（DISM 分析）"),
             new("windows-installer", "Windows Installer 缓存", CleanupCategory.SystemFiles, CleanupRisk.High,
                 "MSI 安装缓存；删除后无法修复或卸载对应软件。",
                 "i-db", Fixed(environment.Windows32("Installer")), Tier: ScanTier.Slow),
@@ -660,7 +663,8 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
             new("vss-shadow", "卷影副本与还原点", CleanupCategory.SystemFiles, CleanupRisk.High,
                 "卷影副本存储占用（vssadmin 数字）；请用系统保护设置管理。",
                 "i-clock", Empty, ScanKind: ScanKind.VssQuery, Tier: ScanTier.Slow, RequiresElevation: true,
-                LocationOverride: "vssadmin list shadowstorage", ScanNote: "仅展示，不提供清理入口"),
+                LocationOverride: "vssadmin list shadowstorage", ScanNote: "仅展示，不提供清理入口",
+                ScanLabel: "卷影副本与还原点（vssadmin 查询）"),
             new("cbs-logs", "CBS 服务日志", CleanupCategory.SystemLogs, CleanupRisk.Medium,
                 "组件安装服务日志；被服务占用时会跳过。",
                 "i-doc", Fixed(environment.Windows32(@"Logs\CBS")), Tier: ScanTier.Slow, RequiresElevation: true),

@@ -46,6 +46,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     private int _pendingTargetCount;
     private bool _isAwaitingCommandStop;
     private bool _hideZeroByteItems = true;
+    private bool _skipSystemAnalysis = true;
     private string _ghostText = string.Empty;
     private bool _isCloseConfirmationVisible;
 
@@ -301,6 +302,16 @@ public sealed class MainWindowViewModel : ReactiveObject
             this.RaiseAndSetIfChanged(ref _hideZeroByteItems, value);
             RefreshGroups();
         }
+    }
+
+    /// <summary>
+    /// 快速模式（默认开）：跳过需要拉子进程的 DISM 组件存储与 vssadmin 卷影副本分析。
+    /// 它们各自可能等上几十秒，未提权时还拿不到数字；要看数字时取消勾选即可。
+    /// </summary>
+    public bool SkipSystemAnalysis
+    {
+        get => _skipSystemAnalysis;
+        set => this.RaiseAndSetIfChanged(ref _skipSystemAnalysis, value);
     }
 
     public bool IsEmptyVisible => State == WorkflowState.Idle && Items.Count == 0;
@@ -635,7 +646,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         var progress = new CallbackProgress<ScanProgress>(OnScanProgress);
         try
         {
-            var result = await _scanner.ScanAsync(progress, _operationCancellation.Token);
+            var result = await _scanner.ScanAsync(progress, _operationCancellation.Token, SkipSystemAnalysis);
             _disk = result.Disk;
             foreach (var model in result.Items)
             {

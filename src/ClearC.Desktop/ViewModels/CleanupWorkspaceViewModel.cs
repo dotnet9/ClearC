@@ -33,6 +33,7 @@ public sealed class CleanupWorkspaceViewModel : MainWindowSectionViewModel
             nameof(CanSelectAll),
             nameof(IsAllSelected),
             nameof(HideZeroByteItems),
+            nameof(SkipSystemAnalysis),
             nameof(IsEmptyVisible),
             nameof(IsListVisible),
             nameof(IsSweepVisible),
@@ -81,6 +82,13 @@ public sealed class CleanupWorkspaceViewModel : MainWindowSectionViewModel
     {
         get => Owner.HideZeroByteItems;
         set => Owner.HideZeroByteItems = value;
+    }
+
+    /// <summary>快速模式：跳过 DISM / vssadmin 分析项（默认开）。</summary>
+    public bool SkipSystemAnalysis
+    {
+        get => Owner.SkipSystemAnalysis;
+        set => Owner.SkipSystemAnalysis = value;
     }
 
     public bool IsEmptyVisible => Owner.IsEmptyVisible;
