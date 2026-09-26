@@ -1,0 +1,22 @@
+# ClearC 最小编辑规范：缩进、换行与 using 顺序。
+# CI 用 `dotnet format ClearC.slnx --verify-no-changes` 校验（§8.2）。
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Windows 批处理必须保持 CRLF。
+[*.{bat,cmd}]
+end_of_line = crlf
+
+[*.{md,json,yml,yaml,axaml,xaml,csproj,props,targets,slnx,xml}]
+indent_size = 2
+
+[*.cs]
+# using 顺序：System.* 排在最前，其余按字母序。
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false

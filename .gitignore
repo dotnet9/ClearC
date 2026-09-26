@@ -53,3 +53,7 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 /.vs
+
+# 本地工具与规划草稿（不随仓库分发）
+.next-cowork/
+.plan/
