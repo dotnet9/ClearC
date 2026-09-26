@@ -149,6 +149,45 @@ public sealed class WindowsCleanupScannerTests
         Assert.Equal("recycle-bin", result.Items[0].Id);
     }
 
+    /// <summary>快速模式：不跑 DISM / vssadmin，两个分析项不进结果也不进进度。</summary>
+    [Fact]
+    public async Task ScanAsync_SkipsExternalAnalysisTargetsInFastMode()
+    {
+        var cache = CreateTarget("cache", @"C:\Cache", ScanTier.Fast);
+        var winsxs = CreateTarget("winsxs", @"C:\Windows\WinSxS", ScanTier.Slow, ScanKind.DismAnalyze);
+        var vss = CreateTarget("vss-shadow", @"C:\Shadow", ScanTier.Slow, ScanKind.VssQuery) with { DisplayName = "卷影副本" };
+        var scanner = CreateScanner(
+            new FakeCatalog(cache, winsxs, vss),
+            new FakeSizeCalculator(new(1024, 4)),
+            new FakeRecycleProvider(default));
+        var progress = new List<ScanProgress>();
+
+        var result = await scanner.ScanAsync(
+            new CollectingProgress<ScanProgress>(progress.Add),
+            TestContext.Current.CancellationToken,
+            skipSystemAnalysis: true);
+
+        Assert.Equal(["cache", "recycle-bin"], result.Items.Select(item => item.Id));
+        Assert.DoesNotContain(progress, value => value.CurrentTarget is "winsxs" or "卷影副本");
+    }
+
+    /// <summary>关闭快速模式后，分析项照旧参与扫描（未提权时给出需管理员说明）。</summary>
+    [Fact]
+    public async Task ScanAsync_KeepsExternalAnalysisTargetsWithoutFastMode()
+    {
+        var winsxs = CreateTarget("winsxs", @"C:\Windows\WinSxS", ScanTier.Slow, ScanKind.DismAnalyze);
+        var scanner = CreateScanner(
+            new FakeCatalog(winsxs),
+            new FakeSizeCalculator(new(2048, 4)),
+            new FakeRecycleProvider(default));
+
+        var result = await scanner.ScanAsync(
+            cancellationToken: TestContext.Current.CancellationToken,
+            skipSystemAnalysis: false);
+
+        Assert.Contains(result.Items, item => item.Id == "winsxs");
+    }
+
     private static WindowsCleanupScanner CreateScanner(
         ICleanupTargetCatalog catalog,
         IDirectorySizeCalculator sizeCalculator,
@@ -168,7 +207,11 @@ public sealed class WindowsCleanupScannerTests
         new VssProbe(new FakeProcessRunner(), new FakeElevationService())
     ]);
 
-    private static CleanupTargetDefinition CreateTarget(string id, string path, ScanTier tier) => new(
+    private static CleanupTargetDefinition CreateTarget(
+        string id,
+        string path,
+        ScanTier tier,
+        ScanKind scanKind = ScanKind.Directory) => new(
         id,
         id,
         CleanupCategory.PackageCache,
@@ -176,6 +219,7 @@ public sealed class WindowsCleanupScannerTests
         "description",
         [path],
         CleanerKind.DirectoryContents,
+        ScanKind: scanKind,
         Tier: tier);
 
     private sealed class FakeCatalog(params CleanupTargetDefinition[] targets) : ICleanupTargetCatalog

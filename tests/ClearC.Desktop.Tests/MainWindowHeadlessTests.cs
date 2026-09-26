@@ -332,7 +332,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
     private sealed class EmptyScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default) =>
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false) =>
             Task.FromResult(new ScanResult(new("C:", "NTFS", 1, 1), [], TimeSpan.Zero));
     }
 
@@ -345,7 +345,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
     /// <summary>三行同一分组，用来断言行宽与列宽一致。</summary>
     private sealed class AlignmentScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
             CleanupItem[] items =
             [
@@ -362,7 +362,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
     private sealed class MultiPathScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
             CleanupItem[] items =
             [
@@ -387,7 +387,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
         public void Release() => _gate.TrySetResult();
 
-        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
             CleanupItem[] items =
             [

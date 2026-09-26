@@ -190,9 +190,21 @@ public sealed class WindowsCleanupTargetCatalogTests
     [Fact]
     public void GetTargets_AssignsSlowerTimeoutToDismAndVssTargets()
     {
-        Assert.Equal(TimeSpan.FromSeconds(180), Targets.Single(t => t.Id == "winsxs").EffectiveScanTimeout);
-        Assert.Equal(TimeSpan.FromSeconds(180), Targets.Single(t => t.Id == "vss-shadow").EffectiveScanTimeout);
+        // DISM / vssadmin 要拉子进程，超时留 90s（早先的 180s 会让扫描尾巴拖三分钟）。
+        Assert.Equal(TimeSpan.FromSeconds(90), Targets.Single(t => t.Id == "winsxs").EffectiveScanTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(90), Targets.Single(t => t.Id == "vss-shadow").EffectiveScanTimeout);
         Assert.Equal(TimeSpan.FromSeconds(60), Targets.Single(t => t.Id == "user-temp").EffectiveScanTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(120), Targets.Single(t => t.Id == "huggingface-cache").EffectiveScanTimeout);
+    }
+
+    /// <summary>命令类目标的幽灵行要显示人话，而不是 vssadmin 命令行。</summary>
+    [Fact]
+    public void GetTargets_UsesAReadableScanLabelForCommandProbes()
+    {
+        Assert.Equal("卷影副本与还原点（vssadmin 查询）", Targets.Single(t => t.Id == "vss-shadow").ScanTarget);
+        Assert.Equal("组件存储 WinSxS（DISM 分析）", Targets.Single(t => t.Id == "winsxs").ScanTarget);
+        // 路径类目标仍显示真实路径（大小写随系统目录命名）。
+        Assert.EndsWith(@"\Temp", Targets.Single(t => t.Id == "win-temp").ScanTarget, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

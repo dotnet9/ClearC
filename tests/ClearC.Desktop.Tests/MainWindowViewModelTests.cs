@@ -151,6 +151,27 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         Assert.False(viewModel.IsCloseConfirmationVisible);
     });
 
+    /// <summary>快速模式默认开：DISM / vssadmin 分析项默认不扫，取消勾选后重扫才带上它们。</summary>
+    [Fact]
+    public Task FastMode_SkipsSystemAnalysisByDefault() => RunAsync(async () =>
+    {
+        var scanner = new FakeScanner();
+        var viewModel = CreateViewModel(scanner);
+
+        Assert.True(viewModel.SkipSystemAnalysis);
+
+        viewModel.PrimaryCommand.Execute(null);
+        await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
+
+        Assert.True(scanner.LastSkipSystemAnalysis);
+
+        viewModel.SkipSystemAnalysis = false;
+        viewModel.SecondaryCommand.Execute(null);
+        await WaitUntilAsync(() => scanner.LastSkipSystemAnalysis == false && viewModel.State == WorkflowState.Results);
+
+        Assert.False(scanner.LastSkipSystemAnalysis);
+    });
+
     [Fact]
     public Task Cleanup_TransitionsThroughConfirmationAndDone() => RunAsync(async () =>
     {
@@ -490,8 +511,12 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
 
     private sealed class FakeScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        /// <summary>视图模型传给扫描器的"快速模式"开关，用来断言默认值与切换。</summary>
+        public bool? LastSkipSystemAnalysis { get; private set; }
+
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
+            LastSkipSystemAnalysis = skipSystemAnalysis;
             CleanupItem[] items =
             [
                 new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 1024, 2, "", "low",
@@ -520,7 +545,7 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
 
         public void Release() => _gate.TrySetResult();
 
-        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
             CleanupItem[] items =
             [
@@ -541,7 +566,7 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
     /// <summary>包含一个会被安全策略拒绝的受保护路径。</summary>
     private sealed class DeniedScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
             CleanupItem[] items =
             [
@@ -557,7 +582,7 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
     /// <summary>只产出回收站一行，用来验证"清空过程无法中断"的进度文案。</summary>
     private sealed class RecycleBinScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
         {
             CleanupItem[] items =
             [

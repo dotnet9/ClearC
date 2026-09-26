@@ -58,19 +58,21 @@ public sealed class ScanProbeTests
         Assert.Contains("可回收约", result.Note);
     }
 
+    /// <summary>未提权时不再退化成整目录硬扫：既慢又偏小，直接报"需管理员"。</summary>
     [Fact]
-    public async Task DismProbe_FallsBackToTheDirectoryScanWhileNotElevated()
+    public async Task DismProbe_ReportsNeedsAdministratorWithoutWalkingWinSxSWhileNotElevated()
     {
+        var calculator = new FakeSizeCalculator(new(4096, 7));
         var probe = new DismProbe(
-            new FakeSizeCalculator(new(4096, 7)),
+            calculator,
             new FakeProcessRunner(new ProcessRunResult(0, DismOutput, string.Empty)),
             new FakeElevationService(false));
 
         var result = await probe.ProbeAsync(CreateTarget(), TestContext.Current.CancellationToken);
 
-        Assert.Equal(4096, result.Bytes);
+        Assert.Equal(0, result.Bytes);
         Assert.Contains("需管理员", result.Note);
-        Assert.Contains("偏大", result.Note);
+        Assert.Equal(0, calculator.CallCount);
     }
 
     [Fact]
@@ -181,9 +183,16 @@ public sealed class ScanProbeTests
 
     private sealed class FakeSizeCalculator(DirectorySize size) : IDirectorySizeCalculator
     {
+        /// <summary>目录扫描是否被调用（未提权时不该发生）。</summary>
+        public int CallCount { get; private set; }
+
         public Task<DirectorySize> CalculateAsync(
             DirectorySizeRequest request,
-            CancellationToken cancellationToken = default) => Task.FromResult(size);
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(size);
+        }
     }
 
     private sealed class FakeProcessRunner(ProcessRunResult result) : IProcessRunner
