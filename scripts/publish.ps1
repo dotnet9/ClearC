@@ -42,7 +42,9 @@ foreach ($rid in $rids) {
 
 foreach ($rid in $rids) {
     $targetFramework = if ($rid.StartsWith("win-", [StringComparison]::OrdinalIgnoreCase)) { "net10.0-windows" } else { "net10.0" }
-    $isWindows = $rid.StartsWith("win-", [StringComparison]::OrdinalIgnoreCase)
+    # pwsh 7 reserves $IsWindows as a read-only automatic variable (case-insensitive),
+    # so the per-RID flag needs a name that cannot collide with it.
+    $isWindowsRid = $rid.StartsWith("win-", [StringComparison]::OrdinalIgnoreCase)
     $outputPath = Join-Path $publishRoot "$rid\ClearC"
     $resolvedOutputPath = [IO.Path]::GetFullPath($outputPath)
     $publishPrefix = $resolvedPublishRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
@@ -72,7 +74,7 @@ foreach ($rid in $rids) {
         "-p:ILLinkTreatWarningsAsErrors=false",
         "-o", $resolvedOutputPath
     )
-    if ($isWindows) {
+    if ($isWindowsRid) {
         $publishArguments += @("-p:PublishAot=true", "-p:StripSymbols=true", "-p:IlcSingleThreaded=true")
     } else {
         $publishArguments += @("-p:PublishAot=false", "-p:PublishSingleFile=true", "-p:PublishReadyToRun=false")
