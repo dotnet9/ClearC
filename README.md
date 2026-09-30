@@ -266,6 +266,28 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 
 目标机器不需要预装 .NET Runtime。Windows x64/x86 发布生成 NativeAOT、裁剪后的自包含程序；Linux x64/arm64 发布生成裁剪后的单文件程序。所有平台都会剥离 PDB/XML 符号文件。
 
+发布时可通过 `-Version` 把版本号写入程序集元数据（`scripts/publish.ps1 -RuntimeIdentifiers win-x64 -Version 0.2.0`）。
+
+### 安装包与自动发布
+
+推送 `v*` 或纯数字标签（例如 `v0.2.0` 或 `0.2.0`）会触发 [.github/workflows/release.yml](.github/workflows/release.yml)：
+
+1. 跑一遍全部测试；
+2. 分别发布 win-x64 / win-x86（NativeAOT 自包含）并执行 `--selfcheck` 冒烟验证；
+3. 用 Inno Setup 生成简体中文安装向导的 `ClearC-v0.2.0-win-x64-setup.exe` / `ClearC-v0.2.0-win-x86-setup.exe`，并生成 `.sha256` 校验文件；
+4. 创建 GitHub Release 并附上全部安装包。
+
+也可以在 GitHub Actions 页面手动触发 `release` 工作流并输入版本号。若仓库中存在 `.github/release-notes/v0.2.0.md`，Release 正文会使用它，否则自动生成变更说明。
+
+本机构建安装包（需安装 [Inno Setup 6](https://jrsoftware.org/isinfo.php)）：
+
+```powershell
+./scripts/build_installer.ps1 -Version 0.2.0              # x64
+./scripts/build_installer.ps1 -Version 0.2.0 -Architecture x86
+```
+
+输出到 `artifacts\release\`。ClearC 仅支持 Windows，因此自动发布只生成 Windows 安装包；Linux 构建仍只用于验证编译。
+
 ## 日志与隐私
 
 日志写入 `%LocalAppData%\ClearC\Logs`，新写入的日志会把 `%USERPROFILE%` / `%APPDATA%` / `%LOCALAPPDATA%` / `%TEMP%` / `%ProgramData%` / `C:\Windows` 前缀替换为环境变量占位符，日志面板的复制与导出同样使用脱敏后的内容。

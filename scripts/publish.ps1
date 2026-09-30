@@ -5,7 +5,12 @@ param(
     [string[]] $RuntimeIdentifiers,
 
     [Parameter(Mandatory = $false)]
-    [string] $RuntimeIdentifier
+    [string] $RuntimeIdentifier,
+
+    # Optional version baked into the assembly metadata (for example 0.2.0);
+    # the project's own Version property is used when omitted.
+    [Parameter(Mandatory = $false)]
+    [string] $Version
 )
 
 $ErrorActionPreference = "Stop"
@@ -71,6 +76,9 @@ foreach ($rid in $rids) {
         $publishArguments += @("-p:PublishAot=true", "-p:StripSymbols=true", "-p:IlcSingleThreaded=true")
     } else {
         $publishArguments += @("-p:PublishAot=false", "-p:PublishSingleFile=true", "-p:PublishReadyToRun=false")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($Version)) {
+        $publishArguments += @("-p:Version=$Version")
     }
 
     Write-Host "Publishing ClearC.Desktop for $rid..."
