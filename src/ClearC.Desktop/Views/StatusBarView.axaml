@@ -6,14 +6,40 @@
   <Border Background="{DynamicResource ClearCStatusBg}"
           BorderBrush="{DynamicResource ClearCLine}"
           BorderThickness="0,1,0,0">
-    <Grid Margin="14,0" ColumnDefinitions="*,Auto">
-      <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+    <Grid Margin="14,0" ColumnDefinitions="*,Auto,Auto">
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
         <Ellipse Width="7" Height="7" Classes.blinkDot="{Binding IsStatusPulsing}" Fill="{Binding StatusBrush}" />
         <TextBlock FontSize="11" Foreground="{DynamicResource ClearCText2}" Text="{Binding StatusText}" />
       </StackPanel>
-      <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="11"
+      <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="11" Margin="0,0,12,0"
                  FontFamily="{DynamicResource ClearCMonoFont}"
                  Foreground="{DynamicResource ClearCText3}" Text="{Binding StateCode}" />
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                  DataContext="{Binding Update}">
+        <TextBlock VerticalAlignment="Center" FontSize="11"
+                   Foreground="{DynamicResource ClearCText2}" Text="{Binding ResultText}"
+                   IsVisible="{Binding ResultText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <ProgressBar Width="90" Height="4" VerticalAlignment="Center"
+                     IsVisible="{Binding IsDownloading}"
+                     Maximum="100" Value="{Binding DownloadProgress}" />
+        <TextBlock VerticalAlignment="Center" FontSize="11"
+                   Foreground="{DynamicResource ClearCText2}" Text="{Binding ProgressText}"
+                   IsVisible="{Binding IsDownloading}" />
+        <Button Classes="btn mini" Content="{Binding ButtonText}"
+                Command="{Binding CheckCommand}"
+                IsEnabled="{Binding !IsChecking}"
+                Classes.danger="{Binding UpdateAvailable}"
+                VerticalAlignment="Center" />
+        <Button Classes="btn mini" Content="下载" Command="{Binding DownloadCommand}"
+                IsVisible="{Binding CanDownload}"
+                VerticalAlignment="Center" />
+        <Button Classes="btn mini primary" Content="安装" Command="{Binding InstallCommand}"
+                IsVisible="{Binding IsReady}"
+                VerticalAlignment="Center" />
+        <Button Classes="btn mini ghost" Content="发布页" Command="{Binding OpenPageCommand}"
+                IsVisible="{Binding NeedsReleasePage}"
+                VerticalAlignment="Center" />
+      </StackPanel>
     </Grid>
   </Border>
 </UserControl>

@@ -86,6 +86,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         LogPanel = new LogPanelViewModel(this, logStore, _palette);
         StatusBar = new StatusBarViewModel(this);
         Overlay = new WorkflowOverlayViewModel(this);
+        Update = new UpdateViewModel((level, message, exception) => AddLog(level, message, exception));
 
         State = WorkflowState.Idle;
         AddLog("OK", $"ClearC 引擎初始化完成 · v{ProductVersion}");
@@ -97,6 +98,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
 
         AddLog("INFO", "等待指令 … 点击「扫描分析」开始扫描");
+        _ = Update.CheckAsync();
     }
 
     /// <summary>「停止并退出」完成、可以真正关闭窗口时触发。</summary>
@@ -115,6 +117,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     public LogPanelViewModel LogPanel { get; }
     public StatusBarViewModel StatusBar { get; }
     public WorkflowOverlayViewModel Overlay { get; }
+    public UpdateViewModel Update { get; }
 
     public ICommand PrimaryCommand { get; }
     public ICommand SecondaryCommand { get; }
