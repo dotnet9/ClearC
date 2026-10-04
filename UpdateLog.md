@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.2.2 (2026-10-04)
+
+### 更新检查摆脱 API 配额
+
+- 版本检查改走 GitHub 网页端点：`releases/latest` 的 302 落点直接给出最新版本号（只读响应头），版本变化时再经 `expanded_assets/{tag}`（发布页懒加载资产列表的接口）解析安装包直链——全程不碰 api.github.com 的每小时配额，代理共享出口 IP 也不会再看到「GitHub API 限流中」。
+- Releases API 降级为自动回退（403/429 按 Retry-After / X-RateLimit-Reset 退避），网页端点改版或超时时才启用；下载与校验流程不变。
+
 ## 0.2.1 (2026-10-01)
 
 # ClearC v0.2.1
