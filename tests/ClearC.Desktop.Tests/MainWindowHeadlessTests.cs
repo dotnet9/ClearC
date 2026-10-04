@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.VisualTree;
@@ -51,8 +51,10 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             var root = Assert.IsType<Border>(window.Content);
             var grid = Assert.IsType<Grid>(root.Child);
             Assert.Equal(new GridLength(44), grid.RowDefinitions[0].Height);
-            Assert.Equal(new GridLength(160), grid.RowDefinitions[2].Height);
-            Assert.Equal(new GridLength(28), grid.RowDefinitions[3].Height);
+            // 行 1 是平台提示横幅（Auto，非 Windows 才显示）；工作区/日志/状态栏顺延为 2/3/4
+            Assert.Equal(GridLength.Auto, grid.RowDefinitions[1].Height);
+            Assert.Equal(new GridLength(160), grid.RowDefinitions[3].Height);
+            Assert.Equal(new GridLength(28), grid.RowDefinitions[4].Height);
 
             var statusBar = Assert.Single(window.GetVisualDescendants().OfType<StatusBarView>());
             Assert.Equal(28, statusBar.Bounds.Height);

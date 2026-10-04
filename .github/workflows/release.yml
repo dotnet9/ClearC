@@ -96,7 +96,7 @@ jobs:
         run: pwsh scripts/package_linux_deb.ps1 -RuntimeIdentifier '${{ matrix.rid }}' -Version $env:APP_VERSION -Force
 
       - name: 打包 macOS dmg 安装镜像
-        if: runner.os == 'MacOSX'
+        if: runner.os == 'macOS'
         shell: bash
         run: chmod +x scripts/package_macos_dmg.sh && ./scripts/package_macos_dmg.sh '${{ matrix.rid }}' "$APP_VERSION"
 
