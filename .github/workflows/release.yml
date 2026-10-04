@@ -1,4 +1,4 @@
-name: release
+﻿name: release
 
 # 推送 v* 或纯数字标签（如 0.2.0）即发布：win-x64 / win-x86 生成 NativeAOT
 # 自包含程序、冒烟验证后用 Inno Setup 打中文安装包，并创建 GitHub Release。
@@ -45,10 +45,22 @@ jobs:
           - rid: win-x86
             arch: x86
             os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+          - rid: osx-x64
+            os: macos-14
+          - rid: osx-arm64
+            os: macos-14
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: 安装 NativeAOT 依赖 (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
 
       - name: 安装 .NET SDK
         uses: actions/setup-dotnet@v4
@@ -73,11 +85,23 @@ jobs:
         shell: pwsh
         run: pwsh scripts/publish.ps1 -RuntimeIdentifiers '${{ matrix.rid }}' -Version $env:APP_VERSION
 
-      - name: 冒烟测试（--selfcheck）
+      - name: 冒烟测试（--selfcheck，Windows）
+        if: runner.os == 'Windows'
         shell: pwsh
         run: pwsh scripts/smoke.ps1 -Path 'artifacts/publish/${{ matrix.rid }}/ClearC/ClearC.Desktop.exe'
 
+      - name: 打包 Linux deb 安装包
+        if: runner.os == 'Linux'
+        shell: pwsh
+        run: pwsh scripts/package_linux_deb.ps1 -RuntimeIdentifier '${{ matrix.rid }}' -Version $env:APP_VERSION -Force
+
+      - name: 打包 macOS dmg 安装镜像
+        if: runner.os == 'MacOSX'
+        shell: bash
+        run: chmod +x scripts/package_macos_dmg.sh && ./scripts/package_macos_dmg.sh '${{ matrix.rid }}' "$APP_VERSION"
+
       - name: 构建 Windows 安装包
+        if: runner.os == 'Windows'
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
         with:
           path: scripts/ClearC.iss
@@ -87,7 +111,8 @@ jobs:
             /DSourceDir=${{ github.workspace }}\artifacts\publish\${{ matrix.rid }}\ClearC
             /DOutputDir=${{ github.workspace }}\artifacts\release
 
-      - name: 计算安装包 SHA-256
+      - name: 计算安装包 SHA-256 (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         env:
           ARCH: ${{ matrix.arch }}
@@ -165,4 +190,6 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/release/*.exe
+            artifacts/release/*.deb
+            artifacts/release/*.dmg
             artifacts/release/*.sha256

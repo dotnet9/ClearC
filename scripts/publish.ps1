@@ -1,4 +1,4 @@
-param(
+﻿param(
     # Accept either the plural form used by the batch wrappers or the old
     # singular switch so existing callers remain compatible.
     [Parameter(Mandatory = $false)]
@@ -33,7 +33,7 @@ $rids = @(
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
         Select-Object -Unique
 )
-$supportedRids = @("win-x64", "win-x86", "linux-x64", "linux-arm64")
+$supportedRids = @("win-x64", "win-x86", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64")
 foreach ($rid in $rids) {
     if ($supportedRids -notcontains $rid) {
         throw "Unsupported runtime identifier '$rid'. Supported platforms: $($supportedRids -join ', ')."
@@ -77,7 +77,19 @@ foreach ($rid in $rids) {
     if ($isWindowsRid) {
         $publishArguments += @("-p:PublishAot=true", "-p:StripSymbols=true", "-p:IlcSingleThreaded=true")
     } else {
-        $publishArguments += @("-p:PublishAot=false", "-p:PublishSingleFile=true", "-p:PublishReadyToRun=false")
+        # 全平台 NativeAOT：完整反射元数据保全，单线程 ILC；
+        # Apple ld_classic 不支持压缩调试段（-gz=zlib），macOS 保留符号
+        $publishArguments += @(
+            "-p:PublishAot=true",
+            "-p:PublishTrimmed=true",
+            "-p:PublishSingleFile=false",
+            "-p:IlcGenerateCompleteTypeMetadata=true",
+            "-p:IlcTrimMetadata=false",
+            "-p:IlcSingleThreaded=true"
+        )
+        if ($rid.StartsWith("osx-", [StringComparison]::OrdinalIgnoreCase)) {
+            $publishArguments += "-p:StripSymbols=false"
+        }
     }
     if (-not [string]::IsNullOrWhiteSpace($Version)) {
         $publishArguments += @("-p:Version=$Version")

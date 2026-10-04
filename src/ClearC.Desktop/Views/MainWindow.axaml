@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ClearC.Desktop.ViewModels"
         xmlns:views="using:ClearC.Desktop.Views"
@@ -20,12 +20,23 @@
           BoxShadow="0 30 80 0 #29172B63, 0 2 8 0 #0F172B63"
           ClipToBounds="True"
           CornerRadius="{DynamicResource ClearCRadiusWindow}">
-    <Grid RowDefinitions="44,*,160,28">
+    <Grid RowDefinitions="44,Auto,*,160,28">
       <views:TitleBarView Grid.Row="0" DataContext="{Binding TitleBar}" />
-      <views:CleanupWorkspaceView Grid.Row="1" DataContext="{Binding Workspace}" />
-      <views:LogPanelView Grid.Row="2" DataContext="{Binding LogPanel}" />
-      <views:StatusBarView Grid.Row="3" DataContext="{Binding StatusBar}" />
-      <views:WorkflowOverlayView Grid.RowSpan="4" DataContext="{Binding Overlay}" />
+      <Border x:Name="PlatformNoticeBanner" Grid.Row="1" IsVisible="False"
+              Background="#FFF6E5" BorderBrush="#F0C878" BorderThickness="0,1"
+              Padding="14,8">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                     Foreground="#8A6116"
+                     Text="🚧 当前平台（Linux / macOS）版本正在开发中：扫描与清理能力依赖 Windows 系统接口，桌面框架已就绪，敬请期待后续版本。" />
+          <Button Grid.Column="1" Content="知道了" Margin="12,0,0,0" Padding="10,4"
+                  Click="OnPlatformNoticeDismiss" VerticalAlignment="Center" />
+        </Grid>
+      </Border>
+      <views:CleanupWorkspaceView Grid.Row="2" DataContext="{Binding Workspace}" />
+      <views:LogPanelView Grid.Row="3" DataContext="{Binding LogPanel}" />
+      <views:StatusBarView Grid.Row="4" DataContext="{Binding StatusBar}" />
+      <views:WorkflowOverlayView Grid.RowSpan="5" DataContext="{Binding Overlay}" />
     </Grid>
   </Border>
 </Window>

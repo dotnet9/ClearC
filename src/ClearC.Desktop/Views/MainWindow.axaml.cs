@@ -1,5 +1,7 @@
+﻿using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using ClearC.Desktop.ViewModels;
 
 namespace ClearC.Desktop.Views;
@@ -12,6 +14,17 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+
+        // 产品口径：非 Windows 平台功能正在开发中，启动时给出友好提示（不阻塞浏览界面）
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            PlatformNoticeBanner.IsVisible = true;
+        }
+    }
+
+    private void OnPlatformNoticeDismiss(object? sender, RoutedEventArgs e)
+    {
+        PlatformNoticeBanner.IsVisible = false;
     }
 
     /// <summary>Esc 关闭当前模态（确认页 / 关闭保护），减少鼠标折返。</summary>
