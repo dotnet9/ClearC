@@ -311,3 +311,7 @@ scripts/                  可重复执行的发布脚本与冒烟脚本
 ## 许可证
 
 [MIT](LICENSE)
+
+## 发布
+
+标准发布流程与发布说明规范见 [docs/RELEASE.md](docs/RELEASE.md)。
