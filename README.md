@@ -4,6 +4,13 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 项目的重点不是“尽可能多删”，而是把每个清理目标的容量、风险、执行方式和失败原因展示清楚。低风险缓存默认选中；会造成不可恢复结果或需要重新下载依赖的项目必须手动选择并再次确认。
 
+## 下载安装
+
+从 [GitHub Releases](https://github.com/dotnet9/ClearC/releases/latest) 下载最新安装包（附 `.sha256` 校验）：
+
+
+- Windows x64：`ClearC-v*-win-x64-setup.exe`（简体中文安装向导）
+
 ## 功能
 
 - 浅色技术蓝紫界面：自绘标题栏、磁盘环图、分组清理列表、行内详情、风险确认、Toast、自绘日志面板与状态栏，共六个工作流状态。
@@ -214,7 +221,7 @@ ClearC 不会自动结束 IDE、`dotnet`、MSBuild 或浏览器进程。遇到�
 
 ## 环境
 
-- Windows 10/11 x64（或 x86）
+- Windows 10/11 x64
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)（从源码构建时需要）
 
 仓库通过 `global.json` 固定 SDK 功能带，并允许使用同一功能带的最新补丁。
@@ -251,12 +258,11 @@ publish_win-x64.bat --no-pause
 通用入口支持一次发布一个或多个平台：
 
 ```bat
-publish.bat "win-x64 win-x86" --no-pause
+publish.bat "win-x64" --no-pause
 publish_all.bat --no-pause
-publish_win-x86.bat --no-pause
 ```
 
-`publish_all.bat` 默认只发布 `win-x64 win-x86`；Linux RID 需要在 `publish.bat` 里显式指定，且只用于验证编译通过。
+`publish_all.bat` 默认只发布 `win-x64`；Linux RID 需要在 `publish.bat` 里显式指定，且只用于验证编译通过。
 
 自包含程序输出到：
 
@@ -264,7 +270,7 @@ publish_win-x86.bat --no-pause
 artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 ```
 
-目标机器不需要预装 .NET Runtime。Windows x64/x86 发布生成 NativeAOT、裁剪后的自包含程序；Linux x64/arm64 发布生成裁剪后的单文件程序。所有平台都会剥离 PDB/XML 符号文件。
+目标机器不需要预装 .NET Runtime。Windows x64 发布生成 NativeAOT、裁剪后的自包含程序；Linux x64/arm64 发布生成裁剪后的单文件程序。所有平台都会剥离 PDB/XML 符号文件。
 
 发布时可通过 `-Version` 把版本号写入程序集元数据（`scripts/publish.ps1 -RuntimeIdentifiers win-x64 -Version 0.2.0`）。
 
@@ -273,8 +279,8 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 推送 `v*` 或纯数字标签（例如 `v0.2.0` 或 `0.2.0`）会触发 [.github/workflows/release.yml](.github/workflows/release.yml)：
 
 1. 跑一遍全部测试；
-2. 分别发布 win-x64 / win-x86（NativeAOT 自包含）并执行 `--selfcheck` 冒烟验证；
-3. 用 Inno Setup 生成简体中文安装向导的 `ClearC-v0.2.0-win-x64-setup.exe` / `ClearC-v0.2.0-win-x86-setup.exe`，并生成 `.sha256` 校验文件；
+2. 发布 win-x64（NativeAOT 自包含）并执行 `--selfcheck` 冒烟验证；
+3. 用 Inno Setup 生成简体中文安装向导的 `ClearC-v0.2.0-win-x64-setup.exe`，并生成 `.sha256` 校验文件；
 4. 创建 GitHub Release 并附上全部安装包。
 
 也可以在 GitHub Actions 页面手动触发 `release` 工作流并输入版本号。若仓库中存在 `.github/release-notes/v0.2.0.md`，Release 正文会使用它，否则自动生成变更说明。
@@ -283,7 +289,6 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 
 ```powershell
 ./scripts/build_installer.ps1 -Version 0.2.0              # x64
-./scripts/build_installer.ps1 -Version 0.2.0 -Architecture x86
 ```
 
 输出到 `artifacts\release\`。ClearC 仅支持 Windows，因此自动发布只生成 Windows 安装包；Linux 构建仍只用于验证编译。
