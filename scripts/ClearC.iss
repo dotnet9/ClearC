@@ -1,21 +1,12 @@
 ; ClearC Windows installer.
 ; Build from the repository root with Inno Setup 6 and pass /DAppVersion=x.y.z.
-; /DAppArch selects the target architecture: x64 (default) or x86.
 
 #ifndef AppVersion
 #define AppVersion "0.0.0"
 #endif
 
-#ifndef AppArch
-#define AppArch "x64"
-#endif
-
-#if AppArch != "x64" && AppArch != "x86"
-#error AppArch must be x64 or x86
-#endif
-
 #ifndef SourceDir
-#define SourceDir "..\artifacts\publish\win-" + AppArch + "\ClearC"
+#define SourceDir "..\artifacts\publish\win-x64\ClearC"
 #endif
 
 #ifndef OutputDir
@@ -33,13 +24,11 @@ DefaultDirName={autopf}\ClearC
 DefaultGroupName=ClearC
 DisableProgramGroupPage=yes
 OutputDir={#OutputDir}
-OutputBaseFilename=ClearC-v{#AppVersion}-win-{#AppArch}-setup
+OutputBaseFilename=ClearC-v{#AppVersion}-win-x64-setup
 Compression=lzma2/ultra64
 SolidCompression=yes
-#if AppArch == "x64"
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-#endif
 PrivilegesRequired=admin
 ChangesAssociations=no
 CloseApplications=yes

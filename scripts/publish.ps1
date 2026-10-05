@@ -33,7 +33,7 @@ $rids = @(
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
         Select-Object -Unique
 )
-$supportedRids = @("win-x64", "win-x86", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64")
+$supportedRids = @("win-x64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64")
 foreach ($rid in $rids) {
     if ($supportedRids -notcontains $rid) {
         throw "Unsupported runtime identifier '$rid'. Supported platforms: $($supportedRids -join ', ')."

@@ -1,7 +1,7 @@
 ﻿name: release
 
-# 推送 v* 或纯数字标签（如 0.2.0）即发布：win-x64 / win-x86 生成 NativeAOT
-# 自包含程序、冒烟验证后用 Inno Setup 打中文安装包，并创建 GitHub Release。
+# 推送 v* 或纯数字标签（如 0.2.0）即发布：win-x64 生成 NativeAOT 自包含程序、
+# 冒烟验证后用 Inno Setup 打中文安装包，并创建 GitHub Release。
 on:
   push:
     tags:
@@ -41,9 +41,6 @@ jobs:
         include:
           - rid: win-x64
             arch: x64
-            os: windows-latest
-          - rid: win-x86
-            arch: x86
             os: windows-latest
           - rid: linux-x64
             os: ubuntu-latest

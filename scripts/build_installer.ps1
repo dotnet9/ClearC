@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $Version,
 
-    [ValidateSet("x64", "x86")]
+    [ValidateSet("x64")]
     [string] $Architecture = "x64",
 
     [string] $SourceDirectory = "",
