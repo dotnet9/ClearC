@@ -4,6 +4,8 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 项目的重点不是“尽可能多删”，而是把每个清理目标的容量、风险、执行方式和失败原因展示清楚。低风险缓存默认选中；会造成不可恢复结果或需要重新下载依赖的项目必须手动选择并再次确认。
 
+![ClearC 界面工作流](docs/media/design-workflow.gif)
+
 ## 下载安装
 
 从 [GitHub Releases](https://github.com/dotnet9/ClearC/releases/latest) 下载最新安装包（附 `.sha256` 校验）：
