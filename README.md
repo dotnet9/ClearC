@@ -16,7 +16,7 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 ## 功能
 
 - 浅色技术蓝紫界面：自绘标题栏、磁盘环图、分组清理列表、行内详情、风险确认、Toast、自绘日志面板与状态栏，共六个工作流状态。
-- 清理目标从 11 个扩展到约 120 个，覆盖系统缓存、系统日志与转储、升级与安装残留、遥测、显卡与游戏缓存、Store 应用、浏览器家族、开发缓存、引擎与移动开发、OEM 残留。
+- 清理目标已扩展到 113 个，覆盖系统缓存、系统日志与转储、升级与安装残留、遥测、显卡与游戏缓存、Store 应用、浏览器家族、开发缓存、引擎与移动开发、OEM 残留。
 - 两档并行扫描：快档（缓存 / 日志 / 临时目录 / 单文件）4 路并发先出首屏结果，慢档（DISM、大树、Store 应用）2 路并发后台补齐；列表里只保留一条跟随当前分析目标的幽灵行（显示正在分析的真实路径或可读的分析项名称），已完成行按大小插入所属分组。
 - 扫描走一次目录枚举取回类型、大小与写入时间（不再对每个条目额外查询属性），十万文件级的缓存目录实测快约 6 倍；每个目标独立超时（普通 60s、DISM/vssadmin 90s、大树 120s），DISM 与 vssadmin 串行执行避免互相锁死。
 - 快速模式（默认开，分组栏右侧可切换）：跳过 `winsxs` 与 `vss-shadow` 这两个要拉起 DISM / `vssadmin` 子进程的分析项——未提权时它们拿不到官方数字却仍要等；取消勾选即恢复分析。未提权时 WinSxS 不再退化成整目录硬扫（未提权读不全、数字偏小且很慢），直接标注"需管理员"。
@@ -281,8 +281,8 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 推送 `v*` 或纯数字标签（例如 `v0.2.0` 或 `0.2.0`）会触发 [.github/workflows/release.yml](.github/workflows/release.yml)：
 
 1. 跑一遍全部测试；
-2. 发布 win-x64（NativeAOT 自包含）并执行 `--selfcheck` 冒烟验证；
-3. 用 Inno Setup 生成简体中文安装向导的 `ClearC-v0.2.0-win-x64-setup.exe`，并生成 `.sha256` 校验文件；
+2. 为 win-x64 / linux-x64 / linux-arm64 / osx-x64 / osx-arm64 五个平台发布并执行 `--selfcheck` 冒烟验证；
+3. 分别生成 Windows 安装包（Inno Setup 中文向导 `ClearC-v0.2.0-win-x64-setup.exe`）、Linux `.deb` 与 macOS `.dmg`，均附 `.sha256` 校验文件；
 4. 创建 GitHub Release 并附上全部安装包。
 
 也可以在 GitHub Actions 页面手动触发 `release` 工作流并输入版本号。若仓库中存在 `.github/release-notes/v0.2.0.md`，Release 正文会使用它，否则自动生成变更说明。
@@ -293,7 +293,7 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 ./scripts/build_installer.ps1 -Version 0.2.0              # x64
 ```
 
-输出到 `artifacts\release\`。ClearC 仅支持 Windows，因此自动发布只生成 Windows 安装包；Linux 构建仍只用于验证编译。
+输出到 `artifacts\release\`。ClearC 的清理功能仅支持 Windows（非 Windows 平台启动会提示并退出）；自动发布除 Windows 安装包外，也会为 Linux/macOS 生成 deb/dmg 安装包。
 
 ## 日志与隐私
 
