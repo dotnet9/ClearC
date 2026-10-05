@@ -9,7 +9,7 @@ EXECUTABLE_NAME="ClearC.Desktop"
 BUNDLE_ID="com.dotnet9.clearc"
 CATEGORY="public.app-category.utilities"
 ICON_SOURCE="${ICON_SOURCE:-$ROOT_DIR/logo.png}"
-PUBLISH_DIR="${PUBLISH_DIR:-$ROOT_DIR/artifacts/publish/$RID/ClearC}"
+PUBLISH_DIR="${PUBLISH_DIR:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/artifacts/release}"
 CODESIGN_IDENTITY="${CODESIGN_IDENTITY:-}"
 
@@ -97,6 +97,7 @@ PLIST
 [[ $# -eq 2 ]] || { usage; exit 1; }
 RID="$1"
 VERSION="$2"
+[[ -n "$PUBLISH_DIR" ]] || PUBLISH_DIR="$ROOT_DIR/artifacts/publish/$RID/ClearC"
 case "$RID" in
   osx-x64|osx-arm64) ;;
   *) die "Unknown RID: $RID (use osx-x64 or osx-arm64)" ;;
