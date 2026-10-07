@@ -3,83 +3,132 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ClearC · 界面原型总览</title>
+<title>ClearC · C盘清理助手（交互原型）</title>
 <link rel="stylesheet" href="assets/theme.css">
 </head>
-<body>
+<body data-state="idle">
 <div class="stage">
 
-  <!-- SVG 图标库 -->
-  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
-    <defs>
-      <symbol id="i-clean" viewBox="0 0 24 24"><path d="M11 3l1.7 4.6 4.6 1.7-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
-      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
-      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5.5 12.5l4 4 9-9"/></symbol>
-      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2L3.2 19h17.6zM12 10.2v4M12 16.8h.01"/></symbol>
-      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 3.2L5.8 13.4h5.4l-1.4 7.4 7.4-10.2h-5.4z"/></symbol>
-      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M13.5 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5z"/><path d="M13.5 3.5v5h5M9 13h6M9 16h6"/></symbol>
-    </defs>
-  </svg>
+  <!-- ══════════ 主窗体（唯一入口，所有状态由交互推进） ══════════ -->
+  <div class="app-window" id="appWindow">
 
-  <div class="index-wrap">
-    <div class="ix-head">
-      <img class="ix-logo" src="../logo.png" alt="ClearC">
-      <h1>ClearC 界面原型</h1>
-      <span>C盘清理助手 · 界面原型 · 科技蓝紫主题 · v0.3</span>
-    </div>
+    <!-- 标题栏：可拖动 / 双击最大化 -->
+    <header class="titlebar" id="titlebar">
+      <div class="tb-left">
+        <span class="app-logo"><svg class="icon"><use href="#i-logo"/></svg></span>
+        <b class="app-name">CLEARC</b>
+        <span class="tb-sub">C 盘清理助手</span>
+      </div>
+      <div class="tb-right">
+        <button class="tb-btn" id="btnMin" title="最小化"><svg class="icon"><use href="#i-min"/></svg></button>
+        <button class="tb-btn" id="btnMax" title="最大化"><svg class="icon"><use href="#i-max"/></svg></button>
+        <button class="tb-btn tb-close" id="btnClose" title="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
+      </div>
+    </header>
 
-    <div class="ix-grid">
+    <main class="page">
 
-      <a class="ix-card" href="state-01-idle.html">
-        <div class="ix-no">STATE 01</div>
-        <div class="ix-title">初始状态</div>
-        <div class="ix-desc">应用启动后的待机界面：磁盘占用环图 71%，可释放空间显示「待扫描」，结果区为空状态提示。</div>
-        <div class="ix-file">state-01-idle.html</div>
-      </a>
+      <!-- ── 总览：磁盘环图 + 统计 + 操作 ── -->
+      <section class="hero">
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 150 150">
+            <defs>
+              <linearGradient id="dg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#2f6bff"/><stop offset="1" stop-color="#7c5cff"/>
+              </linearGradient>
+            </defs>
+            <circle class="d-track" cx="75" cy="75" r="56"/>
+            <circle class="d-fill" id="donutFill" cx="75" cy="75" r="56" transform="rotate(-90 75 75)"/>
+          </svg>
+          <div class="d-center"><b id="donutPct">67%</b><span>已用</span></div>
+        </div>
 
-      <a class="ix-card" href="state-02-scanning.html">
-        <div class="ix-no">STATE 02</div>
-        <div class="ix-title">分析中</div>
-        <div class="ix-desc">点击「扫描分析」后：进度条流动、结果逐行出现、扫描光带扫过列表、日志实时滚动输出。</div>
-        <div class="ix-file">state-02-scanning.html</div>
-      </a>
+        <div class="hero-info">
+          <div class="hi-title"><b id="hiTitle">C: 系统盘</b><span id="hiSub">Win 10 Pro x64 · SSD · 535.9 GB · NTFS</span></div>
+          <div class="hi-stat"><span id="heroLabel">可释放空间</span><b id="heroStat" class="placeholder">待扫描</b></div>
+          <div class="hi-sub">已用 <b id="diskUsed">361.4 GB</b> · 可用 <b id="diskFree">174.5 GB</b><span id="diskScope"></span></div>
+          <div class="hi-actions">
+            <button class="btn primary" id="btnMain"></button>
+            <button class="btn ghost" id="btnSecond"></button>
+          </div>
+          <div class="hi-progress" id="progressWrap" hidden>
+            <div class="pbar"><i id="pbarFill"></i></div>
+            <span id="progressText"></span>
+          </div>
+        </div>
+      </section>
 
-      <a class="ix-card" href="state-03-results.html">
-        <div class="ix-no">STATE 03</div>
-        <div class="ix-title">分析结果</div>
-        <div class="ix-desc">扫描完成：15 个目标全部列出，13 项可清理共 29.53 GB，默认全选，行可展开查看详情。</div>
-        <div class="ix-file">state-03-results.html</div>
-      </a>
+      <!-- ── 盘符选择（扫描范围，复选框勾选需要扫描的盘符） ── -->
+      <section class="diskbar">
+        <div class="db-head"><span class="db-title">扫描范围</span><span class="db-hint" id="dbHint"></span></div>
+        <div class="db-cards" id="dbCards"></div>
+      </section>
 
-      <a class="ix-card" href="state-04-confirm.html">
-        <div class="ix-no">STATE 04</div>
-        <div class="ix-title">确认清理</div>
-        <div class="ix-desc">点击「执行清理」弹出确认框：待清理清单、合计释放量、高风险项橙色警告条。</div>
-        <div class="ix-file">state-04-confirm.html</div>
-      </a>
+      <!-- ── 全选 + 已选统计 ── -->
+      <div class="listbar">
+        <label class="chk">
+          <input type="checkbox" id="checkAll">
+          <span class="box"><svg class="icon"><use href="#i-check"/></svg></span>全选
+        </label>
+        <span class="sel-info" id="selInfo"></span>
+      </div>
 
-      <a class="ix-card" href="state-05-cleaning.html">
-        <div class="ix-no">STATE 05</div>
-        <div class="ix-title">清理中</div>
-        <div class="ix-desc">逐项清理：已完成行打勾置灰并显示释放量，当前行蓝色脉冲高亮，日志持续输出。</div>
-        <div class="ix-file">state-05-cleaning.html</div>
-      </a>
+      <!-- ── 结果清单 ── -->
+      <div class="list-zone">
+        <div class="list" id="list"></div>
+      </div>
+    </main>
 
-      <a class="ix-card" href="state-06-done.html">
-        <div class="ix-no">STATE 06</div>
-        <div class="ix-title">清理完成</div>
-        <div class="ix-desc">清理结束：共释放 11.30 GB，环图降至 67%，跳过项保留标记，右下角成功 Toast。</div>
-        <div class="ix-file">state-06-done.html</div>
-      </a>
+    <!-- ── 日志视图 ── -->
+    <section class="console">
+      <div class="con-head">
+        <span class="con-title"><i class="tick"></i>运行日志<em id="logCount">0</em></span>
+        <span class="con-actions"><button class="mini" id="btnClearLog">清空</button></span>
+      </div>
+      <div class="con-body" id="logBody"></div>
+    </section>
 
-    </div>
-
-    <div class="ix-foot">
-      ◎ 状态页之间可通过底部导航条互相跳转，主按钮按真实流程联动（初始 → 分析 → 结果 → 确认 → 清理 → 完成）<br>
-      ◎ 开发实现时请以各状态页为视觉基准：assets/theme.css 定义了全部颜色 / 字号 / 间距 / 动效参数
-    </div>
+    <!-- ── 状态栏 ── -->
+    <footer class="statusbar">
+      <span class="sb-left"><i class="dot" id="sbDot"></i><span id="sbText">SYSTEM READY · 等待指令</span></span>
+      <span class="sb-right">CLEARC · PROTO · 交互原型</span>
+    </footer>
   </div>
 
+  <!-- 最小化后的任务栏胶囊（点击恢复窗口） -->
+  <div class="taskbar" id="taskbar" hidden>
+    <button id="btnRestore" title="恢复窗口">
+      <span class="app-logo"><svg class="icon"><use href="#i-logo"/></svg></span>
+      CLEARC · 点击恢复窗口
+    </button>
+  </div>
 </div>
+
+<!-- 右键菜单（打开所在目录 / 复制路径 / 勾选 / 详情） -->
+<div class="ctx" id="ctxMenu" hidden></div>
+
+<!-- 确认清理模态框（按当前勾选动态生成） -->
+<div class="mask" id="mask" hidden>
+  <div class="modal">
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-body" id="mBody"></div>
+    <div class="m-actions" id="mActions"></div>
+  </div>
+</div>
+
+<!-- 关闭应用后的重启层 -->
+<div class="mask" id="relaunch" hidden>
+  <div class="relaunch-box">
+    <span class="app-logo"><svg class="icon"><use href="#i-logo"/></svg></span>
+    <div class="relaunch-title">ClearC 已关闭</div>
+    <div class="relaunch-sub">原型演示 · 关闭即退出应用，点击下方按钮重新启动</div>
+    <button class="btn primary" id="btnRelaunch">重新启动</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="assets/app.js"></script>
 </body>
 </html>
