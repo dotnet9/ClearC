@@ -90,7 +90,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             }
 
             Assert.Equal(WorkflowState.Results, viewModel.State);
-            viewModel.Groups[0].IsExpanded = true;
+            viewModel.Sections[0].Groups[0].IsExpanded = true;
             window.UpdateLayout();
 
             var rows = window.GetVisualDescendants()
@@ -106,7 +106,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             // 固定列宽：元信息 158 / 大小 92 / 状态 64（§6.5）。
             var rowGrid = Assert.IsType<Grid>(rows[0].Content);
             Assert.Equal(
-                "22,34,12,*,Auto,158,92,64,14",
+                "22,34,12,*,Auto,158,92,64,30,14",
                 string.Join(',', rowGrid.ColumnDefinitions.Select(column => column.Width.ToString())));
             Assert.Equal(new GridLength(158), rowGrid.ColumnDefinitions[5].Width);
             Assert.Equal(new GridLength(92), rowGrid.ColumnDefinitions[6].Width);
@@ -185,7 +185,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             }
 
             var row = viewModel.Items.Single(item => item.Id == "multi");
-            viewModel.Groups[0].IsExpanded = true;
+            viewModel.Sections[0].Groups[0].IsExpanded = true;
             row.IsExpanded = true;
             window.UpdateLayout();
 
@@ -216,7 +216,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             }
 
             window.UpdateLayout();
-            var group = viewModel.Groups[0];
+            var group = viewModel.Sections[0].Groups[0];
             var visibleRows = () => VisibleRowCount(window);
 
             // 默认折叠：组头在，行不在。
@@ -259,21 +259,21 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
             window.UpdateLayout();
 
-            Assert.Equal(2, viewModel.Groups.Count);
+            Assert.Equal(2, viewModel.Sections[0].Groups.Count);
             Assert.Equal(0, VisibleRowCount(window));
 
-            viewModel.Groups[0].IsExpanded = true;
+            viewModel.Sections[0].Groups[0].IsExpanded = true;
             window.UpdateLayout();
             var firstGroupRows = VisibleRowCount(window);
             Assert.Equal(1, firstGroupRows);
 
-            viewModel.Groups[1].IsExpanded = true;
+            viewModel.Sections[0].Groups[1].IsExpanded = true;
             window.UpdateLayout();
 
-            Assert.False(viewModel.Groups[0].IsExpanded);
-            Assert.True(viewModel.Groups[1].IsExpanded);
+            Assert.False(viewModel.Sections[0].Groups[0].IsExpanded);
+            Assert.True(viewModel.Sections[0].Groups[1].IsExpanded);
             Assert.Equal(firstGroupRows, VisibleRowCount(window));
-            Assert.Equal(["cache"], viewModel.Groups[1].Items.Select(item => item.Id));
+            Assert.Equal(["cache"], viewModel.Sections[0].Groups[1].Items.Select(item => item.Id));
 
             window.Close();
         }, TestContext.Current.CancellationToken);
@@ -381,7 +381,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
     private sealed class EmptyScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false) =>
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null) =>
             Task.FromResult(new ScanResult(new("C:", "NTFS", 1, 1), [], TimeSpan.Zero));
     }
 
@@ -394,7 +394,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
     /// <summary>三行同一分组，用来断言行宽与列宽一致。</summary>
     private sealed class AlignmentScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [
@@ -412,7 +412,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
     /// <summary>两个分组各一行，用来验证手风琴（同一时刻只展开一个）。</summary>
     private sealed class TwoGroupScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [
@@ -427,7 +427,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
     private sealed class MultiPathScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [
@@ -452,7 +452,7 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
         public void Release() => _gate.TrySetResult();
 
-        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [

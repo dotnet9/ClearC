@@ -188,6 +188,47 @@ public sealed class WindowsCleanupScannerTests
         Assert.Contains(result.Items, item => item.Id == "winsxs");
     }
 
+    /// <summary>勾选的盘符范围原样传给目录解析；多盘扫描靠目录按范围生成目标。</summary>
+    [Fact]
+    public async Task ScanAsync_PassesTheSelectedDriveScopeToTheCatalog()
+    {
+        var target = CreateTarget("cache", @"C:\Cache", ScanTier.Fast);
+        var catalog = new FakeCatalog(target);
+        var scanner = CreateScanner(
+            catalog,
+            new FakeSizeCalculator(new(1024, 4)),
+            new FakeRecycleProvider(default));
+
+        await scanner.ScanAsync(
+            cancellationToken: TestContext.Current.CancellationToken,
+            driveScope: ["C:", "D:"]);
+
+        Assert.Equal(["C:", "D:"], catalog.LastDriveScope);
+    }
+
+    /// <summary>额外盘符的回收站：目录给出分盘回收行时，扫描逐盘用 Shell 数字产出条目。</summary>
+    [Fact]
+    public async Task ScanAsync_AddsAPerDriveRecycleBinForExtraDrives()
+    {
+        var dRecycle = new CleanupTargetDefinition(
+            "d-recycle-bin", "回收站（D:）", CleanupCategory.RecycleBin, CleanupRisk.Medium,
+            "description", [@"D:\$Recycle.Bin"],
+            CleanerKind.RecycleBin, LocationOverride: @"D:\$Recycle.Bin");
+        var catalog = new FakeCatalog(dRecycle);
+        var scanner = CreateScanner(
+            catalog,
+            new FakeSizeCalculator(default),
+            new FakeRecycleProvider(new(4096, 6)));
+
+        var result = await scanner.ScanAsync(
+            cancellationToken: TestContext.Current.CancellationToken,
+            driveScope: ["C:", "D:"]);
+
+        Assert.Equal(["recycle-bin", "d-recycle-bin"], result.Items.Select(item => item.Id).ToArray());
+        Assert.Equal(4096, result.Items.Single(item => item.Id == "d-recycle-bin").SizeBytes);
+        Assert.Equal(@"D:\$Recycle.Bin", result.Items.Single(item => item.Id == "d-recycle-bin").Location);
+    }
+
     private static WindowsCleanupScanner CreateScanner(
         ICleanupTargetCatalog catalog,
         IDirectorySizeCalculator sizeCalculator,
@@ -224,10 +265,17 @@ public sealed class WindowsCleanupScannerTests
 
     private sealed class FakeCatalog(params CleanupTargetDefinition[] targets) : ICleanupTargetCatalog
     {
+        public IReadOnlyList<string>? LastDriveScope { get; private set; }
+
         public IReadOnlyList<CleanupTargetDefinition> GetTargets() => targets;
 
-        public Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<CleanupTargetDefinition>>(targets);
+        public Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(
+            IReadOnlyList<string>? driveScope = null,
+            CancellationToken cancellationToken = default)
+        {
+            LastDriveScope = driveScope;
+            return Task.FromResult<IReadOnlyList<CleanupTargetDefinition>>(targets);
+        }
     }
 
     private sealed class FakeSizeCalculator(DirectorySize size) : IDirectorySizeCalculator
@@ -276,6 +324,8 @@ public sealed class WindowsCleanupScannerTests
     private sealed class FakeDiskProvider : IDiskInfoProvider
     {
         public DiskSnapshot GetSystemDrive() => new("C:", "NTFS", 100_000, 40_000);
+
+        public IReadOnlyList<DiskSnapshot> GetFixedDrives() => [GetSystemDrive(), new("D:", "NTFS", 200_000, 10_000)];
     }
 
     private sealed class FakeRecycleProvider(DirectorySize size) : IRecycleBinInfoProvider

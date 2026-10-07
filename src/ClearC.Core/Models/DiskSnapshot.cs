@@ -4,7 +4,8 @@ public sealed record DiskSnapshot(
     string DriveName,
     string DriveFormat,
     long TotalBytes,
-    long FreeBytes)
+    long FreeBytes,
+    string? VolumeLabel = null)
 {
     public long UsedBytes => Math.Max(0, TotalBytes - FreeBytes);
 

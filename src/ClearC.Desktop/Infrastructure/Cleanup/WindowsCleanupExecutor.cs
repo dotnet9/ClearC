@@ -51,8 +51,15 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
         var stopwatch = Stopwatch.StartNew();
         var results = new List<CleanupItemResult>(plan.Count);
 
-        // 与扫描同一代目录状态：执行前重新解析一次目录/探测结果。
-        var targets = BuildTargetMap(await _catalog.ResolveTargetsAsync(cancellationToken));
+        // 与扫描同一代目录状态：执行前按计划涉及的盘符重新解析一次目录/探测结果。
+        var scope = plan
+            .SelectMany(item => item.CleanRoots)
+            .Select(root => Path.GetPathRoot(root)?.TrimEnd('\\', '/'))
+            .Where(root => !string.IsNullOrWhiteSpace(root))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var targets = BuildTargetMap(await _catalog.ResolveTargetsAsync(scope, cancellationToken));
 
         for (var index = 0; index < plan.Count; index++)
         {

@@ -40,7 +40,10 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         viewModel.PrimaryCommand.Execute(null);
         await WaitUntilAsync(() => viewModel.State == WorkflowState.Results);
 
-        // 组间按小计降序：用户文件 4096 > 系统缓存 2048 > 临时文件 1024。
+        // 分区只有一个（C: 系统盘）；组间按小计降序：用户文件 4096 > 系统缓存 2048 > 临时文件 1024。
+        var section = Assert.Single(viewModel.Sections);
+        Assert.Equal("C:", section.DriveName);
+        Assert.Equal("系统盘", section.TypeText);
         Assert.Equal(
             new[]
             {
@@ -48,21 +51,21 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
                 CleanupDisplayGroup.SystemCache,
                 CleanupDisplayGroup.TemporaryFiles
             },
-            viewModel.Groups.Select(group => group.Group));
-        Assert.Equal(4096, viewModel.Groups[0].SubtotalBytes);
-        Assert.Equal(["codex-data"], viewModel.Groups[0].Items.Select(item => item.Id));
+            section.Groups.Select(group => group.Group));
+        Assert.Equal(4096, section.Groups[0].SubtotalBytes);
+        Assert.Equal(["codex-data"], section.Groups[0].Items.Select(item => item.Id));
         // 默认全部折叠（手风琴），展开一个即折叠其余。
-        Assert.All(viewModel.Groups, group => Assert.False(group.IsExpanded));
-        Assert.All(viewModel.Groups, group => Assert.Equal(-90, group.ChevronRotation));
+        Assert.All(section.Groups, group => Assert.False(group.IsExpanded));
+        Assert.All(section.Groups, group => Assert.Equal(-90, group.ChevronRotation));
 
-        viewModel.Groups[1].IsExpanded = true;
+        section.Groups[1].IsExpanded = true;
 
-        Assert.True(viewModel.Groups[1].IsExpanded);
+        Assert.True(section.Groups[1].IsExpanded);
         Assert.All(
-            viewModel.Groups.Where(group => !ReferenceEquals(group, viewModel.Groups[1])),
+            section.Groups.Where(group => !ReferenceEquals(group, section.Groups[1])),
             group => Assert.False(group.IsExpanded));
-        Assert.Equal("系统缓存", viewModel.Groups[1].Name);
-        Assert.Equal("1 项", viewModel.Groups[1].CountText);
+        Assert.Equal("系统缓存", section.Groups[1].Name);
+        Assert.Equal("1 项", section.Groups[1].CountText);
     });
 
     [Fact]
@@ -490,14 +493,18 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         viewModel.Items.Single(item => item.Id == id);
 
     private static IReadOnlyList<CleanupItemViewModel> VisibleRows(MainWindowViewModel viewModel) =>
-        viewModel.Groups.SelectMany(group => group.Items).ToArray();
+        viewModel.Sections
+            .SelectMany(section => section.Groups)
+            .SelectMany(group => group.Items)
+            .ToArray();
 
     private static MainWindowViewModel CreateViewModel(
         ICleanupScanner? scanner = null,
         ICleanupExecutor? executor = null,
         IElevationService? elevationService = null,
         IToastScheduler? toastScheduler = null,
-        ILocationOpener? locationOpener = null) => new(
+        ILocationOpener? locationOpener = null,
+        IReadOnlyList<DiskSnapshot>? initialDrives = null) => new(
         scanner ?? new FakeScanner(),
         executor ?? new FakeExecutor(),
         new CleanupSafetyPolicy(),
@@ -505,7 +512,8 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         new InMemoryLogStore(NullApplicationLogger.Instance),
         elevationService ?? new FakeElevationService(true),
         toastScheduler: toastScheduler,
-        locationOpener: locationOpener);
+        locationOpener: locationOpener,
+        initialDrives: initialDrives);
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
@@ -523,9 +531,13 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         /// <summary>视图模型传给扫描器的"快速模式"开关，用来断言默认值与切换。</summary>
         public bool? LastSkipSystemAnalysis { get; private set; }
 
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        /// <summary>视图模型传给扫描器的盘符范围。</summary>
+        public IReadOnlyList<string>? LastDriveScope { get; private set; }
+
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             LastSkipSystemAnalysis = skipSystemAnalysis;
+            LastDriveScope = driveScope;
             CleanupItem[] items =
             [
                 new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 1024, 2, "", "low",
@@ -547,6 +559,29 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         }
     }
 
+    /// <summary>C 盘与 D 盘各产出一条目标，用来验证分盘默认勾选策略与分区。</summary>
+    private sealed class DualDriveScanner : ICleanupScanner
+    {
+        public IReadOnlyList<string>? LastDriveScope { get; private set; }
+
+        public Task<ScanResult> ScanAsync(
+            IProgress<ScanProgress>? progress = null,
+            CancellationToken cancellationToken = default,
+            bool skipSystemAnalysis = false,
+            IReadOnlyList<string>? driveScope = null)
+        {
+            LastDriveScope = driveScope;
+            CleanupItem[] items =
+            [
+                new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 1024, 2, "", "low",
+                    CleanerKind: CleanerKind.DirectoryContents, Paths: [@"C:\Temp"]),
+                new("d-temp", "D 盘临时目录", @"D:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 2048, 4, "", "d-temp",
+                    CleanerKind: CleanerKind.DirectoryContents, Paths: [@"D:\Temp"])
+            ];
+            return Task.FromResult(new ScanResult(new("C:", "NTFS", 100_000, 40_000), items, TimeSpan.FromSeconds(1)));
+        }
+    }
+
     /// <summary>报完已完成的快档行后把幽灵行停在第二个目标上，用来验证取消与幽灵行。</summary>
     private sealed class BlockingScanner : ICleanupScanner
     {
@@ -554,7 +589,7 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
 
         public void Release() => _gate.TrySetResult();
 
-        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [
@@ -575,7 +610,7 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
     /// <summary>包含一个会被安全策略拒绝的受保护路径。</summary>
     private sealed class DeniedScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [
@@ -591,7 +626,7 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
     /// <summary>只产出回收站一行，用来验证"清空过程无法中断"的进度文案。</summary>
     private sealed class RecycleBinScanner : ICleanupScanner
     {
-        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false)
+        public Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress = null, CancellationToken cancellationToken = default, bool skipSystemAnalysis = false, IReadOnlyList<string>? driveScope = null)
         {
             CleanupItem[] items =
             [

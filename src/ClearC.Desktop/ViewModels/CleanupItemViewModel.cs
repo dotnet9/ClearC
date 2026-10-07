@@ -14,6 +14,7 @@ public sealed class CleanupItemViewModel : ReactiveObject
     private readonly IThemePalette _palette;
     private readonly bool _isElevated;
     private readonly ILocationOpener? _locationOpener;
+    private readonly ITextClipboard? _clipboard;
     private bool _isSelected;
     private bool _isExpanded;
     private bool _canSelect;
@@ -26,18 +27,23 @@ public sealed class CleanupItemViewModel : ReactiveObject
         CleanupItem model,
         IThemePalette? palette = null,
         bool isElevated = true,
-        ILocationOpener? locationOpener = null)
+        ILocationOpener? locationOpener = null,
+        ITextClipboard? clipboard = null)
     {
         Model = model;
         _palette = palette ?? ThemePalette.Instance;
         _isElevated = isElevated;
         _locationOpener = locationOpener;
+        _clipboard = clipboard;
 
         var accent = ParseAccent(model.Accent);
         AccentBrush = new SolidColorBrush(accent);
         TileBackground = new SolidColorBrush(accent, 0x1f / 255d);
         TileBorder = new SolidColorBrush(accent, 0x55 / 255d);
         OpenLocationCommand = ReactiveCommand.Create(OpenLocation);
+        CopyPathCommand = ReactiveCommand.CreateFromTask(CopyPathAsync);
+        ToggleSelectionCommand = ReactiveCommand.Create(ToggleSelection);
+        ToggleExpandedCommand = ReactiveCommand.Create(() => IsExpanded = !IsExpanded);
     }
 
     public event EventHandler? SelectionChanged;
@@ -73,6 +79,24 @@ public sealed class CleanupItemViewModel : ReactiveObject
 
     /// <summary>在资源管理器中定位第一个清理路径；失败原因显示在详情里。</summary>
     public ICommand OpenLocationCommand { get; }
+
+    /// <summary>复制完整路径到剪贴板（右键菜单）。</summary>
+    public ICommand CopyPathCommand { get; }
+
+    /// <summary>勾选 / 取消勾选（右键菜单）。</summary>
+    public ICommand ToggleSelectionCommand { get; }
+
+    /// <summary>展开 / 收起详情（右键菜单）。</summary>
+    public ICommand ToggleExpandedCommand { get; }
+
+    /// <summary>右键菜单里勾选项的文案随当前状态切换。</summary>
+    public string ContextToggleText => IsSelected ? "取消勾选" : "勾选此项";
+
+    /// <summary>右键菜单里详情项的文案随展开状态切换。</summary>
+    public string ContextExpandText => IsExpanded ? "收起详情" : "展开详情";
+
+    /// <summary>所在盘符（如 "C:"），结果列表按盘符分区。</summary>
+    public string DriveName => Model.DriveName;
 
     public string LocationHint
     {
@@ -129,6 +153,7 @@ public sealed class CleanupItemViewModel : ReactiveObject
             }
 
             this.RaiseAndSetIfChanged(ref _isSelected, value);
+            this.RaisePropertyChanged(nameof(ContextToggleText));
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -142,6 +167,7 @@ public sealed class CleanupItemViewModel : ReactiveObject
             {
                 this.RaiseAndSetIfChanged(ref _isExpanded, value);
                 this.RaisePropertyChanged(nameof(ChevronRotation));
+                this.RaisePropertyChanged(nameof(ContextExpandText));
             }
         }
     }
@@ -240,6 +266,20 @@ public sealed class CleanupItemViewModel : ReactiveObject
             ? "当前环境无法打开资源管理器"
             : _locationOpener.TryOpen(path ?? string.Empty) ?? string.Empty;
     }
+
+    private async Task CopyPathAsync()
+    {
+        if (_clipboard is null)
+        {
+            LocationHint = "当前环境没有可用剪贴板";
+            return;
+        }
+
+        await _clipboard.CopyAsync(Model.Location);
+        LocationHint = "路径已复制到剪贴板";
+    }
+
+    private void ToggleSelection() => IsSelected = !IsSelected;
 
     private static Color ParseAccent(string? accent) =>
         Color.TryParse(accent, out var parsed) ? parsed : Color.Parse("#2f6bff");

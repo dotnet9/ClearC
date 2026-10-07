@@ -5,7 +5,7 @@
              xmlns:views="using:ClearC.Desktop.Views"
              x:Class="ClearC.Desktop.Views.CleanupWorkspaceView"
              x:DataType="vm:CleanupWorkspaceViewModel">
-  <Grid RowDefinitions="Auto,Auto,Auto,*">
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
     <!-- ═══ 总览区 ═══ -->
     <Grid Grid.Row="0" Margin="26,20,26,18" ColumnDefinitions="150,30,*">
       <Grid Width="150" Height="150">
@@ -100,8 +100,57 @@
       </Grid>
     </Border>
 
+    <!-- ═══ 盘符选择条（扫描范围，原型 .diskbar） ═══ -->
+    <StackPanel Grid.Row="2" Margin="26,0,26,12">
+      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,8">
+        <TextBlock FontSize="12.5" FontWeight="Bold" Text="扫描范围" />
+        <TextBlock VerticalAlignment="Center" FontSize="11"
+                   Foreground="{DynamicResource ClearCText3}" Text="{Binding ScopeHint}" />
+      </StackPanel>
+      <ItemsControl ItemsSource="{Binding DriveCards}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Spacing="10" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:DriveCardViewModel">
+            <Border Classes="driveCard" Classes.on="{Binding IsChecked}" Classes.locked="{Binding IsLocked}"
+                    ToolTip.Tip="{Binding LockedToolTip}">
+              <Grid ColumnDefinitions="Auto,Auto,14,*,12,Auto">
+                <CheckBox Grid.Column="0" VerticalAlignment="Center"
+                          IsChecked="{Binding IsChecked}"
+                          IsEnabled="{Binding !IsLocked}"
+                          ToolTip.Tip="{Binding LockedToolTip}" />
+                <TextBlock Grid.Column="1" Classes="driveLetter" Text="{Binding Letter}" />
+                <StackPanel Grid.Column="3" VerticalAlignment="Center" Spacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <Border Classes="driveType" Classes.data="{Binding !IsSystemDrive}">
+                      <TextBlock Text="{Binding TypeText}" />
+                    </Border>
+                    <TextBlock MaxWidth="130" VerticalAlignment="Center"
+                               FontSize="12" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource ClearCText2}"
+                               IsVisible="{Binding HasVolumeLabel}" Text="{Binding VolumeLabel}" />
+                  </StackPanel>
+                  <Border Classes="driveUsageTrack" Width="150">
+                    <Border Classes="driveUsageFill" Classes.hot="{Binding IsNearlyFull}"
+                            Width="{Binding UsageBarWidth}" />
+                  </Border>
+                  <TextBlock FontSize="10.5" Foreground="{DynamicResource ClearCText3}" Text="{Binding UsageText}" />
+                </StackPanel>
+                <TextBlock Grid.Column="5" Classes="driveScan" Classes.pending="{Binding IsScanPending}"
+                           MaxWidth="150" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding HasScanSummary}" Text="{Binding ScanSummary}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+
     <!-- ═══ 分组栏 ═══ -->
-    <Grid Grid.Row="2" Margin="26,0,26,10" ColumnDefinitions="Auto,*,Auto">
+    <Grid Grid.Row="3" Margin="26,0,26,10" ColumnDefinitions="Auto,*,Auto">
       <CheckBox Grid.Column="0" VerticalAlignment="Center" Content="全选"
                 IsEnabled="{Binding CanSelectAll}" IsChecked="{Binding IsAllSelected}" />
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">

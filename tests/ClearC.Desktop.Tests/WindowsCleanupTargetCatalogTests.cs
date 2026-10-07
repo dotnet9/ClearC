@@ -15,7 +15,33 @@ public sealed class WindowsCleanupTargetCatalogTests
     [Fact]
     public void GetTargets_ReturnsTheExpectedNumberOfTargets()
     {
-        Assert.InRange(Targets.Count, 80, 140);
+        // 每个非系统固定盘追加 8 个通用目标（临时目录 / Windows.old / 页面文件 / OEM 残留 / 回收站）。
+        Assert.InRange(Targets.Count, 80, 200);
+    }
+
+    /// <summary>多盘符：每个非系统固定盘都有通用目标，且 id 按盘符前缀区分。</summary>
+    [Fact]
+    public void GetTargets_AddsGenericTargetsForEveryExtraFixedDrive()
+    {
+        foreach (var drive in WindowsCleanupTargetCatalog.FixedDriveRoots(excludeSystemDrive: true))
+        {
+            var prefix = drive.TrimEnd('\\', '/').ToLowerInvariant();
+            Assert.Contains(Targets, target => target.Id == $"{prefix}-recycle-bin");
+            Assert.Contains(Targets, target => target.Id == $"{prefix}-temp");
+            Assert.Contains(Targets, target => target.Id == $"{prefix}-pagefile");
+        }
+    }
+
+    /// <summary>扫描范围之外的盘符不生成目标（扫描按勾选范围进行）。</summary>
+    [Fact]
+    public async Task ResolveTargetsAsync_SkipsDrivesOutsideTheScope()
+    {
+        var catalog = new WindowsCleanupTargetCatalog();
+
+        var scoped = await catalog.ResolveTargetsAsync(["C:"], TestContext.Current.CancellationToken);
+
+        Assert.Contains(scoped, target => target.Id == "user-temp");
+        Assert.DoesNotContain(scoped, target => target.Id.EndsWith("-recycle-bin", StringComparison.Ordinal) && target.Id != "recycle-bin");
     }
 
     [Fact]

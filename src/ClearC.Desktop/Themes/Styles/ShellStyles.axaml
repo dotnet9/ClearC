@@ -310,6 +310,111 @@
     <Setter Property="Background" Value="{DynamicResource ClearCRowHover}" />
   </Style>
 
+  <!-- ═══ 盘符选择条（原型 .dcard） ═══ -->
+  <Style Selector="Border.driveCard">
+    <Setter Property="Background" Value="{DynamicResource ClearCWin}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="14,10" />
+    <Setter Property="MinWidth" Value="330" />
+  </Style>
+  <Style Selector="Border.driveCard.on">
+    <Setter Property="BorderBrush" Value="#FF9FB6FF" />
+    <Setter Property="Background" Value="#FFF3F7FF" />
+    <Setter Property="BoxShadow" Value="0 4 14 0 #1A2F6BFF" />
+  </Style>
+  <Style Selector="TextBlock.driveLetter">
+    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCAccent}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.driveType">
+    <Setter Property="Padding" Value="7,1" />
+    <Setter Property="CornerRadius" Value="99" />
+    <Setter Property="Background" Value="#FFE9F0FF" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.driveType TextBlock">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCAccent}" />
+  </Style>
+  <Style Selector="Border.driveType.data">
+    <Setter Property="Background" Value="#FFF1EDFF" />
+  </Style>
+  <Style Selector="Border.driveType.data TextBlock">
+    <Setter Property="Foreground" Value="#FF7C5CFF" />
+  </Style>
+  <Style Selector="Border.driveUsageTrack">
+    <Setter Property="Height" Value="5" />
+    <Setter Property="Background" Value="{DynamicResource ClearCProgressTrack}" />
+    <Setter Property="CornerRadius" Value="99" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style Selector="Border.driveUsageFill">
+    <Setter Property="Background" Value="{DynamicResource ClearCAccentGradient}" />
+    <Setter Property="CornerRadius" Value="99" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+  <Style Selector="Border.driveUsageFill.hot">
+    <Setter Property="Background" Value="#FFEF4444" />
+  </Style>
+  <Style Selector="TextBlock.driveScan">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFamily" Value="{DynamicResource ClearCMonoFont}" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCAccent}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextAlignment" Value="Right" />
+  </Style>
+  <Style Selector="TextBlock.driveScan.pending">
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCText3}" />
+  </Style>
+
+  <!-- ═══ 盘符分区头（原型 .ds-head） ═══ -->
+  <Style Selector="Border.dsHead">
+    <Setter Property="Background" Value="{DynamicResource ClearCPanel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="8,7,12,7" />
+  </Style>
+  <Style Selector="Border.dsPolicy">
+    <Setter Property="Background" Value="#FFFDF3E3" />
+    <Setter Property="CornerRadius" Value="99" />
+  </Style>
+  <Style Selector="Border.dsPolicy TextBlock">
+    <Setter Property="Foreground" Value="#FFB45309" />
+  </Style>
+  <Style Selector="Border.dsPolicy.auto">
+    <Setter Property="Background" Value="#FFE6F7F0" />
+  </Style>
+  <Style Selector="Border.dsPolicy.auto TextBlock">
+    <Setter Property="Foreground" Value="#FF059669" />
+  </Style>
+
+  <!-- ═══ 行内「打开所在目录」按钮（原型 .row-open） ═══ -->
+  <Style Selector="Button.rowOpen">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="{DynamicResource ClearCWin}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.rowOpen:pointerover">
+    <Setter Property="Background" Value="#FFF6F9FF" />
+    <Setter Property="BorderBrush" Value="#FFB9C8FF" />
+  </Style>
+
   <!-- ═══ 滚动条方向尺寸 ═══ -->
   <Style Selector="ScrollBar:vertical">
     <Setter Property="Width" Value="9" />

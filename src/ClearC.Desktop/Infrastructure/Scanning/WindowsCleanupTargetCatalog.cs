@@ -10,8 +10,12 @@ internal interface ICleanupTargetCatalog
     /// <summary>
     /// 扫描用：重新解析探测路径、展开通配目录，并剔除磁盘上不存在的目标，
     /// 避免列表里出现大量 0 字节假条目。
+    /// <paramref name="driveScope"/> 为要扫描的盘符（如 ["C:", "D:"]）；
+    /// <c>null</c> 或空 = 仅系统盘。系统盘使用完整目录，其他盘符只生成通用目标。
     /// </summary>
-    Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(
+        IReadOnlyList<string>? driveScope = null,
+        CancellationToken cancellationToken = default);
 }
 
 internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
@@ -26,12 +30,20 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
     internal WindowsCleanupTargetCatalog(ITargetPathResolver pathResolver) => _pathResolver = pathResolver;
 
     /// <summary>非 Windows 平台没有这些系统目录，返回空表（§8.1），避免出现 <c>C:\</c> 假设。</summary>
-    public IReadOnlyList<CleanupTargetDefinition> GetTargets() =>
-        OperatingSystem.IsWindows()
-            ? Build(_pathResolver.ResolveDefaults(), discoveredOnly: false)
-            : [];
+    public IReadOnlyList<CleanupTargetDefinition> GetTargets()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return [];
+        }
+
+        var toolchain = _pathResolver.ResolveDefaults();
+        var rows = SystemRows(toolchain).Concat(ExtraDriveRows(FixedDriveRoots(excludeSystemDrive: true)));
+        return Build(rows.ToArray(), toolchain, discoveredOnly: false);
+    }
 
     public async Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(
+        IReadOnlyList<string>? driveScope = null,
         CancellationToken cancellationToken = default)
     {
         if (!OperatingSystem.IsWindows())
@@ -39,16 +51,32 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
             return [];
         }
 
+        var systemDrive = SystemDriveName();
+        var includeSystem = driveScope is not { Count: > 0 }
+            || driveScope.Any(drive => string.Equals(drive, systemDrive, StringComparison.OrdinalIgnoreCase));
+        var extraDrives = (driveScope is { Count: > 0 }
+                ? driveScope
+                    .Where(drive => !string.Equals(drive, systemDrive, StringComparison.OrdinalIgnoreCase))
+                    .ToArray()
+                : [])
+            .Intersect(FixedDriveRoots(excludeSystemDrive: false), StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         var toolchain = await _pathResolver.ResolveAsync(cancellationToken);
-        return Build(toolchain, discoveredOnly: true);
+        IReadOnlyList<Row> rows = includeSystem ? SystemRows(toolchain) : [];
+        foreach (var drive in extraDrives)
+        {
+            rows = rows.Concat(ExtraDriveRows([drive])).ToArray();
+        }
+
+        return Build(rows, toolchain, discoveredOnly: true);
     }
 
     private static IReadOnlyList<CleanupTargetDefinition> Build(
+        IReadOnlyList<Row> rows,
         IReadOnlyDictionary<string, PathResolution> toolchain,
         bool discoveredOnly)
     {
-        var environment = EnvironmentPaths.Create();
-        var rows = BuildRows(environment, toolchain);
         var claimedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var targets = new List<CleanupTargetDefinition>(rows.Count);
 
@@ -109,6 +137,93 @@ internal sealed class WindowsCleanupTargetCatalog : ICleanupTargetCatalog
     }
 
     private static bool PathExists(string path) => File.Exists(path) || Directory.Exists(path);
+
+    /// <summary>系统盘根目录（如 "C:"）。</summary>
+    internal static string SystemDriveName() =>
+        Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows))?.TrimEnd('\\', '/') ?? "C:";
+
+    /// <summary>本机全部固定磁盘根目录（如 ["C:", "D:"]）。</summary>
+    internal static IReadOnlyList<string> FixedDriveRoots(bool excludeSystemDrive)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return [];
+        }
+
+        var systemDrive = SystemDriveName();
+        var roots = new List<string>();
+        try
+        {
+            roots.AddRange(DriveInfo.GetDrives()
+                .Where(drive => drive.DriveType == DriveType.Fixed && drive.IsReady)
+                .Select(drive => drive.Name.TrimEnd('\\', '/'))
+                .Where(root => root.Length > 0));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+        }
+
+        return excludeSystemDrive
+            ? roots.Where(root => !string.Equals(root, systemDrive, StringComparison.OrdinalIgnoreCase)).ToArray()
+            : roots;
+    }
+
+    /// <summary>系统盘的完整清理目录（既有 G1–G13 全部目标）。</summary>
+    private static IReadOnlyList<Row> SystemRows(IReadOnlyDictionary<string, PathResolution> toolchain) =>
+        BuildRows(EnvironmentPaths.Create(), toolchain);
+
+    /// <summary>
+    /// 其他固定盘符的通用目标：临时目录、Windows.old、页面文件、驱动安装残留与回收站。
+    /// 这些目录不依赖用户配置，路径全部以盘符为根。
+    /// </summary>
+    private static IReadOnlyList<Row> ExtraDriveRows(IReadOnlyList<string> driveRoots)
+    {
+        if (driveRoots.Count == 0)
+        {
+            return [];
+        }
+
+        var rows = new List<Row>();
+        foreach (var driveRoot in driveRoots)
+        {
+            var letter = driveRoot.TrimEnd('\\', '/');
+            var id = letter.ToLowerInvariant();
+            // Path.Combine 需要 "D:\ 形态的根，否则 "D:" + "Temp" 会生成驱动器相对路径。
+            var root = driveRoot.EndsWith('\\') ? driveRoot : driveRoot + '\\';
+            rows.AddRange(
+            [
+                new($"{id}-temp", $"临时目录（{letter}:）", CleanupCategory.TemporaryFiles, CleanupRisk.Low,
+                    "该盘根目录下的 Temp / tmp 临时目录；只清理超过 7 天未修改的文件。",
+                    "i-file", Fixed(Path.Combine(root, "Temp"), Path.Combine(root, "tmp")),
+                    CleanerKind.DirectoryContents, MinimumAge: TimeSpan.FromDays(7)),
+                new($"{id}-windows-old", $"旧版系统 Windows.old（{letter}:）", CleanupCategory.SystemFiles, CleanupRisk.High,
+                    "该盘上的系统升级备份，删除后无法回滚；应使用 Windows 设置管理。",
+                    "i-window", Fixed(Path.Combine(root, "Windows.old")),
+                    Tier: ScanTier.Slow, IsProtected: true),
+                new($"{id}-pagefile", $"页面文件 pagefile.sys（{letter}:）", CleanupCategory.SystemFiles, CleanupRisk.Medium,
+                    "设置在该盘的虚拟内存交换文件，仅展示占用，不可直接清理。",
+                    "i-db", Fixed(Path.Combine(root, "pagefile.sys")), ScanKind: ScanKind.SingleFile),
+                new($"{id}-intel", $"Intel 安装残留（{letter}:）", CleanupCategory.SystemFiles, CleanupRisk.Medium,
+                    "驱动安装解压目录；仅展示占用，确认无用后请手动删除。",
+                    "i-chip", Fixed(Path.Combine(root, "Intel")), Tier: ScanTier.Slow),
+                new($"{id}-amd", $"AMD 安装残留（{letter}:）", CleanupCategory.SystemFiles, CleanupRisk.Medium,
+                    "驱动安装解压目录；仅展示占用，确认无用后请手动删除。",
+                    "i-chip", Fixed(Path.Combine(root, "AMD")), Tier: ScanTier.Slow),
+                new($"{id}-nvidia", $"NVIDIA 安装残留（{letter}:）", CleanupCategory.SystemFiles, CleanupRisk.Medium,
+                    "驱动安装解压目录；仅展示占用，确认无用后请手动删除。",
+                    "i-chip", Fixed(Path.Combine(root, "NVIDIA")), Tier: ScanTier.Slow),
+                new($"{id}-swsetup", $"OEM 预装软件残留（{letter}:）", CleanupCategory.SystemFiles, CleanupRisk.Medium,
+                    "厂商预装软件安装源（SWSetup）；仅展示占用。",
+                    "i-window", Fixed(Path.Combine(root, "SWSetup")), Tier: ScanTier.Slow),
+                new($"{id}-recycle-bin", $"回收站（{letter}:）", CleanupCategory.RecycleBin, CleanupRisk.Medium,
+                    "清空后文件无法从回收站恢复，执行前必须单独确认。",
+                    "i-trash", Fixed(Path.Combine(root, "$Recycle.Bin")),
+                    CleanerKind.RecycleBin, LocationOverride: $"{root}$Recycle.Bin")
+            ]);
+        }
+
+        return rows;
+    }
 
     /// <summary>
     /// 静态定义保留候选路径：通配串展开不出结果时（例如当前机器没有 WSL 磁盘镜像、

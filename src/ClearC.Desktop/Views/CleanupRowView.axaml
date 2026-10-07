@@ -11,7 +11,17 @@
                   Classes.current="{Binding IsCurrent}"
                   Classes.expanded="{Binding IsExpanded}"
                   IsChecked="{Binding IsExpanded}">
-      <Grid ColumnDefinitions="22,34,12,*,Auto,158,92,64,14">
+      <ToggleButton.ContextMenu>
+        <ContextMenu>
+          <MenuItem Command="{Binding OpenLocationCommand}" Header="打开文件（夹）所在目录" />
+          <MenuItem Command="{Binding CopyPathCommand}" Header="复制完整路径" />
+          <MenuItem Command="{Binding ToggleSelectionCommand}"
+                    Header="{Binding ContextToggleText}"
+                    IsVisible="{Binding CanSelect}" />
+          <MenuItem Command="{Binding ToggleExpandedCommand}" Header="{Binding ContextExpandText}" />
+        </ContextMenu>
+      </ToggleButton.ContextMenu>
+      <Grid ColumnDefinitions="22,34,12,*,Auto,158,92,64,30,14">
         <CheckBox Grid.Column="0" VerticalAlignment="Center"
                   ToolTip.Tip="{Binding SelectionToolTip}"
                   IsChecked="{Binding IsSelected}"
@@ -73,7 +83,16 @@
                    FontSize="11" FontWeight="SemiBold"
                    Foreground="{Binding ResultBrush}" Text="{Binding ResultText}" />
 
-        <controls:IconGlyph Grid.Column="8" Width="14" Height="14" VerticalAlignment="Center"
+        <Button Grid.Column="8" Classes="rowOpen" VerticalAlignment="Center"
+                Command="{Binding OpenLocationCommand}"
+                ToolTip.Tip="打开文件（夹）所在目录">
+          <controls:IconGlyph Width="13" Height="13"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Data="{StaticResource ClearCIconFolder}"
+                              Foreground="{DynamicResource ClearCText3}" />
+        </Button>
+
+        <controls:IconGlyph Grid.Column="9" Width="14" Height="14" VerticalAlignment="Center"
                             Data="{StaticResource ClearCIconChevron}"
                             Foreground="{DynamicResource ClearCText3}"
                             RenderTransformOrigin="50%,50%">

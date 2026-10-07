@@ -28,7 +28,13 @@ public sealed class MainWindowViewModel : ReactiveObject
     private readonly IThemePalette _palette;
     private readonly IToastScheduler _toastScheduler;
     private readonly ILocationOpener _locationOpener;
-    private readonly Dictionary<CleanupDisplayGroup, CleanupGroupViewModel> _groupCache = [];
+    private readonly ITextClipboard _clipboard;
+    private readonly Dictionary<(string Drive, CleanupDisplayGroup Group), CleanupGroupViewModel> _groupCache = [];
+    private readonly Dictionary<string, CleanupDriveSectionViewModel> _sectionCache = [];
+    private readonly Dictionary<string, DiskSnapshot> _diskByDrive = [];
+    private readonly string _systemDrive;
+    private List<string> _scanDrives = [];
+    private bool _scopeStale;
     private CleanupSelection? _selection;
     private CancellationTokenSource? _operationCancellation;
     private TaskCompletionSource? _operationDone;
@@ -38,6 +44,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     private string _progressText = string.Empty;
     private long _measuredFreedBytes;
     private long _estimatedFreedBytes;
+    private readonly Dictionary<string, long> _freedByDrive = [];
     private bool _isToastVisible;
     private bool _isToastSuccess = true;
     private bool _isFastTierComplete;
@@ -59,7 +66,9 @@ public sealed class MainWindowViewModel : ReactiveObject
         IElevationService? elevationService = null,
         IThemePalette? palette = null,
         IToastScheduler? toastScheduler = null,
-        ILocationOpener? locationOpener = null)
+        ILocationOpener? locationOpener = null,
+        ITextClipboard? clipboard = null,
+        IReadOnlyList<DiskSnapshot>? initialDrives = null)
     {
         _scanner = scanner;
         _executor = executor;
@@ -69,7 +78,24 @@ public sealed class MainWindowViewModel : ReactiveObject
         _palette = palette ?? ThemePalette.Instance;
         _toastScheduler = toastScheduler ?? new DispatcherToastScheduler();
         _locationOpener = locationOpener ?? new LocationOpener();
+        _clipboard = clipboard ?? new DesktopTextClipboard();
         _disk = initialDisk;
+        _systemDrive = initialDisk.DriveName;
+        _diskByDrive[initialDisk.DriveName] = initialDisk;
+
+        var drives = initialDrives is { Count: > 0 }
+            ? initialDrives
+            : [initialDisk];
+        foreach (var snapshot in drives)
+        {
+            _diskByDrive.TryAdd(snapshot.DriveName, snapshot);
+        }
+
+        DriveCards = [.. drives.Select(snapshot => new DriveCardViewModel(
+            _diskByDrive[snapshot.DriveName],
+            isSystemDrive: string.Equals(snapshot.DriveName, _systemDrive, StringComparison.OrdinalIgnoreCase),
+            isChecked: string.Equals(snapshot.DriveName, _systemDrive, StringComparison.OrdinalIgnoreCase),
+            OnDriveCardChecked))];
 
         PrimaryCommand = ReactiveCommand.CreateFromTask(HandlePrimaryAsync);
         SecondaryCommand = ReactiveCommand.CreateFromTask(HandleSecondaryAsync);
@@ -90,14 +116,17 @@ public sealed class MainWindowViewModel : ReactiveObject
 
         State = WorkflowState.Idle;
         AddLog("OK", $"ClearC 引擎初始化完成 · v{ProductVersion}");
-        AddLog("INFO", $"挂载磁盘 {_disk.DriveName} · {_disk.DriveFormat} · {ByteSizeFormatter.Format(_disk.TotalBytes)}");
-        AddLog("INFO", $"已用 {ByteSizeFormatter.Format(_disk.UsedBytes)} · 可用 {ByteSizeFormatter.Format(_disk.FreeBytes)} · 占用率 {_disk.UsedRatio:P1}");
+        AddLog("INFO", $"检测到 {drives.Count} 个本地磁盘 · {string.Join(" · ", drives.Select(d => $"{d.DriveName} {ByteSizeFormatter.Format(d.TotalBytes)}"))}");
+        foreach (var snapshot in drives)
+        {
+            AddLog("INFO", $"{snapshot.DriveName} 已用 {ByteSizeFormatter.Format(snapshot.UsedBytes)}（{snapshot.UsedRatio:P0}）· 可用 {ByteSizeFormatter.Format(snapshot.FreeBytes)}");
+        }
         if (!_elevationService.IsElevated)
         {
             AddLog("WARN", "当前未提权 · 部分系统缓存不可清理，可使用「以管理员重启」。");
         }
 
-        AddLog("INFO", "等待指令 … 点击「扫描分析」开始扫描");
+        AddLog("INFO", "提示：勾选需要扫描的盘符（系统盘默认选中），点击「扫描分析」开始");
         _ = Update.CheckAsync();
     }
 
@@ -107,8 +136,11 @@ public sealed class MainWindowViewModel : ReactiveObject
     /// <summary>全部扫描项（含 0 字节项），供分组与安全策略使用。</summary>
     public ObservableCollection<CleanupItemViewModel> Items { get; } = [];
 
-    /// <summary>按展示分组排好序的可见行。</summary>
-    public ObservableCollection<CleanupGroupViewModel> Groups { get; } = [];
+    /// <summary>盘符选择条（复选框 = 扫描范围，系统盘默认选中）。</summary>
+    public ObservableCollection<DriveCardViewModel> DriveCards { get; }
+
+    /// <summary>按盘符分区、分区内按展示分组排好序的可见行。</summary>
+    public ObservableCollection<CleanupDriveSectionViewModel> Sections { get; } = [];
 
     public ObservableCollection<CleanupItemViewModel> SelectedItems { get; } = [];
 
@@ -141,16 +173,105 @@ public sealed class MainWindowViewModel : ReactiveObject
 
             this.RaiseAndSetIfChanged(ref _state, value);
             UpdateRowSelectability();
+            RefreshDriveCardLocks();
             RefreshStateProperties();
         }
     }
 
-    public string DriveTitle => $"{_disk.DriveName} 系统盘";
-    public string DriveInfo => $"SSD · {ByteSizeFormatter.Format(_disk.TotalBytes)} · {_disk.DriveFormat}";
-    public double UsedRatio => _disk.UsedRatio;
-    public string UsedPercent => $"{Math.Round(_disk.UsedRatio * 100):0}%";
-    public string DiskUsedText => ByteSizeFormatter.Format(_disk.UsedBytes);
-    public string DiskFreeText => ByteSizeFormatter.Format(_disk.FreeBytes);
+    /// <summary>扫描 / 清理进行中锁定盘符选择（原型：扫描过程中不可修改范围）。</summary>
+    private void RefreshDriveCardLocks()
+    {
+        var locked = State is WorkflowState.Scanning or WorkflowState.Cleaning;
+        foreach (var card in DriveCards)
+        {
+            card.IsLocked = locked;
+        }
+    }
+
+    /// <summary>当前勾选的盘符范围（如 ["C:", "D:"]）。</summary>
+    public IReadOnlyList<string> SelectedDrives => DriveCards
+        .Where(card => card.IsChecked)
+        .Select(card => card.DriveName)
+        .ToArray();
+
+    private static string ScopeText(IReadOnlyList<string> drives) =>
+        drives.Count > 0 ? string.Join(" · ", drives) : "（未选择任何盘符）";
+
+    /// <summary>盘符选择条旁的提示文案（原型 <c>.db-hint</c>）。</summary>
+    public string ScopeHint => State switch
+    {
+        WorkflowState.Idle => "勾选需要扫描的盘符 · 系统盘默认选中",
+        WorkflowState.Scanning => $"正在扫描已勾选的 {_scanDrives.Count} 个盘符 …",
+        WorkflowState.Results => _scopeStale
+            ? "扫描范围已修改 · 请点击「重新分析」"
+            : "勾选结果项后执行清理 · 修改盘符后请「重新分析」",
+        WorkflowState.Cleaning => "正在清理已勾选的项目 …",
+        _ => "如需修改范围，请点击「重新分析」"
+    };
+
+    /// <summary>勾选盘符导致结果过期时由「重新分析」复位。</summary>
+    private void OnDriveCardChecked(DriveCardViewModel card, bool isChecked)
+    {
+        if (State is WorkflowState.Scanning or WorkflowState.Cleaning)
+        {
+            // 扫描 / 清理进行中范围已锁定；UI 层已禁用复选框，这里仅忽略程序化触发。
+            return;
+        }
+
+        AddLog("INFO", $"扫描范围已更新：{ScopeText(SelectedDrives)}");
+
+        var scope = SelectedDrives;
+        if (State is WorkflowState.Results or WorkflowState.Done
+            && !_scopeStale
+            && (scope.Count != _scanDrives.Count || !scope.All(drive => _scanDrives.Contains(drive, StringComparer.OrdinalIgnoreCase))))
+        {
+            _scopeStale = true;
+            AddLog("WARN", "扫描范围与当前结果不一致 · 请点击「重新分析」");
+        }
+
+        RefreshScopeProperties();
+    }
+
+    /// <summary>已勾选盘符的快照（环图与总览统计聚合这些盘）。</summary>
+    private IReadOnlyList<DiskSnapshot> SelectedSnapshots => _diskByDrive
+        .Where(entry => DriveCards.Any(card => card.IsChecked
+            && string.Equals(card.DriveName, entry.Key, StringComparison.OrdinalIgnoreCase)))
+        .Select(entry => entry.Value)
+        .ToArray();
+
+    public string DriveTitle => string.Join(" · ", DriveCards
+        .Where(card => card.IsChecked)
+        .Select(card => $"{card.DriveName} {card.TypeText}"));
+
+    public string DriveInfo
+    {
+        get
+        {
+            var selected = SelectedSnapshots.ToArray();
+            return selected.Length switch
+            {
+                1 => string.IsNullOrWhiteSpace(selected[0].VolumeLabel)
+                    ? $"{ByteSizeFormatter.Format(selected[0].TotalBytes)} · {selected[0].DriveFormat}"
+                    : $"{selected[0].VolumeLabel} · {ByteSizeFormatter.Format(selected[0].TotalBytes)} · {selected[0].DriveFormat}",
+                > 1 => $"合计 {ByteSizeFormatter.Format(selected.Sum(s => s.TotalBytes))} · {selected[0].DriveFormat}",
+                _ => string.Empty
+            };
+        }
+    }
+
+    public double UsedRatio
+    {
+        get
+        {
+            var selected = SelectedSnapshots.ToArray();
+            var total = selected.Sum(s => s.TotalBytes);
+            return total <= 0 ? 0 : (double)selected.Sum(s => s.UsedBytes) / total;
+        }
+    }
+
+    public string UsedPercent => $"{Math.Round(UsedRatio * 100):0}%";
+    public string DiskUsedText => ByteSizeFormatter.Format(SelectedSnapshots.Sum(s => s.UsedBytes));
+    public string DiskFreeText => ByteSizeFormatter.Format(SelectedSnapshots.Sum(s => s.FreeBytes));
 
     public string HeroLabel => State switch
     {
@@ -191,7 +312,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     public bool IsPrimaryEnabled => State switch
     {
-        WorkflowState.Idle => true,
+        WorkflowState.Idle => SelectedDrives.Count > 0,
         WorkflowState.Scanning => _isFastTierComplete && SelectedCount > 0,
         WorkflowState.Results => SelectedCount > 0,
         _ => false
@@ -261,7 +382,9 @@ public sealed class MainWindowViewModel : ReactiveObject
     /// <summary>快档完成后即可交互（§3.3）。</summary>
     public bool CanInteractWithList => State == WorkflowState.Results || State is WorkflowState.Scanning && _isFastTierComplete;
 
-    private IEnumerable<CleanupItemViewModel> VisibleRows => Groups.SelectMany(group => group.Items);
+    private IEnumerable<CleanupItemViewModel> VisibleRows => Sections
+        .SelectMany(section => section.Groups)
+        .SelectMany(group => group.Items);
 
     public bool CanSelectAll => CanInteractWithList && VisibleRows.Any(row => row.Model.CanClean);
 
@@ -318,7 +441,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     }
 
     public bool IsEmptyVisible => State == WorkflowState.Idle && Items.Count == 0;
-    public bool IsListVisible => Groups.Count > 0;
+    public bool IsListVisible => Sections.Count > 0;
     public bool IsSweepVisible => State == WorkflowState.Scanning;
 
     public string GhostText
@@ -388,7 +511,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     public string StatusText => State switch
     {
         WorkflowState.Idle => "SYSTEM READY · 等待指令",
-        WorkflowState.Scanning => "SCANNING · 正在扫描 C 盘",
+        WorkflowState.Scanning => $"SCANNING · 正在扫描 {ScopeText(_scanDrives)}",
         WorkflowState.Results => "SCAN COMPLETE · 扫描完成",
         WorkflowState.Confirming => "AWAIT CONFIRM · 等待确认",
         WorkflowState.Cleaning => "CLEANING · 正在清理",
@@ -618,6 +741,13 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     private async Task ScanAsync()
     {
+        var scope = SelectedDrives;
+        if (scope.Count == 0)
+        {
+            AddLog("WARN", "请先勾选需要扫描的盘符。");
+            return;
+        }
+
         _operationCancellation?.Dispose();
         _operationCancellation = new CancellationTokenSource();
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -625,7 +755,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
         StopToastTimer();
         Items.Clear();
-        Groups.Clear();
+        Sections.Clear();
         foreach (var group in _groupCache.Values)
         {
             group.Refresh([]);
@@ -643,14 +773,31 @@ public sealed class MainWindowViewModel : ReactiveObject
         GhostText = string.Empty;
         ProgressValue = 0;
         ProgressText = "准备扫描…";
+        _scanDrives = [.. scope];
+        _scopeStale = false;
+        foreach (var card in DriveCards)
+        {
+            if (_scanDrives.Contains(card.DriveName, StringComparer.OrdinalIgnoreCase))
+            {
+                card.ScanSummary = "等待扫描";
+                card.IsScanPending = true;
+            }
+            else
+            {
+                card.ScanSummary = string.Empty;
+                card.IsScanPending = false;
+            }
+        }
+
         State = WorkflowState.Scanning;
-        AddLog("INFO", "开始扫描 C 盘 …");
+        AddLog("INFO", $"开始扫描已勾选盘符：{ScopeText(_scanDrives)} …");
 
         var progress = new CallbackProgress<ScanProgress>(OnScanProgress);
         try
         {
-            var result = await _scanner.ScanAsync(progress, _operationCancellation.Token, SkipSystemAnalysis);
+            var result = await _scanner.ScanAsync(progress, _operationCancellation.Token, SkipSystemAnalysis, _scanDrives);
             _disk = result.Disk;
+            _diskByDrive[result.Disk.DriveName] = result.Disk;
             foreach (var model in result.Items)
             {
                 EnsureRow(model);
@@ -668,11 +815,28 @@ public sealed class MainWindowViewModel : ReactiveObject
             GhostText = string.Empty;
             RebuildSelectedItems();
             RefreshGroups();
+            RefreshDriveCardsAfterScan(result.Items);
             State = WorkflowState.Results;
             AddLog("OK", $"扫描完成 · 耗时 {result.Elapsed.TotalSeconds:0.0}s · 定位 {result.Items.Sum(item => item.FileCount):N0} 个文件");
             AddLog("INFO", $"共 {result.Items.Count} 个目标位置 · 总占用 {ByteSizeFormatter.Format(result.TotalBytes)}");
-            AddLog("INFO", $"可清理 {Items.Count(row => row.Model.CanClean)} 项 · 共 {ByteSizeFormatter.Format(Items.Where(row => row.Model.CanClean).Sum(row => row.Model.SizeBytes))}");
-            AddLog("INFO", "已默认勾选低风险项目，可手动调整。");
+            foreach (var drive in _scanDrives)
+            {
+                var cleanable = result.Items
+                    .Where(item => item.DriveName.Equals(drive, StringComparison.OrdinalIgnoreCase) && item.CanClean)
+                    .ToArray();
+                AddLog("INFO", $"{drive} 可清理 {cleanable.Length} 项 · 共 {ByteSizeFormatter.Format(cleanable.Sum(item => item.SizeBytes))}"
+                    + (drive.Equals(_systemDrive, StringComparison.OrdinalIgnoreCase)
+                        ? " · 低风险项已默认勾选"
+                        : " · 默认未勾选，请决策"));
+            }
+
+            var highRisk = result.Items.Where(item => item.Risk == CleanupRisk.High).ToArray();
+            if (highRisk.Length > 0)
+            {
+                AddLog("WARN", "高风险项默认未勾选：" + string.Join(" · ", highRisk.Select(item => $"{item.DisplayName}（{item.DriveName}:）")));
+            }
+
+            AddLog("INFO", "已默认勾选系统盘低风险项，中高风险与其他盘符请决策；右键结果行可打开所在目录。");
         }
         catch (OperationCanceledException)
         {
@@ -710,6 +874,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         ProgressValue = value.Ratio * 100;
         ProgressText = value.DisplayText;
         GhostText = value.Item is null ? value.GhostText : string.Empty;
+        RefreshDriveCardScanSummaries(CurrentScanDrive(value));
 
         if (value.Tier == ScanTier.Slow)
         {
@@ -729,6 +894,56 @@ public sealed class MainWindowViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsGhostVisible));
         this.RaisePropertyChanged(nameof(IsSweepVisible));
     });
+
+    /// <summary>推导当前正在扫描的盘符：完成事件带盘符，幽灵行从目标路径取根，命令类分析项回退系统盘。</summary>
+    private string? CurrentScanDrive(ScanProgress value) =>
+        value.Item?.DriveName
+        ?? (Path.GetPathRoot(value.TargetPath ?? string.Empty) is { } root ? root.TrimEnd('\\', '/') : null)
+        ?? (value.Tier == ScanTier.Slow ? _systemDrive : null);
+
+    private void RefreshDriveCardScanSummaries(string? currentDrive)
+    {
+        foreach (var card in DriveCards)
+        {
+            if (!_scanDrives.Contains(card.DriveName, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(currentDrive)
+                && card.DriveName.Equals(currentDrive, StringComparison.OrdinalIgnoreCase))
+            {
+                card.ScanSummary = "正在扫描 …";
+                card.IsScanPending = true;
+                continue;
+            }
+
+            var received = Items
+                .Where(row => row.Model.DriveName.Equals(card.DriveName, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            card.ScanSummary = received.Length > 0
+                ? $"已扫 {received.Length} 项 · {ByteSizeFormatter.Format(received.Sum(row => row.Model.SizeBytes))}"
+                : "等待扫描";
+            card.IsScanPending = true;
+        }
+    }
+
+    private void RefreshDriveCardsAfterScan(IReadOnlyList<CleanupItem> items)
+    {
+        foreach (var card in DriveCards)
+        {
+            if (!_scanDrives.Contains(card.DriveName, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var cleanable = items
+                .Where(item => item.DriveName.Equals(card.DriveName, StringComparison.OrdinalIgnoreCase) && item.CanClean)
+                .ToArray();
+            card.ScanSummary = $"可清理 {cleanable.Length} 项 · {ByteSizeFormatter.Format(cleanable.Sum(item => item.SizeBytes))}";
+            card.IsScanPending = false;
+        }
+    }
 
     private static string Note(CleanupItem item) => string.IsNullOrWhiteSpace(item.ScanNote) ? string.Empty : $" · {item.ScanNote}";
 
@@ -753,7 +968,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             return existing;
         }
 
-        var row = new CleanupItemViewModel(normalized, _palette, _elevationService.IsElevated, _locationOpener)
+        var row = new CleanupItemViewModel(normalized, _palette, _elevationService.IsElevated, _locationOpener, _clipboard)
         {
             CanSelect = CanInteractWithList
         };
@@ -790,38 +1005,64 @@ public sealed class MainWindowViewModel : ReactiveObject
         RefreshSelectionProperties();
     }
 
-    /// <summary>按 §6.4 排序重建分组：组间按小计降序、组内按大小降序（0 字节排末尾）。</summary>
+    /// <summary>
+    /// 按盘符分区（原型 <c>.drive-sec</c>）+ 分区内按 §6.4 排序重建：
+    /// 系统盘在前、扫描范围顺序次之；组间按小计降序、组内按大小降序（0 字节排末尾）。
+    /// </summary>
     private void RefreshGroups()
     {
         var visible = Items.Where(row => !HideZeroByteItems || row.Model.SizeBytes > 0).ToArray();
         var ordered = visible
-            .GroupBy(row => row.DisplayGroup)
+            .GroupBy(row => row.Model.DriveName)
             .Select(group => (
-                Group: group.Key,
+                Drive: group.Key,
                 Rows: (IReadOnlyList<CleanupItemViewModel>)group
                     .OrderByDescending(row => row.Model.SizeBytes)
                     .ThenBy(row => row.DisplayName, StringComparer.Ordinal)
                     .ToArray()))
-            .OrderByDescending(entry => entry.Rows.Sum(row => row.Model.SizeBytes))
-            .ThenBy(entry => (int)entry.Group)
+            .OrderBy(entry => DriveOrder(entry.Drive))
             .ToArray();
 
-        foreach (var cached in _groupCache.Values)
+        foreach (var section in _sectionCache.Values)
         {
-            cached.Refresh([]);
-        }
-
-        Groups.Clear();
-        foreach (var (group, rows) in ordered)
-        {
-            if (!_groupCache.TryGetValue(group, out var groupViewModel))
+            foreach (var group in section.Groups)
             {
-                groupViewModel = new CleanupGroupViewModel(group, CollapseOtherGroups);
-                _groupCache[group] = groupViewModel;
+                group.Refresh([]);
             }
 
-            groupViewModel.Refresh(rows);
-            Groups.Add(groupViewModel);
+            section.Groups.Clear();
+        }
+
+        Sections.Clear();
+        foreach (var (drive, rows) in ordered)
+        {
+            var section = EnsureDriveSection(drive, rows);
+            var groups = rows
+                .GroupBy(row => row.DisplayGroup)
+                .Select(group => (
+                    Group: group.Key,
+                    Rows: (IReadOnlyList<CleanupItemViewModel>)group
+                        .OrderByDescending(row => row.Model.SizeBytes)
+                        .ThenBy(row => row.DisplayName, StringComparer.Ordinal)
+                        .ToArray()))
+                .OrderByDescending(entry => entry.Rows.Sum(row => row.Model.SizeBytes))
+                .ThenBy(entry => (int)entry.Group)
+                .ToArray();
+
+            foreach (var (group, groupRows) in groups)
+            {
+                if (!_groupCache.TryGetValue((drive, group), out var groupViewModel))
+                {
+                    groupViewModel = new CleanupGroupViewModel(group, CollapseOtherGroups);
+                    _groupCache[(drive, group)] = groupViewModel;
+                }
+
+                groupViewModel.Refresh(groupRows);
+                section.Groups.Add(groupViewModel);
+            }
+
+            RefreshSectionSummary(section, rows);
+            Sections.Add(section);
         }
 
         this.RaisePropertyChanged(nameof(IsListVisible));
@@ -830,14 +1071,82 @@ public sealed class MainWindowViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsAllSelected));
     }
 
-    /// <summary>手风琴：展开一个分组时折叠其余分组（默认全部折叠）。</summary>
+    private CleanupDriveSectionViewModel EnsureDriveSection(string drive, IReadOnlyList<CleanupItemViewModel> rows)
+    {
+        if (_sectionCache.TryGetValue(drive, out var section))
+        {
+            return section;
+        }
+
+        _diskByDrive.TryGetValue(drive, out var snapshot);
+        var isSystem = string.Equals(drive, _systemDrive, StringComparison.OrdinalIgnoreCase);
+        section = new CleanupDriveSectionViewModel(
+            drive,
+            isSystem ? "系统盘" : "数据盘",
+            snapshot?.VolumeLabel ?? string.Empty);
+        _sectionCache[drive] = section;
+        return section;
+    }
+
+    private void RefreshSectionSummary(CleanupDriveSectionViewModel section, IReadOnlyList<CleanupItemViewModel> rows)
+    {
+        var isSystem = string.Equals(section.DriveName, _systemDrive, StringComparison.OrdinalIgnoreCase);
+        if (State == WorkflowState.Scanning)
+        {
+            section.PolicyText = isSystem ? "策略：低风险项将默认勾选" : "策略：默认不勾选";
+            section.IsPolicyAuto = isSystem;
+            section.SelectedText = string.Empty;
+            section.SummaryText = rows.Count > 0
+                ? $"已扫 {rows.Count} 项 · {ByteSizeFormatter.Format(rows.Sum(row => row.Model.SizeBytes))}"
+                : "等待扫描";
+            return;
+        }
+
+        var autoCount = rows.Count(row => row.Model.IsRecommended);
+        section.PolicyText = autoCount > 0 ? $"低风险 {autoCount} 项已默认勾选" : "默认未勾选 · 请自行决策";
+        section.IsPolicyAuto = autoCount > 0;
+
+        if (State is WorkflowState.Results or WorkflowState.Cleaning)
+        {
+            var selected = rows.Where(row => row.IsSelected).ToArray();
+            section.SelectedText = selected.Length > 0
+                ? $"已选 {selected.Length} 项 · {ByteSizeFormatter.Format(selected.Sum(row => row.Model.SizeBytes))}"
+                : string.Empty;
+        }
+        else
+        {
+            section.SelectedText = string.Empty;
+        }
+
+        var cleanable = rows.Where(row => row.Model.CanClean).ToArray();
+        section.SummaryText = cleanable.Length > 0
+            ? $"可清理 {cleanable.Length} 项 · {ByteSizeFormatter.Format(cleanable.Sum(row => row.Model.SizeBytes))}"
+            : string.Empty;
+    }
+
+    /// <summary>分区排序：系统盘恒在首位，其余按扫描范围顺序，范围之外的排最后。</summary>
+    private int DriveOrder(string drive)
+    {
+        if (string.Equals(drive, _systemDrive, StringComparison.OrdinalIgnoreCase))
+        {
+            return -1;
+        }
+
+        var index = _scanDrives.FindIndex(candidate => string.Equals(candidate, drive, StringComparison.OrdinalIgnoreCase));
+        return index >= 0 ? index : 1_000;
+    }
+
+    /// <summary>手风琴：展开一个分组时折叠其余分组（跨分区，默认全部折叠）。</summary>
     private void CollapseOtherGroups(CleanupGroupViewModel expanded)
     {
-        foreach (var group in Groups)
+        foreach (var section in Sections)
         {
-            if (!ReferenceEquals(group, expanded))
+            foreach (var group in section.Groups)
             {
-                group.IsExpanded = false;
+                if (!ReferenceEquals(group, expanded))
+                {
+                    group.IsExpanded = false;
+                }
             }
         }
     }
@@ -897,6 +1206,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
         _measuredFreedBytes = 0;
         _estimatedFreedBytes = 0;
+        _freedByDrive.Clear();
         IsAwaitingCommandStop = false;
         ProgressValue = 0;
         ProgressText = "准备清理…";
@@ -909,7 +1219,6 @@ public sealed class MainWindowViewModel : ReactiveObject
             var result = await _executor.CleanAsync(plan, progress, _operationCancellation.Token);
             _measuredFreedBytes = result.MeasuredFreedBytes;
             _estimatedFreedBytes = result.EstimatedFreedBytes;
-            _disk = _disk with { FreeBytes = Math.Min(_disk.TotalBytes, _disk.FreeBytes + result.FreedBytes) };
             State = WorkflowState.Done;
             ShowToast();
             AddLog("OK", $"清理完成 · 成功 {result.CompletedCount} 项 · 实测释放 {ByteSizeFormatter.Format(result.MeasuredFreedBytes)}");
@@ -917,8 +1226,6 @@ public sealed class MainWindowViewModel : ReactiveObject
             {
                 AddLog("INFO", $"官方命令项按扫描时大小估算，预计再释放 ~{ByteSizeFormatter.Format(result.EstimatedFreedBytes)}（估算）。");
             }
-
-            AddLog("INFO", $"{_disk.DriveName} 可用空间为估算值，建议重新扫描获取精确值。");
         }
         catch (OperationCanceledException)
         {
@@ -932,6 +1239,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
         finally
         {
+            ApplyFreedToDriveSnapshots();
             IsAwaitingCommandStop = false;
             RebuildSelectedItems();
             RefreshGroups();
@@ -939,6 +1247,33 @@ public sealed class MainWindowViewModel : ReactiveObject
             _operationDone = null;
             completion.TrySetResult();
         }
+    }
+
+    /// <summary>把清理释放量按盘符累计进盘符快照（环图与盘符卡容量条同步），并输出各盘可用空间变化。</summary>
+    private void ApplyFreedToDriveSnapshots()
+    {
+        foreach (var (drive, freed) in _freedByDrive)
+        {
+            if (freed <= 0 || !_diskByDrive.TryGetValue(drive, out var snapshot))
+            {
+                continue;
+            }
+
+            var updated = snapshot with { FreeBytes = Math.Min(snapshot.TotalBytes, snapshot.FreeBytes + freed) };
+            _diskByDrive[drive] = updated;
+            if (drive.Equals(_disk.DriveName, StringComparison.OrdinalIgnoreCase))
+            {
+                _disk = updated;
+            }
+
+            DriveCards
+                .FirstOrDefault(card => card.DriveName.Equals(drive, StringComparison.OrdinalIgnoreCase))
+                ?.UpdateSnapshot(updated);
+            AddLog("INFO", $"{drive} 可用 {ByteSizeFormatter.Format(snapshot.FreeBytes)} → {ByteSizeFormatter.Format(updated.FreeBytes)}（估算）");
+        }
+
+        _freedByDrive.Clear();
+        RefreshScopeProperties();
     }
 
     private void OnCleanupProgress(CleanupProgress value) => OnUi(() =>
@@ -974,6 +1309,9 @@ public sealed class MainWindowViewModel : ReactiveObject
         {
             _measuredFreedBytes += value.Result.FreedBytes;
         }
+
+        var drive = value.Item.DriveName;
+        _freedByDrive[drive] = _freedByDrive.GetValueOrDefault(drive) + value.Result.FreedBytes;
 
         this.RaisePropertyChanged(nameof(HeroValue));
         RebuildSelectedItems();
@@ -1022,6 +1360,24 @@ public sealed class MainWindowViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(ConfirmationTotal));
         this.RaisePropertyChanged(nameof(IsConfirmEnabled));
         this.RaisePropertyChanged(nameof(HasDeniedItems));
+        foreach (var section in Sections)
+        {
+            RefreshSectionSummary(section, section.Groups.SelectMany(group => group.Items).ToArray());
+        }
+    }
+
+    /// <summary>盘符勾选变化只影响聚合总览与提示，不需要整表刷新。</summary>
+    private void RefreshScopeProperties()
+    {
+        this.RaisePropertyChanged(nameof(DriveTitle));
+        this.RaisePropertyChanged(nameof(DriveInfo));
+        this.RaisePropertyChanged(nameof(UsedRatio));
+        this.RaisePropertyChanged(nameof(UsedPercent));
+        this.RaisePropertyChanged(nameof(DiskUsedText));
+        this.RaisePropertyChanged(nameof(DiskFreeText));
+        this.RaisePropertyChanged(nameof(ScopeHint));
+        this.RaisePropertyChanged(nameof(IsPrimaryEnabled));
+        this.RaisePropertyChanged(nameof(PrimaryButtonText));
     }
 
     private void RefreshStateProperties()
@@ -1062,6 +1418,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(ToastText));
         this.RaisePropertyChanged(nameof(IsToastSuccess));
         this.RaisePropertyChanged(nameof(IsElevationBannerVisible));
+        this.RaisePropertyChanged(nameof(ScopeHint));
         RefreshSelectionProperties();
     }
 

@@ -23,13 +23,13 @@
                  Foreground="{DynamicResource ClearCText3}" Text="等待扫描指令 · 点击「扫描分析」开始" />
     </StackPanel>
 
-    <!-- 分组列表 + 幽灵行 -->
+    <!-- 盘符分区 + 分组列表 + 幽灵行 -->
     <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsListVisible}">
       <StackPanel Margin="0,0,10,0">
-        <ItemsControl ItemsSource="{Binding Groups}">
+        <ItemsControl ItemsSource="{Binding Sections}">
           <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:CleanupGroupViewModel">
-              <views:CleanupGroupView />
+            <DataTemplate x:DataType="vm:CleanupDriveSectionViewModel">
+              <views:CleanupDriveSectionView />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

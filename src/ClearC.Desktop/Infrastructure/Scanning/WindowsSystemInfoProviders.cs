@@ -7,6 +7,9 @@ namespace ClearC.Desktop.Infrastructure.Scanning;
 internal interface IDiskInfoProvider
 {
     DiskSnapshot GetSystemDrive();
+
+    /// <summary>本机全部固定磁盘（系统盘优先），供盘符选择条与多盘扫描使用。</summary>
+    IReadOnlyList<DiskSnapshot> GetFixedDrives();
 }
 
 internal sealed class WindowsDiskInfoProvider : IDiskInfoProvider
@@ -17,6 +20,52 @@ internal sealed class WindowsDiskInfoProvider : IDiskInfoProvider
         var root = Path.GetPathRoot(windows) ?? @"C:\";
         var drive = new DriveInfo(root);
         return new(drive.Name.TrimEnd('\\'), drive.DriveFormat, drive.TotalSize, drive.AvailableFreeSpace);
+    }
+
+    public IReadOnlyList<DiskSnapshot> GetFixedDrives()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return [GetSystemDrive()];
+        }
+
+        var systemRoot = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows)) ?? @"C:\";
+        var snapshots = new List<DiskSnapshot>();
+        try
+        {
+            foreach (var drive in DriveInfo.GetDrives())
+            {
+                if (drive.DriveType != DriveType.Fixed || !drive.IsReady)
+                {
+                    continue;
+                }
+
+                string? label = null;
+                try
+                {
+                    label = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? null : drive.VolumeLabel;
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                }
+
+                snapshots.Add(new(
+                    drive.Name.TrimEnd('\\'),
+                    drive.DriveFormat,
+                    drive.TotalSize,
+                    drive.AvailableFreeSpace,
+                    label));
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+        }
+
+        // 系统盘排在首位，其余按盘符排序。
+        return snapshots
+            .OrderByDescending(snapshot => snapshot.DriveName.Equals(systemRoot.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
+            .ThenBy(snapshot => snapshot.DriveName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 }
 

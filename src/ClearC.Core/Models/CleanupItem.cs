@@ -28,5 +28,22 @@ public sealed record CleanupItem(
 
     public bool CanClean => CleanerKind != CleanerKind.None && !IsProtected;
 
-    public bool IsRecommended => CanClean && SizeBytes > 0 && Risk == CleanupRisk.Low;
+    /// <summary>该项所在的盘符（如 "C:"）；根目录解析不出时回退系统盘。</summary>
+    public string DriveName => Path.GetPathRoot(CleanRoots[0]) is { } root
+        ? root.TrimEnd('\\', '/')
+        : SystemDriveRoot ?? string.Empty;
+
+    /// <summary>是否位于系统盘（多盘扫描时，非系统盘结果一律交给用户决策）。</summary>
+    public bool IsOnSystemDrive => SystemDriveRoot is null
+        || string.Equals(DriveName, SystemDriveRoot, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// 默认勾选策略：仅系统盘上的低风险可清理项（影响不大）默认勾选；
+    /// 中/高风险项与其他盘符的全部结果默认不勾选，由用户决策。
+    /// </summary>
+    public bool IsRecommended => CanClean && SizeBytes > 0 && Risk == CleanupRisk.Low && IsOnSystemDrive;
+
+    private static readonly string? SystemDriveRoot = OperatingSystem.IsWindows()
+        ? Path.GetPathRoot(Environment.SystemDirectory)?.TrimEnd('\\', '/')
+        : null;
 }

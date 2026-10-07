@@ -60,18 +60,26 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
     public async Task<ScanResult> ScanAsync(
         IProgress<ScanProgress>? progress = null,
         CancellationToken cancellationToken = default,
-        bool skipSystemAnalysis = false)
+        bool skipSystemAnalysis = false,
+        IReadOnlyList<string>? driveScope = null)
     {
         var stopwatch = Stopwatch.StartNew();
         var disk = _diskInfoProvider.GetSystemDrive();
+        var scope = driveScope is not { Count: > 0 }
+            ? [disk.DriveName]
+            : driveScope.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var includeSystem = scope.Contains(disk.DriveName, StringComparer.OrdinalIgnoreCase);
         var resolved = _platform.IsWindows
-            ? await _catalog.ResolveTargetsAsync(cancellationToken)
+            ? await _catalog.ResolveTargetsAsync(scope, cancellationToken)
             : [];
         // 快速模式：不拉起 DISM / vssadmin 子进程，别为两个分析项让整次扫描多等几分钟。
-        var targets = skipSystemAnalysis
+        var analysisTargets = skipSystemAnalysis
             ? resolved.Where(target => !RequiresExternalAnalysis(target)).ToArray()
             : resolved;
-        var total = targets.Count + 1;
+        // 回收站不走路由探测（$Recycle.Bin 枚举受限、数字偏小），统一用 Shell API 查询（§3.1）。
+        var recycleRows = analysisTargets.Where(target => target.CleanerKind == CleanerKind.RecycleBin).ToArray();
+        var targets = analysisTargets.Where(target => target.CleanerKind != CleanerKind.RecycleBin).ToArray();
+        var total = targets.Length + (includeSystem ? 1 : 0) + recycleRows.Count(row => !row.Id.Equals("recycle-bin", StringComparison.Ordinal));
         var items = new ConcurrentDictionary<string, CleanupItem>(StringComparer.Ordinal);
         var completed = 0;
         var slowGate = new SemaphoreSlim(1, 1);
@@ -82,19 +90,35 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
         // 慢档：DISM、大树与 Store 应用，后台补齐。
         await RunTierAsync(targets.Where(target => target.Tier == ScanTier.Slow).ToArray(), SlowParallelism, slowGate);
 
-        progress?.Report(new(Volatile.Read(ref completed), total, "回收站"));
-        items["recycle-bin"] = await ScanRecycleBinAsync(disk, cancellationToken);
-        Interlocked.Increment(ref completed);
-
-        progress?.Report(new(Volatile.Read(ref completed), total, "扫描完成"));
-        stopwatch.Stop();
-
         var ordered = targets
             .Select(target => items.TryGetValue(target.Id, out var item) ? item : null)
             .Where(item => item is not null)
             .Select(item => item!)
-            .Append(items["recycle-bin"])
-            .ToArray();
+            .ToList();
+
+        // 回收站按扫描范围顺序输出：系统盘在前，其他盘符随后，逐盘用 Shell 数字产出条目。
+        if (includeSystem)
+        {
+            progress?.Report(new(Volatile.Read(ref completed), total, "回收站"));
+            items["recycle-bin"] = await ScanRecycleBinAsync(
+                disk, "recycle-bin", "回收站", $"{disk.DriveName}\\$Recycle.Bin", cancellationToken);
+            ordered.Add(items["recycle-bin"]);
+            Interlocked.Increment(ref completed);
+        }
+
+        foreach (var row in recycleRows.Where(row => !row.Id.Equals("recycle-bin", StringComparison.Ordinal)))
+        {
+            var driveName = Path.GetPathRoot(row.Paths.FirstOrDefault() ?? row.Location)?.TrimEnd('\\', '/') ?? string.Empty;
+            var snapshot = new DiskSnapshot(driveName, string.Empty, 0, 0);
+            progress?.Report(new(Volatile.Read(ref completed), total, row.DisplayName, ScanTier.Fast, null, row.ScanTarget));
+            items[row.Id] = await ScanRecycleBinAsync(snapshot, row.Id, row.DisplayName, row.Location, cancellationToken);
+            ordered.Add(items[row.Id]);
+            Interlocked.Increment(ref completed);
+        }
+
+        progress?.Report(new(Volatile.Read(ref completed), total, "扫描完成"));
+        stopwatch.Stop();
+
         return new(disk, ordered, stopwatch.Elapsed);
 
         async Task RunTierAsync(
@@ -172,23 +196,28 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
         }
     }
 
-    private async Task<CleanupItem> ScanRecycleBinAsync(DiskSnapshot disk, CancellationToken cancellationToken)
+    private async Task<CleanupItem> ScanRecycleBinAsync(
+        DiskSnapshot disk,
+        string id,
+        string displayName,
+        string location,
+        CancellationToken cancellationToken)
     {
         var size = _platform.IsWindows
             ? await _recycleBinInfoProvider.GetInfoAsync($"{disk.DriveName}\\", cancellationToken)
             : default;
         return new(
-            "recycle-bin",
-            "回收站",
-            $"{disk.DriveName}\\$Recycle.Bin",
+            id,
+            displayName,
+            location,
             CleanupCategory.RecycleBin,
             CleanupRisk.Medium,
             size.Bytes,
             size.FileCount,
             "清空后文件无法从回收站恢复，执行前必须单独确认。",
-            "recycle-bin",
+            id,
             CleanerKind: CleanerKind.RecycleBin,
-            Paths: [$"{disk.DriveName}\\$Recycle.Bin"],
+            Paths: [location],
             Icon: "i-trash",
             Accent: "#64748b");
     }

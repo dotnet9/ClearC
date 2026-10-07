@@ -40,14 +40,19 @@ public sealed class CleanupWorkspaceViewModel : MainWindowSectionViewModel
             nameof(IsGhostVisible),
             nameof(GhostText),
             nameof(IsElevationBannerVisible),
-            nameof(ElevationBannerText))
+            nameof(ElevationBannerText),
+            nameof(ScopeHint))
     {
     }
 
-    public ObservableCollection<CleanupGroupViewModel> Groups => Owner.Groups;
+    public ObservableCollection<DriveCardViewModel> DriveCards => Owner.DriveCards;
+    public ObservableCollection<CleanupDriveSectionViewModel> Sections => Owner.Sections;
     public ICommand PrimaryCommand => Owner.PrimaryCommand;
     public ICommand SecondaryCommand => Owner.SecondaryCommand;
     public ICommand RestartElevatedCommand => Owner.RestartElevatedCommand;
+
+    /// <summary>盘符选择条旁的提示文案（扫描范围 / 修改提示）。</summary>
+    public string ScopeHint => Owner.ScopeHint;
 
     public string DriveTitle => Owner.DriveTitle;
     public string DriveInfo => Owner.DriveInfo;

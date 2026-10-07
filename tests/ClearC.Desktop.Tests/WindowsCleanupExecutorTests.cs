@@ -341,7 +341,7 @@ public sealed class WindowsCleanupExecutorTests
     {
         public IReadOnlyList<CleanupTargetDefinition> GetTargets() => targets;
 
-        public Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(CancellationToken cancellationToken = default) =>
+        public Task<IReadOnlyList<CleanupTargetDefinition>> ResolveTargetsAsync(IReadOnlyList<string>? driveScope = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<CleanupTargetDefinition>>(targets);
     }
 

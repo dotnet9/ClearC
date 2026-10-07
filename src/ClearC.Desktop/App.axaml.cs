@@ -29,7 +29,9 @@ public sealed partial class App : Application
     {
         var scanner = new WindowsCleanupScanner();
         var executor = new WindowsCleanupExecutor();
-        var disk = new WindowsDiskInfoProvider().GetSystemDrive();
+        var diskProvider = new WindowsDiskInfoProvider();
+        var disk = diskProvider.GetSystemDrive();
+        var drives = diskProvider.GetFixedDrives();
         var logStore = new InMemoryLogStore(logger ?? CodeWfApplicationLogger.Instance);
         return new MainWindow
         {
@@ -38,7 +40,8 @@ public sealed partial class App : Application
                 executor,
                 new CleanupSafetyPolicy(),
                 disk,
-                logStore)
+                logStore,
+                initialDrives: drives)
         };
     }
 

@@ -39,6 +39,22 @@ public sealed class CleanupSelectionTests
         Assert.Empty(selection.SelectedIds);
     }
 
+    /// <summary>默认勾选策略（§多盘）：其他盘符的低风险项也不默认勾选，交给用户决策。</summary>
+    [Fact]
+    public void Constructor_DoesNotRecommendLowRiskItemsOnNonSystemDrives()
+    {
+        var dTemp = new CleanupItem(
+            "d-temp", "D 盘临时目录", @"D:\Temp", CleanupCategory.TemporaryFiles,
+            CleanupRisk.Low, 500, 2, "", "d-temp", CleanerKind: CleanerKind.DirectoryContents);
+
+        var selection = new CleanupSelection([dTemp]);
+
+        Assert.Empty(selection.SelectedIds);
+        Assert.False(dTemp.IsRecommended);
+        Assert.False(dTemp.IsOnSystemDrive);
+        Assert.Equal("D:", dTemp.DriveName);
+    }
+
     private static CleanupItem[] CreateItems() =>
     [
         new("low", "Low", @"C:\Temp", CleanupCategory.TemporaryFiles, CleanupRisk.Low, 100, 1, "", "temp", CleanerKind: CleanerKind.DirectoryContents),
