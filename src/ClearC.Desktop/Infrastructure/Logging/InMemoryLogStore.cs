@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using Avalonia;
 using Avalonia.Threading;
-using CodeWF.Log.Core;
+using CodeWF.Toolkit.Logging;
 
 namespace ClearC.Desktop.Infrastructure.Logging;
 

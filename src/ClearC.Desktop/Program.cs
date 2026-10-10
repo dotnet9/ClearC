@@ -5,7 +5,7 @@ using Avalonia.Threading;
 using ClearC.Desktop.Infrastructure.Scanning;
 using ClearC.Desktop.Infrastructure.Windows;
 using ClearC.Desktop.ViewModels;
-using CodeWF.Log.Core;
+using CodeWF.Toolkit.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace ClearC.Desktop;

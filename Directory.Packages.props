@@ -8,7 +8,7 @@
     <PackageVersion Include="Avalonia" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Headless" Version="12.1.1" />
-    <PackageVersion Include="CodeWF.Log.Core" Version="12.1.2.3" />
+    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.0-preview.1" />
     <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
     <PackageVersion Include="ReactiveUI" Version="24.1.0" />
     <PackageVersion Include="System.Reactive" Version="7.0.0" />
