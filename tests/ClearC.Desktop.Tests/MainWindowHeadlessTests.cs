@@ -10,6 +10,7 @@ using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
+using CodeWF.Avalonia.Controls.Controls;
 
 namespace ClearC.Desktop.Tests;
 
@@ -29,7 +30,8 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             Assert.Single(window.GetVisualDescendants().OfType<DiskDonut>());
             Assert.Single(window.GetVisualDescendants().OfType<LogPanelView>());
             Assert.Single(window.GetVisualDescendants().OfType<CleanupListView>());
-            Assert.IsType<TitleBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<TitleBarView>()).DataContext);
+            // 标题栏品牌区已迁入 CodeWFWindow.LeftContent（原 TitleBarView 已删除）
+            Assert.NotNull(((CodeWFWindow)window).LeftContent);
             Assert.IsType<CleanupWorkspaceViewModel>(Assert.Single(window.GetVisualDescendants().OfType<CleanupWorkspaceView>()).DataContext);
             Assert.IsType<LogPanelViewModel>(Assert.Single(window.GetVisualDescendants().OfType<LogPanelView>()).DataContext);
             Assert.IsType<StatusBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<StatusBarView>()).DataContext);
@@ -48,13 +50,11 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             window.Show();
             window.UpdateLayout();
 
-            var root = Assert.IsType<Border>(window.Content);
-            var grid = Assert.IsType<Grid>(root.Child);
-            Assert.Equal(new GridLength(44), grid.RowDefinitions[0].Height);
-            // 行 1 是平台提示横幅（Auto，非 Windows 才显示）；工作区/日志/状态栏顺延为 2/3/4
-            Assert.Equal(GridLength.Auto, grid.RowDefinitions[1].Height);
-            Assert.Equal(new GridLength(160), grid.RowDefinitions[3].Height);
-            Assert.Equal(new GridLength(28), grid.RowDefinitions[4].Height);
+            // 窗体迁移到 CodeWFWindow 后，Content 直接是内容网格：横幅/工作区/日志/状态栏
+            var grid = Assert.IsType<Grid>(window.Content);
+            Assert.Equal(GridLength.Auto, grid.RowDefinitions[0].Height);
+            Assert.Equal(new GridLength(160), grid.RowDefinitions[2].Height);
+            Assert.Equal(new GridLength(28), grid.RowDefinitions[3].Height);
 
             var statusBar = Assert.Single(window.GetVisualDescendants().OfType<StatusBarView>());
             Assert.Equal(28, statusBar.Bounds.Height);

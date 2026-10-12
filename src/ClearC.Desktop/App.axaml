@@ -1,10 +1,12 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:semi="https://irihi.tech/semi"
+             xmlns:codewf="https://codewf.com"
              x:Class="ClearC.Desktop.App"
              RequestedThemeVariant="Light">
   <Application.Styles>
     <semi:SemiTheme Locale="zh-CN" />
+    <codewf:ACSemiTheme />
     <StyleInclude Source="/Themes/Index.axaml" />
   </Application.Styles>
 </Application>

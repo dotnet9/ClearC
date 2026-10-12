@@ -6,6 +6,7 @@
   <assembly fullname="ReactiveUI" preserve="all" />
   <assembly fullname="System.Reactive" preserve="all" />
   <assembly fullname="Semi.Avalonia" preserve="all" />
+  <assembly fullname="CodeWF.Avalonia.Controls" preserve="all" />
   <assembly fullname="Avalonia" preserve="all" />
   <assembly fullname="Avalonia.Base" preserve="all" />
   <assembly fullname="Avalonia.Controls" preserve="all" />

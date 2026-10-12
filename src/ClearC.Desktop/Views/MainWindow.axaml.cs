@@ -3,10 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using ClearC.Desktop.ViewModels;
+using CodeWF.Avalonia.Controls.Controls;
 
 namespace ClearC.Desktop.Views;
 
-public sealed partial class MainWindow : Window
+public sealed partial class MainWindow : CodeWFWindow
 {
     private bool _closeConfirmed;
 
