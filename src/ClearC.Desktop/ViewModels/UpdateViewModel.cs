@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using ClearC.Desktop.Services;
+using ClearC.Desktop.I18n;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.IO;
@@ -40,6 +41,7 @@ public sealed class UpdateViewModel : ReactiveObject
         DownloadCommand = ReactiveCommand.CreateFromTask(() => DownloadAsync());
         InstallCommand = ReactiveCommand.Create(InstallDownloaded);
         OpenPageCommand = ReactiveCommand.Create(OpenReleasePage);
+        AppLocalizer.Instance.CultureChanged += OnCultureChanged;
     }
 
     public ICommand CheckCommand { get; }
@@ -69,16 +71,16 @@ public sealed class UpdateViewModel : ReactiveObject
 
     public bool UpdateAvailable => _pendingUpdate is not null;
 
-    /// <summary>状态栏常驻按钮的文案：平时是「检查更新」，发现新版后变成版本徽标。</summary>
-    public string ButtonText => UpdateAvailable ? $"新版本 {_pendingUpdate!.Tag}" : "检查更新";
+    /// <summary>状态栏常驻按钮的文案：平时是检查更新，发现新版后变成版本徽标。</summary>
+    public string ButtonText => UpdateAvailable ? AppText.Format(Language.UpdateNewVersion, _pendingUpdate!.Tag) : AppText.Get(Language.UpdateCheck);
 
     public string ResultText => _resultText;
 
     public double DownloadProgress => _downloadProgress;
 
     public string ProgressText => IsDownloading
-        ? _downloadProgress > 0 ? $"下载中 {_downloadProgress:0}%" : "正在准备下载…"
-        : IsReady ? "下载完成" : string.Empty;
+        ? _downloadProgress > 0 ? AppText.Format(Language.UpdateDownloading, _downloadProgress.ToString("0", AppLocalizer.Instance.Culture)) : AppText.Get(Language.UpdatePreparing)
+        : IsReady ? AppText.Get(Language.UpdateProgressReady) : string.Empty;
 
     public bool CanDownload => UpdateAvailable && !IsDownloading && !IsReady &&
         !string.IsNullOrWhiteSpace(_pendingUpdate?.AssetUrl) &&
@@ -102,21 +104,21 @@ public sealed class UpdateViewModel : ReactiveObject
 
             if (!result.Succeeded)
             {
-                SetResult("检查更新失败，请稍后重试");
+                SetResult(AppText.Get(Language.UpdateError));
                 return;
             }
 
             if (result.Update is null)
             {
                 _pendingUpdate = null;
-                SetResult($"已是最新版本 v{current}");
+                SetResult(AppText.Format(Language.UpdateLatest, current));
                 return;
             }
 
             _pendingUpdate = result.Update;
             SetResult(NeedsReleasePage
-                ? "发现新版本，但没有匹配的安装包，请到发布页下载"
-                : $"发现新版本 {result.Update.Tag}，可下载安装");
+                ? AppText.Get(Language.UpdateNoAsset)
+                : AppText.Format(Language.UpdateAvailable, result.Update.Tag));
         }
         finally
         {
@@ -153,15 +155,15 @@ public sealed class UpdateViewModel : ReactiveObject
             UpdateDownloadResult download = await _downloader.DownloadAsync(
                 _pendingUpdate, progress, _downloadCancellation.Token).ConfigureAwait(true);
             _downloadedPath = download.FilePath;
-            SetResult($"已下载 {download.FileName}，可安装");
+            SetResult(AppText.Format(Language.UpdateDownloaded, download.FileName));
         }
         catch (OperationCanceledException)
         {
-            SetResult("已取消下载");
+            SetResult(AppText.Get(Language.UpdateCanceled));
         }
         catch (Exception exception)
         {
-            SetResult($"下载失败：{exception.Message}");
+            SetResult(AppText.Format(Language.UpdateDownloadFailed, exception.Message));
         }
         finally
         {
@@ -176,7 +178,7 @@ public sealed class UpdateViewModel : ReactiveObject
         string? path = _downloadedPath;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            SetResult("安装包不存在，请重新下载");
+            SetResult(AppText.Get(Language.UpdateInstallMissing));
             return;
         }
 
@@ -194,7 +196,7 @@ public sealed class UpdateViewModel : ReactiveObject
         }
         catch (Exception exception)
         {
-            SetResult($"启动安装器失败：{exception.Message}");
+            SetResult(AppText.Format(Language.UpdateInstallFailed, exception.Message));
         }
     }
 
@@ -230,6 +232,13 @@ public sealed class UpdateViewModel : ReactiveObject
     {
         this.RaisePropertyChanged(nameof(IsReady));
         this.RaisePropertyChanged(nameof(CanDownload));
+        this.RaisePropertyChanged(nameof(ProgressText));
+    }
+
+    private void OnCultureChanged(object? sender, EventArgs args)
+    {
+        this.RaisePropertyChanged(nameof(ButtonText));
+        this.RaisePropertyChanged(nameof(ResultText));
         this.RaisePropertyChanged(nameof(ProgressText));
     }
 }

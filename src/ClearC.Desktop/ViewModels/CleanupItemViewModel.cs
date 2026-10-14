@@ -4,6 +4,7 @@ using ClearC.Core.Formatting;
 using ClearC.Core.Models;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Themes;
 using ReactiveUI;
 
@@ -44,6 +45,7 @@ public sealed class CleanupItemViewModel : ReactiveObject
         CopyPathCommand = ReactiveCommand.CreateFromTask(CopyPathAsync);
         ToggleSelectionCommand = ReactiveCommand.Create(ToggleSelection);
         ToggleExpandedCommand = ReactiveCommand.Create(() => IsExpanded = !IsExpanded);
+        AppLocalizer.Instance.CultureChanged += OnCultureChanged;
     }
 
     public event EventHandler? SelectionChanged;
@@ -64,15 +66,20 @@ public sealed class CleanupItemViewModel : ReactiveObject
     public IBrush RiskBackground => _palette.RiskBackground(Model.Risk);
 
     public string SizeText => ByteSizeFormatter.Format(Model.SizeBytes);
-    public string FileCountText => $"{Model.FileCount:N0} 个文件";
+    public string FileCountText => AppText.Format(Language.ItemFiles, Model.FileCount);
     public string RelativeTimeText => RelativeTimeFormatter.Format(Model.LastWriteTimeUtc);
     public string MetaText => $"{FileCountText} · {RelativeTimeText}";
-    public string RiskText => Model.Risk switch { CleanupRisk.Low => "低风险", CleanupRisk.Medium => "中风险", _ => "高风险" };
+    public string RiskText => Model.Risk switch
+    {
+        CleanupRisk.Low => AppText.Get(Language.ItemLowRisk),
+        CleanupRisk.Medium => AppText.Get(Language.ItemMediumRisk),
+        _ => AppText.Get(Language.ItemHighRisk)
+    };
 
     /// <summary>详情里的路径列表（逐行渲染，个人目录前缀替换为环境变量占位符）。</summary>
     public IReadOnlyList<string> PathLines => Model.CleanRoots.Select(PathRedactor.Redact).ToArray();
 
-    public string PathSourceText => string.IsNullOrWhiteSpace(Model.PathSource) ? string.Empty : $"来源 {Model.PathSource}";
+    public string PathSourceText => string.IsNullOrWhiteSpace(Model.PathSource) ? string.Empty : AppText.Format(Language.ItemSource, Model.PathSource);
     public bool HasPathSource => !string.IsNullOrWhiteSpace(Model.PathSource);
     public string ScanNoteText => Model.ScanNote ?? string.Empty;
     public bool HasScanNote => !string.IsNullOrWhiteSpace(Model.ScanNote);
@@ -90,10 +97,10 @@ public sealed class CleanupItemViewModel : ReactiveObject
     public ICommand ToggleExpandedCommand { get; }
 
     /// <summary>右键菜单里勾选项的文案随当前状态切换。</summary>
-    public string ContextToggleText => IsSelected ? "取消勾选" : "勾选此项";
+    public string ContextToggleText => AppText.Get(IsSelected ? Language.ItemDeselect : Language.ItemSelect);
 
     /// <summary>右键菜单里详情项的文案随展开状态切换。</summary>
-    public string ContextExpandText => IsExpanded ? "收起详情" : "展开详情";
+    public string ContextExpandText => AppText.Get(IsExpanded ? Language.ItemCollapse : Language.ItemExpand);
 
     /// <summary>所在盘符（如 "C:"），结果列表按盘符分区。</summary>
     public string DriveName => Model.DriveName;
@@ -117,24 +124,24 @@ public sealed class CleanupItemViewModel : ReactiveObject
     public bool HasLocationHint => !string.IsNullOrEmpty(_locationHint);
 
     public string Recommendation => Model.CleanerKey == "codex-conversations"
-        ? "默认不选择。请先关闭 Codex；配置、登录信息、技能、插件、数据库和诊断日志不会删除。"
+        ? AppText.Get(Language.ItemRecommendationCodex)
         : !Model.CanClean
-        ? "由系统或应用管理，ClearC 不执行删除"
+        ? AppText.Get(Language.ItemRecommendationSystem)
         : NeedsElevation
-        ? "需要管理员权限，请先用「以管理员重启」提权后再清理"
+        ? AppText.Get(Language.ItemRecommendationElevation)
         : Model.Risk == CleanupRisk.Low
-            ? "可安全清理，缓存会在需要时自动重建"
-            : "清理后不可恢复或需要重新下载，请确认影响";
+            ? AppText.Get(Language.ItemRecommendationLow)
+            : AppText.Get(Language.ItemRecommendationRisk);
     public string? SelectionToolTip => Model.CleanerKey == "codex-conversations"
-        ? "默认不选择。ClearC 仅在本地删除 Codex 活动与归档会话文件，不连接 Codex；检测到 Codex 正在运行时会跳过。"
+        ? AppText.Get(Language.ItemSelectionCodex)
         : NeedsElevation
-        ? "需要管理员权限，未提权时不可选择。"
+        ? AppText.Get(Language.ItemSelectionElevation)
         : null;
 
     /// <summary>未提权时该项不可清理（<see cref="CleanupItem.RequiresElevation"/> 为真）。</summary>
     public bool NeedsElevation => Model.RequiresElevation && !_isElevated;
     public bool IsReadOnly => !Model.CanClean || NeedsElevation;
-    public string ReadOnlyText => NeedsElevation ? "需管理员" : Model.CanClean ? string.Empty : "不可清理";
+    public string ReadOnlyText => NeedsElevation ? AppText.Get(Language.ItemRequiresAdmin) : Model.CanClean ? string.Empty : AppText.Get(Language.ItemCannotClean);
     public bool HasReadOnlyTag => IsReadOnly;
 
     public bool IsSelected
@@ -219,16 +226,16 @@ public sealed class CleanupItemViewModel : ReactiveObject
     public double RowOpacity => HasResult ? 0.45 : 1;
     public string ResultText => _result?.Outcome switch
     {
-        CleanupOutcome.Completed => "✓ 已清理",
-        CleanupOutcome.Skipped => "已跳过",
-        CleanupOutcome.Failed => "清理失败",
-        CleanupOutcome.Cancelled => "已取消",
+        CleanupOutcome.Completed => AppText.Get(Language.ItemResultCompleted),
+        CleanupOutcome.Skipped => AppText.Get(Language.ItemResultSkipped),
+        CleanupOutcome.Failed => AppText.Get(Language.ItemResultFailed),
+        CleanupOutcome.Cancelled => AppText.Get(Language.ItemResultCanceled),
         _ => string.Empty
     };
     public string FreedText => _result is { FreedBytes: > 0 } result
         ? result.IsEstimated
-            ? $"释放 ~{ByteSizeFormatter.Format(result.FreedBytes)}（估算）"
-            : $"释放 {ByteSizeFormatter.Format(result.FreedBytes)}"
+            ? AppText.Format(Language.ItemFreedEstimated, ByteSizeFormatter.Format(result.FreedBytes))
+            : AppText.Format(Language.ItemFreed, ByteSizeFormatter.Format(result.FreedBytes))
         : string.Empty;
     public IBrush ResultBrush => _result?.Outcome switch
     {
@@ -237,6 +244,14 @@ public sealed class CleanupItemViewModel : ReactiveObject
         CleanupOutcome.Failed => _palette.Brush("ClearCRed"),
         _ => _palette.Brush("ClearCText3")
     };
+
+    private void OnCultureChanged(object? sender, EventArgs args)
+    {
+        foreach (var property in new[] { nameof(FileCountText), nameof(MetaText), nameof(RiskText), nameof(PathSourceText), nameof(ContextToggleText), nameof(ContextExpandText), nameof(Recommendation), nameof(SelectionToolTip), nameof(ReadOnlyText), nameof(ResultText), nameof(FreedText) })
+        {
+            this.RaisePropertyChanged(property);
+        }
+    }
 
     public void SetInitialSelection(bool selected)
     {
@@ -263,7 +278,7 @@ public sealed class CleanupItemViewModel : ReactiveObject
     {
         var path = Model.CleanRoots.FirstOrDefault();
         LocationHint = _locationOpener is null
-            ? "当前环境无法打开资源管理器"
+            ? AppText.Get(Language.ItemLocationUnavailable)
             : _locationOpener.TryOpen(path ?? string.Empty) ?? string.Empty;
     }
 
@@ -271,12 +286,12 @@ public sealed class CleanupItemViewModel : ReactiveObject
     {
         if (_clipboard is null)
         {
-            LocationHint = "当前环境没有可用剪贴板";
+            LocationHint = AppText.Get(Language.MainClipboardUnavailable);
             return;
         }
 
         await _clipboard.CopyAsync(Model.Location);
-        LocationHint = "路径已复制到剪贴板";
+        LocationHint = AppText.Get(Language.MainPathCopied);
     }
 
     private void ToggleSelection() => IsSelected = !IsSelected;

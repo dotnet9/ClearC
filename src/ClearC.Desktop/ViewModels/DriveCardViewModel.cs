@@ -1,5 +1,6 @@
 using ClearC.Core.Formatting;
 using ClearC.Core.Models;
+using ClearC.Desktop.I18n;
 using ReactiveUI;
 
 namespace ClearC.Desktop.ViewModels;
@@ -38,7 +39,7 @@ public sealed class DriveCardViewModel : ReactiveObject
     public string Letter => _snapshot.DriveName.TrimEnd('\\', '/');
 
     public bool IsSystemDrive { get; }
-    public string TypeText => IsSystemDrive ? "系统盘" : "数据盘";
+    public string TypeText => AppText.Get(IsSystemDrive ? Language.DriveSystem : Language.DriveData);
 
     public string VolumeLabel => string.IsNullOrWhiteSpace(_snapshot.VolumeLabel)
         ? string.Empty
@@ -52,7 +53,7 @@ public sealed class DriveCardViewModel : ReactiveObject
     public bool IsNearlyFull => _snapshot.UsedRatio >= 0.9;
 
     public string UsageText =>
-        $"已用 {ByteSizeFormatter.Format(_snapshot.UsedBytes)} / {ByteSizeFormatter.Format(_snapshot.TotalBytes)} · {UsedPercentText}";
+        $"{AppText.Get(Language.WorkspaceUsed)} {ByteSizeFormatter.Format(_snapshot.UsedBytes)} / {ByteSizeFormatter.Format(_snapshot.TotalBytes)} · {UsedPercentText}";
 
     /// <summary>容量条填充宽度（轨道 150px，原型 <c>.dc-bar</c>）。</summary>
     public double UsageBarWidth => Math.Clamp(UsedRatio, 0, 1) * 150;
@@ -76,7 +77,7 @@ public sealed class DriveCardViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _isLocked, value);
     }
 
-    public string LockedToolTip => "扫描 / 清理过程中不可修改范围";
+    public string LockedToolTip => AppText.Get(Language.WorkspaceScopeOther);
 
     /// <summary>卡尾的扫描状态：等待扫描 / 正在扫描 … / 可清理汇总。</summary>
     public string ScanSummary
@@ -114,5 +115,13 @@ public sealed class DriveCardViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsNearlyFull));
         this.RaisePropertyChanged(nameof(UsageText));
         this.RaisePropertyChanged(nameof(UsageBarWidth));
+    }
+
+    internal void RefreshLocalization()
+    {
+        this.RaisePropertyChanged(nameof(TypeText));
+        this.RaisePropertyChanged(nameof(UsageText));
+        this.RaisePropertyChanged(nameof(LockedToolTip));
+        this.RaisePropertyChanged(nameof(ScanSummary));
     }
 }

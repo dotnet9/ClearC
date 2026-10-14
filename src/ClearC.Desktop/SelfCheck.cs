@@ -1,6 +1,7 @@
 using Avalonia;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Scanning;
+using ClearC.Desktop.I18n;
 
 namespace ClearC.Desktop;
 
@@ -36,13 +37,13 @@ internal static class SelfCheck
                 !application.TryGetResource("ClearCAccent", application.ActualThemeVariant, out var accent) ||
                 accent is null)
             {
-                Console.Error.WriteLine("selfcheck: 主题资源 ClearCAccent 未解析。");
+                Console.Error.WriteLine(AppText.Get("ClearC.System.SelfCheckAccentMissing"));
                 return 1;
             }
 
             if (!application.TryGetResource("ClearCIconFile", application.ActualThemeVariant, out var icon) || icon is null)
             {
-                Console.Error.WriteLine("selfcheck: 图标资源 ClearCIconFile 未解析。");
+                Console.Error.WriteLine(AppText.Get("ClearC.System.SelfCheckIconMissing"));
                 return 1;
             }
 
@@ -53,7 +54,7 @@ internal static class SelfCheck
 
             if (size.Bytes < 4096 || size.FileCount != 1)
             {
-                Console.Error.WriteLine($"selfcheck: 目录大小计算异常（{size.Bytes} 字节 / {size.FileCount} 个文件）。");
+                Console.Error.WriteLine(AppText.Format("ClearC.System.SelfCheckDirectorySize", size.Bytes, size.FileCount));
                 return 1;
             }
 
@@ -62,7 +63,7 @@ internal static class SelfCheck
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"selfcheck: 失败 {exception}");
+            Console.Error.WriteLine(AppText.Format("ClearC.System.SelfCheckFailed", exception));
             return 1;
         }
         finally

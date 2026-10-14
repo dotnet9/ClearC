@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:ClearC.Desktop.Controls"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
+             xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
              x:Class="ClearC.Desktop.Views.WorkflowOverlayView"
              x:DataType="vm:WorkflowOverlayViewModel">
   <Grid>
@@ -31,16 +32,16 @@
             CornerRadius="{DynamicResource ClearCRadiusWindow}"
             IsVisible="{Binding IsConfirmationVisible}">
       <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto">
-        <TextBlock Grid.Row="0" FontSize="15" FontWeight="Bold" Text="确认清理" />
+        <TextBlock Grid.Row="0" FontSize="15" FontWeight="Bold" Text="{i18n:I18n ClearC.Workflow.ConfirmClean}" />
         <Border Grid.Row="1" Width="32" Height="3" Margin="0,8,0,12" HorizontalAlignment="Left"
                 Background="{DynamicResource ClearCAccentGradient}"
                 CornerRadius="{DynamicResource ClearCRadiusPill}" />
 
         <StackPanel Grid.Row="2" Spacing="10">
           <TextBlock FontSize="12.5" Foreground="{DynamicResource ClearCText2}">
-            <Run Text="即将清理以下" />
+            <Run Text="{i18n:I18n ClearC.Workflow.AboutToClean}" />
             <Run FontWeight="Bold" Foreground="{DynamicResource ClearCAccent}" Text="{Binding SelectedItems.Count}" />
-            <Run Text="个项目：" />
+            <Run Text="{i18n:I18n ClearC.Workflow.Projects}" />
           </TextBlock>
           <Border MaxHeight="180" Padding="12,4"
                   Background="{DynamicResource ClearCPanel}"
@@ -72,14 +73,14 @@
           <Button Classes="mini" HorizontalAlignment="Left"
                   Command="{Binding ClearDeniedCommand}"
                   IsVisible="{Binding HasDeniedItems}"
-                  Content="取消选择这些项" />
+                  Content="{i18n:I18n ClearC.Item.Deselect}" />
         </StackPanel>
 
         <Border Grid.Row="3" Margin="0,12,0,0" Padding="0,10,0,0"
                 BorderBrush="{DynamicResource ClearCLine2}"
                 BorderThickness="0,1,0,0">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock FontWeight="SemiBold" Text="合计释放" />
+            <TextBlock FontWeight="SemiBold" Text="{i18n:I18n ClearC.Workflow.TotalFreed}" />
             <TextBlock Grid.Column="1" FontWeight="Bold"
                        FontFamily="{DynamicResource ClearCMonoFont}"
                        Foreground="{DynamicResource ClearCAccent}" Text="{Binding ConfirmationTotal}" />
@@ -108,9 +109,9 @@
 
         <StackPanel Grid.Row="6" Margin="0,16,0,0" Orientation="Horizontal" Spacing="9"
                     HorizontalAlignment="Right">
-          <Button Classes="btn ghost" Command="{Binding CancelConfirmationCommand}" Content="取消" />
+          <Button Classes="btn ghost" Command="{Binding CancelConfirmationCommand}" Content="{i18n:I18n ClearC.Workflow.Cancel}" />
           <Button Classes="btn primary" Command="{Binding ConfirmCleanupCommand}"
-                  IsEnabled="{Binding IsConfirmEnabled}" Content="开始清理" />
+                  IsEnabled="{Binding IsConfirmEnabled}" Content="{i18n:I18n ClearC.Workflow.StartClean}" />
         </StackPanel>
       </Grid>
     </Border>
@@ -127,7 +128,7 @@
             CornerRadius="{DynamicResource ClearCRadiusWindow}"
             IsVisible="{Binding IsCloseConfirmationVisible}">
       <StackPanel Spacing="12">
-        <TextBlock FontSize="15" FontWeight="Bold" Text="确认关闭" />
+        <TextBlock FontSize="15" FontWeight="Bold" Text="{i18n:I18n ClearC.Workflow.ConfirmClose}" />
         <Border Width="32" Height="3" HorizontalAlignment="Left"
                 Background="{DynamicResource ClearCAccentGradient}"
                 CornerRadius="{DynamicResource ClearCRadiusPill}" />
@@ -144,12 +145,12 @@
                                 Foreground="{DynamicResource ClearCWarnText}" />
             <TextBlock Grid.Column="1" Margin="9,0,0,0" FontSize="12" TextWrapping="Wrap"
                        Foreground="{DynamicResource ClearCWarnText}"
-                       Text="「停止并退出」会先取消任务，并等待已启动的官方命令安全结束。" />
+                       Text="{i18n:I18n ClearC.Workflow.StopAndExitHint}" />
           </Grid>
         </Border>
         <StackPanel Orientation="Horizontal" Spacing="9" HorizontalAlignment="Right">
-          <Button Classes="btn ghost" Command="{Binding CancelCloseCommand}" Content="取消" />
-          <Button Classes="btn danger" Command="{Binding ConfirmCloseCommand}" Content="停止并退出" />
+          <Button Classes="btn ghost" Command="{Binding CancelCloseCommand}" Content="{i18n:I18n ClearC.Workflow.Cancel}" />
+          <Button Classes="btn danger" Command="{Binding ConfirmCloseCommand}" Content="{i18n:I18n ClearC.Workflow.StopAndExit}" />
         </StackPanel>
       </StackPanel>
     </Border>

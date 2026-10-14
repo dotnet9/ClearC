@@ -10,6 +10,7 @@ using ClearC.Core.Selection;
 using ClearC.Core.Services;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Themes;
 using ReactiveUI;
 
@@ -113,20 +114,21 @@ public sealed class MainWindowViewModel : ReactiveObject
         StatusBar = new StatusBarViewModel(this);
         Overlay = new WorkflowOverlayViewModel(this);
         Update = new UpdateViewModel((level, message, exception) => AddLog(level, message, exception));
+        AppLocalizer.Instance.CultureChanged += OnCultureChanged;
 
         State = WorkflowState.Idle;
-        AddLog("OK", $"ClearC 引擎初始化完成 · v{ProductVersion}");
-        AddLog("INFO", $"检测到 {drives.Count} 个本地磁盘 · {string.Join(" · ", drives.Select(d => $"{d.DriveName} {ByteSizeFormatter.Format(d.TotalBytes)}"))}");
+        AddLog("OK", AppText.Format(Language.MainEngineInitialized, ProductVersion));
+        AddLog("INFO", AppText.Format(Language.MainDriveDetected, drives.Count, string.Join(" · ", drives.Select(d => $"{d.DriveName} {ByteSizeFormatter.Format(d.TotalBytes)}"))));
         foreach (var snapshot in drives)
         {
-            AddLog("INFO", $"{snapshot.DriveName} 已用 {ByteSizeFormatter.Format(snapshot.UsedBytes)}（{snapshot.UsedRatio:P0}）· 可用 {ByteSizeFormatter.Format(snapshot.FreeBytes)}");
+            AddLog("INFO", AppText.Format(Language.MainDriveUsage, snapshot.DriveName, ByteSizeFormatter.Format(snapshot.UsedBytes), snapshot.UsedRatio, ByteSizeFormatter.Format(snapshot.FreeBytes)));
         }
         if (!_elevationService.IsElevated)
         {
-            AddLog("WARN", "当前未提权 · 部分系统缓存不可清理，可使用「以管理员重启」。");
+            AddLog("WARN", AppText.Get(Language.MainElevationLog));
         }
 
-        AddLog("INFO", "提示：勾选需要扫描的盘符（系统盘默认选中），点击「扫描分析」开始");
+        AddLog("INFO", AppText.Get(Language.MainScopeIdle));
         _ = Update.CheckAsync();
     }
 
@@ -195,18 +197,18 @@ public sealed class MainWindowViewModel : ReactiveObject
         .ToArray();
 
     private static string ScopeText(IReadOnlyList<string> drives) =>
-        drives.Count > 0 ? string.Join(" · ", drives) : "（未选择任何盘符）";
+        drives.Count > 0 ? string.Join(" · ", drives) : AppText.Get(Language.MainScopeNone);
 
     /// <summary>盘符选择条旁的提示文案（原型 <c>.db-hint</c>）。</summary>
     public string ScopeHint => State switch
     {
-        WorkflowState.Idle => "勾选需要扫描的盘符 · 系统盘默认选中",
-        WorkflowState.Scanning => $"正在扫描已勾选的 {_scanDrives.Count} 个盘符 …",
+        WorkflowState.Idle => AppText.Get(Language.MainScopeIdle),
+        WorkflowState.Scanning => AppText.Format(Language.MainScopeScanning, _scanDrives.Count),
         WorkflowState.Results => _scopeStale
-            ? "扫描范围已修改 · 请点击「重新分析」"
-            : "勾选结果项后执行清理 · 修改盘符后请「重新分析」",
-        WorkflowState.Cleaning => "正在清理已勾选的项目 …",
-        _ => "如需修改范围，请点击「重新分析」"
+            ? AppText.Get(Language.MainScopeResultsStale)
+            : AppText.Get(Language.MainScopeResults),
+        WorkflowState.Cleaning => AppText.Get(Language.MainScopeCleaning),
+        _ => AppText.Get(Language.MainScopeOther)
     };
 
     /// <summary>勾选盘符导致结果过期时由「重新分析」复位。</summary>
@@ -218,7 +220,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             return;
         }
 
-        AddLog("INFO", $"扫描范围已更新：{ScopeText(SelectedDrives)}");
+        AddLog("INFO", AppText.Format(Language.MainScopeUpdated, ScopeText(SelectedDrives)));
 
         var scope = SelectedDrives;
         if (State is WorkflowState.Results or WorkflowState.Done
@@ -226,7 +228,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             && (scope.Count != _scanDrives.Count || !scope.All(drive => _scanDrives.Contains(drive, StringComparer.OrdinalIgnoreCase))))
         {
             _scopeStale = true;
-            AddLog("WARN", "扫描范围与当前结果不一致 · 请点击「重新分析」");
+            AddLog("WARN", AppText.Get(Language.MainScopeResultsStale));
         }
 
         RefreshScopeProperties();
@@ -253,7 +255,7 @@ public sealed class MainWindowViewModel : ReactiveObject
                 1 => string.IsNullOrWhiteSpace(selected[0].VolumeLabel)
                     ? $"{ByteSizeFormatter.Format(selected[0].TotalBytes)} · {selected[0].DriveFormat}"
                     : $"{selected[0].VolumeLabel} · {ByteSizeFormatter.Format(selected[0].TotalBytes)} · {selected[0].DriveFormat}",
-                > 1 => $"合计 {ByteSizeFormatter.Format(selected.Sum(s => s.TotalBytes))} · {selected[0].DriveFormat}",
+                > 1 => AppText.Format(Language.MainTotal, ByteSizeFormatter.Format(selected.Sum(s => s.TotalBytes)), selected[0].DriveFormat),
                 _ => string.Empty
             };
         }
@@ -275,15 +277,15 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     public string HeroLabel => State switch
     {
-        WorkflowState.Cleaning => "已释放",
-        WorkflowState.Done => "本次已释放",
-        _ => "可释放空间"
+        WorkflowState.Cleaning => AppText.Get(Language.MainHeroReleased),
+        WorkflowState.Done => AppText.Get(Language.MainHeroReleasedThisRun),
+        _ => AppText.Get(Language.MainHeroAvailable)
     };
 
     public string HeroValue => State switch
     {
-        WorkflowState.Idle => "待扫描",
-        WorkflowState.Scanning => "正在分析…",
+        WorkflowState.Idle => AppText.Get(Language.MainHeroPending),
+        WorkflowState.Scanning => AppText.Get(Language.MainHeroAnalyzing),
         WorkflowState.Cleaning or WorkflowState.Done => FreedText,
         _ => ByteSizeFormatter.Format(SelectedBytes)
     };
@@ -297,13 +299,13 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     public string PrimaryButtonText => State switch
     {
-        WorkflowState.Idle => "扫描分析",
-        WorkflowState.Scanning when _isFastTierComplete => $"执行清理 · {ByteSizeFormatter.Format(SelectedBytes)}",
-        WorkflowState.Scanning => "扫描中…",
-        WorkflowState.Results => $"执行清理 · {ByteSizeFormatter.Format(SelectedBytes)}",
-        WorkflowState.Confirming => $"执行清理 · {ByteSizeFormatter.Format(SelectedBytes)}",
-        WorkflowState.Cleaning => "清理中…",
-        _ => "执行清理"
+        WorkflowState.Idle => AppText.Get(Language.MainScan),
+        WorkflowState.Scanning when _isFastTierComplete => AppText.Format(Language.MainCleanWithSize, ByteSizeFormatter.Format(SelectedBytes)),
+        WorkflowState.Scanning => AppText.Get(Language.MainScanning),
+        WorkflowState.Results => AppText.Format(Language.MainCleanWithSize, ByteSizeFormatter.Format(SelectedBytes)),
+        WorkflowState.Confirming => AppText.Format(Language.MainCleanWithSize, ByteSizeFormatter.Format(SelectedBytes)),
+        WorkflowState.Cleaning => AppText.Get(Language.MainCleaning),
+        _ => AppText.Get(Language.MainClean)
     };
 
     public string PrimaryIconKey => State is WorkflowState.Idle or WorkflowState.Scanning ? "i-search" : "i-clean";
@@ -320,10 +322,10 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     public string SecondaryButtonText => State switch
     {
-        WorkflowState.Scanning or WorkflowState.Cleaning when _isAwaitingCommandStop => "正在等待当前命令结束…",
-        WorkflowState.Scanning or WorkflowState.Cleaning => "取消",
-        WorkflowState.Results or WorkflowState.Done => "重新分析",
-        _ => "执行清理"
+        WorkflowState.Scanning or WorkflowState.Cleaning when _isAwaitingCommandStop => AppText.Get(Language.MainWaitingCommand),
+        WorkflowState.Scanning or WorkflowState.Cleaning => AppText.Get(Language.MainCancel),
+        WorkflowState.Results or WorkflowState.Done => AppText.Get(Language.MainReanalyze),
+        _ => AppText.Get(Language.MainClean)
     };
 
     public bool IsSecondaryEnabled => State switch
@@ -377,7 +379,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     public int SelectedCount => Items.Count(item => item.IsSelected);
     public long SelectedBytes => Items.Where(item => item.IsSelected).Sum(item => item.Model.SizeBytes);
-    public string SelectedSummary => SelectedCount == 0 ? "未选择" : $"已选 {SelectedCount} 项 · {ByteSizeFormatter.Format(SelectedBytes)}";
+    public string SelectedSummary => SelectedCount == 0 ? AppText.Get(Language.MainNoSelection) : AppText.Format(Language.MainSelectedSummary, SelectedCount, ByteSizeFormatter.Format(SelectedBytes));
 
     /// <summary>快档完成后即可交互（§3.3）。</summary>
     public bool CanInteractWithList => State == WorkflowState.Results || State is WorkflowState.Scanning && _isFastTierComplete;
@@ -459,10 +461,10 @@ public sealed class MainWindowViewModel : ReactiveObject
     public bool HasDeniedItems => Items.Any(item => item.IsDenied);
 
     public string ConfirmationWarning => HasCodexConversationSelection
-        ? "Codex 活动与归档会话文件将被永久删除。请先关闭 Codex；检测到 Codex 运行时会跳过。此操作无法恢复。"
+        ? AppText.Get(Language.MainConfirmationCodex)
         : HasRiskSelection
-        ? "包含中高风险项目，清理后可能无法恢复或需要重新下载，请确认。"
-        : "清理会永久删除所选缓存内容，请确认后继续。";
+        ? AppText.Get(Language.MainConfirmationRisk)
+        : AppText.Get(Language.MainConfirmationNormal);
 
     public bool IsConfirmationWarningVisible => HasRiskSelection || HasCodexConversationSelection || HasDeniedItems;
 
@@ -471,7 +473,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
     /// <summary>慢档被中断时，确认页提示未完成分析的项数（§3.3）。</summary>
     public string ConfirmationPendingNote => _pendingTargetCount > 0
-        ? $"另有 {_pendingTargetCount} 项未完成分析，本次不会清理。"
+        ? AppText.Format(Language.MainPendingNote, _pendingTargetCount)
         : string.Empty;
 
     public bool IsPendingNoteVisible => _pendingTargetCount > 0;
@@ -485,8 +487,8 @@ public sealed class MainWindowViewModel : ReactiveObject
     public bool IsToastSuccess => _isToastSuccess;
 
     public string ToastText => _estimatedFreedBytes > 0
-        ? $"清理完成 · 实测释放 {ByteSizeFormatter.Format(_measuredFreedBytes)} · 预计再释放 ~{ByteSizeFormatter.Format(_estimatedFreedBytes)}"
-        : $"清理完成 · 释放 {ByteSizeFormatter.Format(_measuredFreedBytes)}";
+        ? AppText.Format(Language.MainToastEstimated, ByteSizeFormatter.Format(_measuredFreedBytes), ByteSizeFormatter.Format(_estimatedFreedBytes))
+        : AppText.Format(Language.MainToastMeasured, ByteSizeFormatter.Format(_measuredFreedBytes));
 
     public bool IsCloseConfirmationVisible
     {
@@ -502,20 +504,20 @@ public sealed class MainWindowViewModel : ReactiveObject
     }
 
     public string CloseConfirmationText => State == WorkflowState.Scanning
-        ? "扫描正在进行，关闭将丢失本次扫描结果。"
-        : "清理正在进行，此时关闭可能造成半清理。";
+        ? AppText.Get(Language.MainCloseScanning)
+        : AppText.Get(Language.MainCloseCleaning);
 
     public bool IsElevationBannerVisible => !_elevationService.IsElevated;
-    public string ElevationBannerText => "未提权 · 部分系统缓存不可清理";
+    public string ElevationBannerText => AppText.Get(Language.MainElevationBanner);
 
     public string StatusText => State switch
     {
-        WorkflowState.Idle => "SYSTEM READY · 等待指令",
-        WorkflowState.Scanning => $"SCANNING · 正在扫描 {ScopeText(_scanDrives)}",
-        WorkflowState.Results => "SCAN COMPLETE · 扫描完成",
-        WorkflowState.Confirming => "AWAIT CONFIRM · 等待确认",
-        WorkflowState.Cleaning => "CLEANING · 正在清理",
-        _ => "TASK COMPLETE · 清理完成"
+        WorkflowState.Idle => AppText.Get(Language.MainStatusReady),
+        WorkflowState.Scanning => AppText.Format(Language.MainStatusScanning, ScopeText(_scanDrives)),
+        WorkflowState.Results => AppText.Get(Language.MainStatusComplete),
+        WorkflowState.Confirming => AppText.Get(Language.MainStatusConfirm),
+        WorkflowState.Cleaning => AppText.Get(Language.MainStatusCleaning),
+        _ => AppText.Get(Language.MainStatusDone)
     };
 
     public Avalonia.Media.IBrush StatusBrush => State switch
@@ -620,7 +622,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             return;
         }
 
-        AddLog("WARN", "已请求取消，等待已启动的官方命令安全结束 …");
+        AddLog("WARN", AppText.Get(Language.MainCancelRequested));
         IsAwaitingCommandStop = true;
         _operationCancellation.Cancel();
     }
@@ -662,13 +664,13 @@ public sealed class MainWindowViewModel : ReactiveObject
                 row.DeniedReason = decision.Reason;
             }
 
-            AddLog("WARN", $"不可清理：{model.DisplayName} · {decision.Reason}");
+            AddLog("WARN", AppText.Format(Language.MainDeniedLog, model.DisplayName, decision.Reason));
         }
 
         State = WorkflowState.Confirming;
         AddLog("INFO", denied > 0
-            ? $"等待确认：{SelectedCount} 项 · 其中 {denied} 项被安全策略拒绝，请先取消选择。"
-            : $"等待确认：{SelectedCount} 项 · {ByteSizeFormatter.Format(SelectedBytes)}");
+            ? AppText.Format(Language.MainAwaitingDenied, SelectedCount, denied)
+            : AppText.Format(Language.MainAwaitingClean, SelectedCount, ByteSizeFormatter.Format(SelectedBytes)));
         RefreshStateProperties();
     }
 
@@ -681,7 +683,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
         ClearDenied();
         State = WorkflowState.Results;
-        AddLog("INFO", "已取消清理确认。");
+        AddLog("INFO", AppText.Get(Language.MainConfirmationCanceled));
     }
 
     private void ClearDenied()
@@ -705,23 +707,23 @@ public sealed class MainWindowViewModel : ReactiveObject
             return;
         }
 
-        AddLog("INFO", "正在请求以管理员身份重启 …");
+        AddLog("INFO", AppText.Get(Language.MainElevationRequest));
         _operationCancellation?.Cancel();
         if (_elevationService.RestartElevated())
         {
-            AddLog("OK", "已启动提权实例，当前实例即将退出。");
+            AddLog("OK", AppText.Get(Language.MainElevationStarted));
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
         else
         {
-            AddLog("WARN", "已取消提权，保持当前权限继续运行。");
+            AddLog("WARN", AppText.Get(Language.MainElevationCanceled));
         }
     }
 
     private async Task ConfirmCloseAsync()
     {
         IsCloseConfirmationVisible = false;
-        AddLog("WARN", "正在停止进行中的任务并退出 …");
+        AddLog("WARN", AppText.Get(Language.MainShutdownRequested));
         _operationCancellation?.Cancel();
         var done = _operationDone;
         if (done is not null)
@@ -729,7 +731,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             var finished = await Task.WhenAny(done.Task, Task.Delay(CloseGuard.GracefulStopTimeout));
             if (finished != done.Task)
             {
-                AddLog("WARN", "当前命令仍在运行，将继续等待其安全结束。");
+                AddLog("WARN", AppText.Get(Language.MainCommandStillRunning));
             }
 
             await done.Task;
@@ -744,7 +746,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         var scope = SelectedDrives;
         if (scope.Count == 0)
         {
-            AddLog("WARN", "请先勾选需要扫描的盘符。");
+            AddLog("WARN", AppText.Get(Language.MainNoDriveSelected));
             return;
         }
 
@@ -772,14 +774,14 @@ public sealed class MainWindowViewModel : ReactiveObject
         IsAwaitingCommandStop = false;
         GhostText = string.Empty;
         ProgressValue = 0;
-        ProgressText = "准备扫描…";
+        ProgressText = AppText.Get(Language.MainPrepareScan);
         _scanDrives = [.. scope];
         _scopeStale = false;
         foreach (var card in DriveCards)
         {
             if (_scanDrives.Contains(card.DriveName, StringComparer.OrdinalIgnoreCase))
             {
-                card.ScanSummary = "等待扫描";
+                card.ScanSummary = AppText.Get(Language.MainWaitingScan);
                 card.IsScanPending = true;
             }
             else
@@ -790,7 +792,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
 
         State = WorkflowState.Scanning;
-        AddLog("INFO", $"开始扫描已勾选盘符：{ScopeText(_scanDrives)} …");
+        AddLog("INFO", AppText.Format(Language.MainScanStarted, ScopeText(_scanDrives)));
 
         var progress = new CallbackProgress<ScanProgress>(OnScanProgress);
         try
@@ -817,26 +819,26 @@ public sealed class MainWindowViewModel : ReactiveObject
             RefreshGroups();
             RefreshDriveCardsAfterScan(result.Items);
             State = WorkflowState.Results;
-            AddLog("OK", $"扫描完成 · 耗时 {result.Elapsed.TotalSeconds:0.0}s · 定位 {result.Items.Sum(item => item.FileCount):N0} 个文件");
-            AddLog("INFO", $"共 {result.Items.Count} 个目标位置 · 总占用 {ByteSizeFormatter.Format(result.TotalBytes)}");
+            AddLog("OK", AppText.Format(Language.MainScanCompleted, result.Elapsed.TotalSeconds, result.Items.Sum(item => item.FileCount)));
+            AddLog("INFO", AppText.Format(Language.MainTargetSummary, result.Items.Count, ByteSizeFormatter.Format(result.TotalBytes)));
             foreach (var drive in _scanDrives)
             {
                 var cleanable = result.Items
                     .Where(item => item.DriveName.Equals(drive, StringComparison.OrdinalIgnoreCase) && item.CanClean)
                     .ToArray();
-                AddLog("INFO", $"{drive} 可清理 {cleanable.Length} 项 · 共 {ByteSizeFormatter.Format(cleanable.Sum(item => item.SizeBytes))}"
-                    + (drive.Equals(_systemDrive, StringComparison.OrdinalIgnoreCase)
-                        ? " · 低风险项已默认勾选"
-                        : " · 默认未勾选，请决策"));
+                AddLog("INFO", AppText.Format(Language.MainDriveCleanable, drive, cleanable.Length, ByteSizeFormatter.Format(cleanable.Sum(item => item.SizeBytes)))
+                    + AppText.Get(drive.Equals(_systemDrive, StringComparison.OrdinalIgnoreCase)
+                        ? Language.MainLowRiskSuffix
+                        : Language.MainManualSuffix));
             }
 
             var highRisk = result.Items.Where(item => item.Risk == CleanupRisk.High).ToArray();
             if (highRisk.Length > 0)
             {
-                AddLog("WARN", "高风险项默认未勾选：" + string.Join(" · ", highRisk.Select(item => $"{item.DisplayName}（{item.DriveName}:）")));
+                AddLog("WARN", AppText.Format(Language.MainHighRiskDefault, string.Join(" · ", highRisk.Select(item => $"{item.DisplayName} ({item.DriveName}:)"))));
             }
 
-            AddLog("INFO", "已默认勾选系统盘低风险项，中高风险与其他盘符请决策；右键结果行可打开所在目录。");
+            AddLog("INFO", AppText.Get(Language.MainSelectionGuidance));
         }
         catch (OperationCanceledException)
         {
@@ -849,13 +851,13 @@ public sealed class MainWindowViewModel : ReactiveObject
             }
 
             State = WorkflowState.Idle;
-            AddLog("WARN", $"扫描已取消，已完成的 {Items.Count} 项目标保留在列表中。");
+            AddLog("WARN", AppText.Format(Language.MainScanCanceled, Items.Count));
         }
         catch (Exception exception)
         {
             GhostText = string.Empty;
             State = WorkflowState.Idle;
-            AddLog("ERR", $"扫描失败：{exception.Message}", exception);
+            AddLog("ERR", AppText.Format(Language.MainScanFailed, exception.Message), exception);
         }
         finally
         {
@@ -888,7 +890,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             RefreshGroups();
             AddLog(
                 item.SizeBytes > 0 ? "INFO" : "WARN",
-                $"[{value.Completed:00}/{value.Total:00}] {item.DisplayName} · {item.FileCount:N0} 个文件 · {ByteSizeFormatter.Format(item.SizeBytes)}{Note(item)}");
+                AppText.Format(Language.MainItemProgress, value.Completed, value.Total, item.DisplayName, item.FileCount, Note(item)));
         }
 
         this.RaisePropertyChanged(nameof(IsGhostVisible));
@@ -913,7 +915,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             if (!string.IsNullOrEmpty(currentDrive)
                 && card.DriveName.Equals(currentDrive, StringComparison.OrdinalIgnoreCase))
             {
-                card.ScanSummary = "正在扫描 …";
+                card.ScanSummary = AppText.Get(Language.MainScanningDrive);
                 card.IsScanPending = true;
                 continue;
             }
@@ -922,8 +924,8 @@ public sealed class MainWindowViewModel : ReactiveObject
                 .Where(row => row.Model.DriveName.Equals(card.DriveName, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
             card.ScanSummary = received.Length > 0
-                ? $"已扫 {received.Length} 项 · {ByteSizeFormatter.Format(received.Sum(row => row.Model.SizeBytes))}"
-                : "等待扫描";
+                ? AppText.Format(Language.MainScannedSummary, received.Length, ByteSizeFormatter.Format(received.Sum(row => row.Model.SizeBytes)))
+                : AppText.Get(Language.MainWaitingScan);
             card.IsScanPending = true;
         }
     }
@@ -940,7 +942,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             var cleanable = items
                 .Where(item => item.DriveName.Equals(card.DriveName, StringComparison.OrdinalIgnoreCase) && item.CanClean)
                 .ToArray();
-            card.ScanSummary = $"可清理 {cleanable.Length} 项 · {ByteSizeFormatter.Format(cleanable.Sum(item => item.SizeBytes))}";
+            card.ScanSummary = AppText.Format(Language.MainCleanableSummary, cleanable.Length, ByteSizeFormatter.Format(cleanable.Sum(item => item.SizeBytes)));
             card.IsScanPending = false;
         }
     }
@@ -955,7 +957,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
 
         _isFastTierComplete = true;
-        AddLog("INFO", "快档扫描完成，可以先查看结果并勾选；慢速目标仍在后台继续分析。");
+        AddLog("INFO", AppText.Get(Language.MainFastScanDone));
         UpdateRowSelectability();
         RefreshStateProperties();
     }
@@ -1082,7 +1084,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         var isSystem = string.Equals(drive, _systemDrive, StringComparison.OrdinalIgnoreCase);
         section = new CleanupDriveSectionViewModel(
             drive,
-            isSystem ? "系统盘" : "数据盘",
+            isSystem ? AppText.Get(Language.DriveSystem) : AppText.Get(Language.DriveData),
             snapshot?.VolumeLabel ?? string.Empty);
         _sectionCache[drive] = section;
         return section;
@@ -1093,24 +1095,24 @@ public sealed class MainWindowViewModel : ReactiveObject
         var isSystem = string.Equals(section.DriveName, _systemDrive, StringComparison.OrdinalIgnoreCase);
         if (State == WorkflowState.Scanning)
         {
-            section.PolicyText = isSystem ? "策略：低风险项将默认勾选" : "策略：默认不勾选";
+            section.PolicyText = isSystem ? AppText.Get(Language.MainPolicyAuto) : AppText.Get(Language.MainPolicyManual);
             section.IsPolicyAuto = isSystem;
             section.SelectedText = string.Empty;
             section.SummaryText = rows.Count > 0
-                ? $"已扫 {rows.Count} 项 · {ByteSizeFormatter.Format(rows.Sum(row => row.Model.SizeBytes))}"
-                : "等待扫描";
+                ? AppText.Format(Language.MainScannedSummary, rows.Count, ByteSizeFormatter.Format(rows.Sum(row => row.Model.SizeBytes)))
+                : AppText.Get(Language.MainWaitingScan);
             return;
         }
 
         var autoCount = rows.Count(row => row.Model.IsRecommended);
-        section.PolicyText = autoCount > 0 ? $"低风险 {autoCount} 项已默认勾选" : "默认未勾选 · 请自行决策";
+        section.PolicyText = autoCount > 0 ? AppText.Format(Language.MainLowRiskDefault, autoCount) : AppText.Get(Language.MainManualDecision);
         section.IsPolicyAuto = autoCount > 0;
 
         if (State is WorkflowState.Results or WorkflowState.Cleaning)
         {
             var selected = rows.Where(row => row.IsSelected).ToArray();
             section.SelectedText = selected.Length > 0
-                ? $"已选 {selected.Length} 项 · {ByteSizeFormatter.Format(selected.Sum(row => row.Model.SizeBytes))}"
+                ? AppText.Format(Language.MainSelectedDriveSummary, selected.Length, ByteSizeFormatter.Format(selected.Sum(row => row.Model.SizeBytes)))
                 : string.Empty;
         }
         else
@@ -1120,7 +1122,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
         var cleanable = rows.Where(row => row.Model.CanClean).ToArray();
         section.SummaryText = cleanable.Length > 0
-            ? $"可清理 {cleanable.Length} 项 · {ByteSizeFormatter.Format(cleanable.Sum(row => row.Model.SizeBytes))}"
+            ? AppText.Format(Language.MainCleanableSummary, cleanable.Length, ByteSizeFormatter.Format(cleanable.Sum(row => row.Model.SizeBytes)))
             : string.Empty;
     }
 
@@ -1209,9 +1211,9 @@ public sealed class MainWindowViewModel : ReactiveObject
         _freedByDrive.Clear();
         IsAwaitingCommandStop = false;
         ProgressValue = 0;
-        ProgressText = "准备清理…";
+        ProgressText = AppText.Get(Language.MainPrepareClean);
         State = WorkflowState.Cleaning;
-        AddLog("INFO", $"开始清理 {plan.Count} 项 · 预计释放 {ByteSizeFormatter.Format(plan.Sum(item => item.SizeBytes))}");
+        AddLog("INFO", AppText.Format(Language.MainCleanStarted, plan.Count, ByteSizeFormatter.Format(plan.Sum(item => item.SizeBytes))));
 
         var progress = new CallbackProgress<CleanupProgress>(OnCleanupProgress);
         try
@@ -1221,21 +1223,21 @@ public sealed class MainWindowViewModel : ReactiveObject
             _estimatedFreedBytes = result.EstimatedFreedBytes;
             State = WorkflowState.Done;
             ShowToast();
-            AddLog("OK", $"清理完成 · 成功 {result.CompletedCount} 项 · 实测释放 {ByteSizeFormatter.Format(result.MeasuredFreedBytes)}");
+            AddLog("OK", AppText.Format(Language.MainCleanCompleted, result.CompletedCount, ByteSizeFormatter.Format(result.MeasuredFreedBytes)));
             if (result.EstimatedFreedBytes > 0)
             {
-                AddLog("INFO", $"官方命令项按扫描时大小估算，预计再释放 ~{ByteSizeFormatter.Format(result.EstimatedFreedBytes)}（估算）。");
+                AddLog("INFO", AppText.Format(Language.MainEstimatedNotice, ByteSizeFormatter.Format(result.EstimatedFreedBytes)));
             }
         }
         catch (OperationCanceledException)
         {
             State = WorkflowState.Done;
-            AddLog("WARN", "已停止后续清理任务；正在执行的官方命令已等待其安全结束。");
+            AddLog("WARN", AppText.Get(Language.MainCleanStopped));
         }
         catch (Exception exception)
         {
             State = WorkflowState.Done;
-            AddLog("ERR", $"清理任务失败：{exception.Message}", exception);
+            AddLog("ERR", AppText.Format(Language.MainCleanFailed, exception.Message), exception);
         }
         finally
         {
@@ -1269,7 +1271,7 @@ public sealed class MainWindowViewModel : ReactiveObject
             DriveCards
                 .FirstOrDefault(card => card.DriveName.Equals(drive, StringComparison.OrdinalIgnoreCase))
                 ?.UpdateSnapshot(updated);
-            AddLog("INFO", $"{drive} 可用 {ByteSizeFormatter.Format(snapshot.FreeBytes)} → {ByteSizeFormatter.Format(updated.FreeBytes)}（估算）");
+            AddLog("INFO", AppText.Format(Language.MainDriveFreed, drive, ByteSizeFormatter.Format(snapshot.FreeBytes), ByteSizeFormatter.Format(updated.FreeBytes)));
         }
 
         _freedByDrive.Clear();
@@ -1282,7 +1284,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         var displayIndex = value.Result is null ? value.Completed + 1 : value.Completed;
         // 清空回收站走 Shell API，一旦开始就无法中断（§3.1），文案要如实说明。
         ProgressText = $"{Math.Min(displayIndex, value.Total):00}/{value.Total:00} · {value.Item.DisplayName}"
-            + (value.Item.CleanerKind == CleanerKind.RecycleBin ? "（清空过程无法中断）" : string.Empty);
+            + (value.Item.CleanerKind == CleanerKind.RecycleBin ? AppText.Get(Language.MainRecycleBinNoCancel) : string.Empty);
         var row = Items.FirstOrDefault(item => item.Id == value.Item.Id);
         foreach (var item in Items)
         {
@@ -1291,7 +1293,7 @@ public sealed class MainWindowViewModel : ReactiveObject
 
         if (value.Result is null)
         {
-            AddLog("INFO", $"[{value.Completed + 1:00}/{value.Total:00}] 清理 {value.Item.DisplayName} …");
+            AddLog("INFO", AppText.Format(Language.MainItemCleaning, value.Completed + 1, value.Total, value.Item.DisplayName));
             return;
         }
 
@@ -1420,6 +1422,30 @@ public sealed class MainWindowViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsElevationBannerVisible));
         this.RaisePropertyChanged(nameof(ScopeHint));
         RefreshSelectionProperties();
+    }
+
+    private void OnCultureChanged(object? sender, EventArgs args)
+    {
+        OnUi(() =>
+        {
+            foreach (var card in DriveCards)
+            {
+                card.RefreshLocalization();
+            }
+
+            foreach (var section in Sections)
+            {
+                var isSystem = string.Equals(section.DriveName, _systemDrive, StringComparison.OrdinalIgnoreCase);
+                section.RefreshLocalization(AppText.Get(isSystem ? Language.DriveSystem : Language.DriveData));
+                RefreshSectionSummary(section, section.Groups.SelectMany(group => group.Items).ToArray());
+                foreach (var group in section.Groups)
+                {
+                    group.RefreshLocalization();
+                }
+            }
+
+            RefreshStateProperties();
+        });
     }
 
     private static void OnUi(Action action)

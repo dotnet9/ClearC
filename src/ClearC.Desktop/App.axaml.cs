@@ -1,10 +1,12 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using System.Globalization;
 using ClearC.Core.Safety;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Scanning;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
 
@@ -16,6 +18,7 @@ public sealed partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        AppLocalizer.Initialize(GetCultureName());
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownRequested += OnShutdownRequested;
@@ -24,6 +27,9 @@ public sealed partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    private static string GetCultureName() =>
+        CultureInfo.CurrentUICulture.Name.Equals("en-US", StringComparison.OrdinalIgnoreCase) ? "en-US" : "zh-CN";
 
     internal static MainWindow CreateMainWindow(IApplicationLogger? logger = null)
     {

@@ -3,6 +3,7 @@
              xmlns:controls="using:ClearC.Desktop.Controls"
              xmlns:sys="using:System"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
+             xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
              x:Class="ClearC.Desktop.Views.CleanupRowView"
              x:DataType="vm:CleanupItemViewModel">
   <StackPanel>
@@ -13,8 +14,8 @@
                   IsChecked="{Binding IsExpanded}">
       <ToggleButton.ContextMenu>
         <ContextMenu>
-          <MenuItem Command="{Binding OpenLocationCommand}" Header="打开文件（夹）所在目录" />
-          <MenuItem Command="{Binding CopyPathCommand}" Header="复制完整路径" />
+          <MenuItem Command="{Binding OpenLocationCommand}" Header="{i18n:I18n ClearC.Item.OpenDirectory}" />
+          <MenuItem Command="{Binding CopyPathCommand}" Header="{i18n:I18n ClearC.Item.CopyPath}" />
           <MenuItem Command="{Binding ToggleSelectionCommand}"
                     Header="{Binding ContextToggleText}"
                     IsVisible="{Binding CanSelect}" />
@@ -85,7 +86,7 @@
 
         <Button Grid.Column="8" Classes="rowOpen" VerticalAlignment="Center"
                 Command="{Binding OpenLocationCommand}"
-                ToolTip.Tip="打开文件（夹）所在目录">
+                ToolTip.Tip="{i18n:I18n ClearC.Item.OpenDirectory}">
           <controls:IconGlyph Width="13" Height="13"
                               HorizontalAlignment="Center" VerticalAlignment="Center"
                               Data="{StaticResource ClearCIconFolder}"
@@ -114,14 +115,14 @@
       <StackPanel Spacing="4">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock Width="34" FontSize="11" FontFamily="{DynamicResource ClearCMonoFont}"
-                     Foreground="{DynamicResource ClearCText3}" Text="说明" />
+                     Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Item.Description}" />
           <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}"
                      Text="{Binding Description}" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock Width="34" FontSize="11" FontFamily="{DynamicResource ClearCMonoFont}"
-                     Foreground="{DynamicResource ClearCText3}" Text="路径" />
+                     Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Item.Path}" />
           <StackPanel>
             <ItemsControl ItemsSource="{Binding PathLines}">
               <ItemsControl.ItemTemplate>
@@ -134,8 +135,8 @@
             <StackPanel Orientation="Horizontal" Spacing="10">
               <TextBlock VerticalAlignment="Center" FontSize="10.5" Foreground="{DynamicResource ClearCText3}"
                          IsVisible="{Binding HasPathSource}" Text="{Binding PathSourceText}" />
-              <Button Classes="mini" Command="{Binding OpenLocationCommand}" Content="打开位置"
-                      ToolTip.Tip="在资源管理器中定位这个清理路径" />
+              <Button Classes="mini" Command="{Binding OpenLocationCommand}" Content="{i18n:I18n ClearC.Item.OpenLocation}"
+                      ToolTip.Tip="{i18n:I18n ClearC.Item.OpenDirectory}" />
             </StackPanel>
             <TextBlock Margin="0,2,0,0" FontSize="10.5" Foreground="{DynamicResource ClearCAmber}"
                        IsVisible="{Binding HasLocationHint}" Text="{Binding LocationHint}" TextWrapping="Wrap" />
@@ -144,21 +145,21 @@
 
         <StackPanel Orientation="Horizontal" Spacing="8">
           <TextBlock Width="34" FontSize="11" FontFamily="{DynamicResource ClearCMonoFont}"
-                     Foreground="{DynamicResource ClearCText3}" Text="建议" />
+                     Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Item.Recommendation}" />
           <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}"
                      Text="{Binding Recommendation}" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasScanNote}">
           <TextBlock Width="34" FontSize="11" FontFamily="{DynamicResource ClearCMonoFont}"
-                     Foreground="{DynamicResource ClearCText3}" Text="备注" />
+                     Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Item.Note}" />
           <TextBlock FontSize="12" Foreground="{DynamicResource ClearCAmber}"
                      Text="{Binding ScanNoteText}" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsDenied}">
           <TextBlock Width="34" FontSize="11" FontFamily="{DynamicResource ClearCMonoFont}"
-                     Foreground="{DynamicResource ClearCText3}" Text="拒绝" />
+                     Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Item.Denied}" />
           <TextBlock FontSize="12" Foreground="{DynamicResource ClearCRed}"
                      Text="{Binding DeniedReason}" TextWrapping="Wrap" />
         </StackPanel>

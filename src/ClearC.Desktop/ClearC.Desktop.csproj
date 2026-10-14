@@ -19,6 +19,9 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="CodeWF.Avalonia.Controls" />
+    <PackageReference Include="CodeWF.Avalonia.Lang" />
+    <PackageReference Include="CodeWF.Toolkit.Core" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" />
     <PackageReference Include="CodeWF.Toolkit.Logging" />
     <PackageReference Include="Semi.Avalonia" />
     <PackageReference Include="ReactiveUI" />
@@ -35,5 +38,20 @@
 
   <ItemGroup>
     <AvaloniaResource Include="..\..\logo.ico" Link="Assets\logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="I18n\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>I18n\%(Filename)%(Extension)</TargetPath>
+    </None>
+    <None Update="I18n\Language.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Language.cs</LastGenOutput>
+    </None>
+    <Compile Update="I18n\Language.cs">
+      <DependentUpon>Language.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

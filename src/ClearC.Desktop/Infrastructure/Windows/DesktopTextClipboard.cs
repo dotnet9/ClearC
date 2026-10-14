@@ -17,9 +17,9 @@ public sealed class DesktopTextClipboard : ITextClipboard
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
             {
                 MainWindow: { } window
-            })
+            } && window.Clipboard is { } clipboard)
         {
-            await window.Clipboard.SetTextAsync(text);
+            await clipboard.SetTextAsync(text);
         }
     }
 }

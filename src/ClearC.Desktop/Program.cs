@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using ClearC.Desktop.Infrastructure.Scanning;
 using ClearC.Desktop.Infrastructure.Windows;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.ViewModels;
 using CodeWF.Toolkit.Logging;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,7 @@ internal static class Program
     {
         if (!OperatingSystem.IsWindows())
         {
-            Console.Error.WriteLine("ClearC 目前仅支持 Windows。");
+            Console.Error.WriteLine(AppText.Get("ClearC.System.PlatformWindowsOnly"));
             return 2;
         }
 
@@ -66,7 +67,7 @@ internal static class Program
         {
             if (loggerInitialized)
             {
-                Logger.Fatal("ClearC 启动或运行失败。", exception);
+                Logger.Fatal(AppText.Get("ClearC.System.StartupFailed"), exception);
             }
 
             throw;

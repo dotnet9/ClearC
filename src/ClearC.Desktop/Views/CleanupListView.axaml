@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:ClearC.Desktop.Controls"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
+             xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
              xmlns:views="using:ClearC.Desktop.Views"
              x:Class="ClearC.Desktop.Views.CleanupListView"
              x:DataType="vm:CleanupWorkspaceViewModel">
@@ -18,9 +19,9 @@
                             StrokeThickness="1.4" />
       </Border>
       <TextBlock HorizontalAlignment="Center" FontSize="13.5" FontWeight="SemiBold"
-                 Foreground="{DynamicResource ClearCText2}" Text="尚未分析" />
+                 Foreground="{DynamicResource ClearCText2}" Text="{i18n:I18n ClearC.Workspace.Pending}" />
       <TextBlock HorizontalAlignment="Center" FontSize="11"
-                 Foreground="{DynamicResource ClearCText3}" Text="等待扫描指令 · 点击「扫描分析」开始" />
+                 Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Workspace.EmptyDriveHint}" />
     </StackPanel>
 
     <!-- 盘符分区 + 分组列表 + 幽灵行 -->

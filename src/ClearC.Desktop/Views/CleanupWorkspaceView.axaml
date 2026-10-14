@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:ClearC.Desktop.Controls"
+             xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
              xmlns:views="using:ClearC.Desktop.Views"
              x:Class="ClearC.Desktop.Views.CleanupWorkspaceView"
@@ -18,7 +19,7 @@
                      FontFamily="{DynamicResource ClearCMonoFont}"
                      Foreground="{DynamicResource ClearCAccent}" Text="{Binding UsedPercent}" />
           <TextBlock HorizontalAlignment="Center" FontSize="10.5" LetterSpacing="2"
-                     Foreground="{DynamicResource ClearCText3}" Text="已用" />
+                     Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Workspace.Used}" />
         </StackPanel>
       </Grid>
 
@@ -43,9 +44,10 @@
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="4">
-          <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}" Text="已用" />
+          <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}" Text="{i18n:I18n ClearC.Workspace.Used}" />
           <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding DiskUsedText}" />
-          <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}" Text="·  可用" />
+          <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}" Text="·" />
+          <TextBlock FontSize="12" Foreground="{DynamicResource ClearCText2}" Text="{i18n:I18n ClearC.Workspace.Available}" />
           <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding DiskFreeText}" />
         </StackPanel>
 
@@ -96,14 +98,14 @@
                             Foreground="{DynamicResource ClearCWarnText}" />
         <TextBlock Grid.Column="1" Margin="9,0" VerticalAlignment="Center" FontSize="12"
                    Foreground="{DynamicResource ClearCWarnText}" Text="{Binding ElevationBannerText}" />
-        <Button Grid.Column="2" Classes="mini" Command="{Binding RestartElevatedCommand}" Content="以管理员重启" />
+        <Button Grid.Column="2" Classes="mini" Command="{Binding RestartElevatedCommand}" Content="{i18n:I18n ClearC.Workspace.RestartElevated}" />
       </Grid>
     </Border>
 
     <!-- ═══ 盘符选择条（扫描范围，原型 .diskbar） ═══ -->
     <StackPanel Grid.Row="2" Margin="26,0,26,12">
       <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,8">
-        <TextBlock FontSize="12.5" FontWeight="Bold" Text="扫描范围" />
+        <TextBlock FontSize="12.5" FontWeight="Bold" Text="{i18n:I18n ClearC.Workspace.ScanScope}" />
         <TextBlock VerticalAlignment="Center" FontSize="11"
                    Foreground="{DynamicResource ClearCText3}" Text="{Binding ScopeHint}" />
       </StackPanel>
@@ -151,16 +153,16 @@
 
     <!-- ═══ 分组栏 ═══ -->
     <Grid Grid.Row="3" Margin="26,0,26,10" ColumnDefinitions="Auto,*,Auto">
-      <CheckBox Grid.Column="0" VerticalAlignment="Center" Content="全选"
+      <CheckBox Grid.Column="0" VerticalAlignment="Center" Content="{i18n:I18n ClearC.Workspace.SelectAll}"
                 IsEnabled="{Binding CanSelectAll}" IsChecked="{Binding IsAllSelected}" />
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
         <TextBlock VerticalAlignment="Center" FontSize="11.5"
                    Foreground="{DynamicResource ClearCText2}" Text="{Binding SelectedSummary}" />
-        <CheckBox VerticalAlignment="Center" FontSize="11.5" Content="隐藏 0 字节项"
+        <CheckBox VerticalAlignment="Center" FontSize="11.5" Content="{i18n:I18n ClearC.Workspace.HideZeroByte}"
                   IsChecked="{Binding HideZeroByteItems}" />
-        <CheckBox VerticalAlignment="Center" FontSize="11.5" Content="快速模式"
+        <CheckBox VerticalAlignment="Center" FontSize="11.5" Content="{i18n:I18n ClearC.Workspace.FastMode}"
                   IsChecked="{Binding SkipSystemAnalysis}"
-                  ToolTip.Tip="跳过 WinSxS 与卷影副本的 DISM / vssadmin 分析（默认开）；取消勾选可查看这两项的官方数字，扫描会慢几十秒" />
+                  ToolTip.Tip="{i18n:I18n ClearC.Workspace.FastModeTip}" />
       </StackPanel>
     </Grid>
 

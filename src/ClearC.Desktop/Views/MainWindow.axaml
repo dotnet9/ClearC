@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:codewf="https://codewf.com"
         xmlns:controls="using:ClearC.Desktop.Controls"
+        xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
         xmlns:vm="using:ClearC.Desktop.ViewModels"
         xmlns:views="using:ClearC.Desktop.Views"
         x:Class="ClearC.Desktop.Views.MainWindow"
@@ -44,8 +45,8 @@
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
                    Foreground="#8A6116"
-                   Text="🚧 当前平台（Linux / macOS）版本正在开发中：扫描与清理能力依赖 Windows 系统接口，桌面框架已就绪，敬请期待后续版本。" />
-        <Button Grid.Column="1" Content="知道了" Margin="12,0,0,0" Padding="10,4"
+                   Text="{i18n:I18n ClearC.PlatformNotice}" />
+        <Button Grid.Column="1" Content="{i18n:I18n ClearC.Dismiss}" Margin="12,0,0,0" Padding="10,4"
                 Click="OnPlatformNoticeDismiss" VerticalAlignment="Center" />
       </Grid>
     </Border>

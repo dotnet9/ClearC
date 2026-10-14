@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using ClearC.Desktop.I18n;
 
 namespace ClearC.Desktop.Infrastructure.Windows;
 
@@ -18,23 +19,23 @@ public sealed class LocationOpener : ILocationOpener
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return "没有可打开的路径";
+            return AppText.Get(Language.LocationNoPath);
         }
 
         if (!Path.IsPathFullyQualified(path))
         {
-            return "路径不是绝对路径，无法打开";
+            return AppText.Get(Language.LocationNotAbsolute);
         }
 
         if (!OperatingSystem.IsWindows())
         {
-            return "仅支持在 Windows 资源管理器中打开";
+            return AppText.Get(Language.LocationWindowsOnly);
         }
 
         var isFile = File.Exists(path);
         if (!isFile && !Directory.Exists(path))
         {
-            return "路径已不存在，可能已被清理";
+            return AppText.Get(Language.LocationMissing);
         }
 
         try
@@ -47,7 +48,7 @@ public sealed class LocationOpener : ILocationOpener
         catch (Exception exception) when (exception is
             Win32Exception or IOException or UnauthorizedAccessException or InvalidOperationException or PlatformNotSupportedException)
         {
-            return $"打开失败：{exception.Message}";
+            return AppText.Format(Language.LocationOpenFailed, exception.Message);
         }
     }
 }

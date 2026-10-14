@@ -13,6 +13,7 @@ public sealed class CleanupDriveSectionViewModel : ReactiveObject
     private bool _isPolicyAuto;
     private string _selectedText = string.Empty;
     private string _summaryText = string.Empty;
+    private string _typeText = string.Empty;
 
     /// <summary>缓存键：同盘符的分区实例跨刷新复用，保住组内展开状态。</summary>
     public CleanupDriveSectionViewModel(
@@ -28,7 +29,11 @@ public sealed class CleanupDriveSectionViewModel : ReactiveObject
     /// <summary>盘符（如 "C:"），分区头左端的字母徽标。</summary>
     public string DriveName { get; }
 
-    public string TypeText { get; }
+    public string TypeText
+    {
+        get => _typeText;
+        private set => this.RaiseAndSetIfChanged(ref _typeText, value);
+    }
 
     public string DriveTitle => $"{DriveName} {TypeText}";
 
@@ -86,4 +91,10 @@ public sealed class CleanupDriveSectionViewModel : ReactiveObject
     public bool HasSummaryText => SummaryText.Length > 0;
 
     public ObservableCollection<CleanupGroupViewModel> Groups { get; } = [];
+
+    internal void RefreshLocalization(string typeText)
+    {
+        TypeText = typeText;
+        this.RaisePropertyChanged(nameof(DriveTitle));
+    }
 }
