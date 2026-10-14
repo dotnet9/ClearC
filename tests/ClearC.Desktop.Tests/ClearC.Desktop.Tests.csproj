@@ -12,4 +12,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ClearC.Desktop\ClearC.Desktop.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\ClearC.Desktop\I18n\*.json" Link="I18n\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@ using ClearC.Core.Safety;
 using ClearC.Core.Services;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.ViewModels;
 
 namespace ClearC.Desktop.Tests;
@@ -457,6 +458,27 @@ public sealed class MainWindowViewModelTests(AvaloniaHeadlessFixture fixture)
         Assert.Equal("扫描分析", viewModel.PrimaryButtonText);
         Assert.True(viewModel.IsPrimaryGlowing);
         Assert.Equal("i-search", viewModel.PrimaryIconKey);
+    });
+
+    [Fact]
+    public Task LanguageSwitch_RefreshesBoundMainWindowText() => Run(() =>
+    {
+        var previous = AppLocalizer.Instance.Culture.Name;
+        try
+        {
+            AppLocalizer.Instance.SetCulture("zh-CN");
+            var viewModel = CreateViewModel();
+            Assert.Equal("扫描分析", viewModel.PrimaryButtonText);
+
+            AppLocalizer.Instance.SetCulture("en-US");
+
+            Assert.Equal("Scan", viewModel.PrimaryButtonText);
+            Assert.Contains("Select drives", viewModel.ScopeHint);
+        }
+        finally
+        {
+            AppLocalizer.Instance.SetCulture(previous);
+        }
     });
 
     [Fact]
