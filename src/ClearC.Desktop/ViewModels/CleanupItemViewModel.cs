@@ -52,11 +52,11 @@ public sealed class CleanupItemViewModel : ReactiveObject
 
     public CleanupItem Model { get; }
     public string Id => Model.Id;
-    public string DisplayName => Model.DisplayName;
+    public string DisplayName => Model.DisplayNameKey is { } key ? AppText.Format(key, Model.TextArgument) : Model.DisplayName;
     public string Location => Model.Location;
     public CleanupCategory Category => Model.Category;
     public CleanupDisplayGroup DisplayGroup => Model.Category.ToDisplayGroup();
-    public string Description => Model.Description;
+    public string Description => Model.DescriptionKey is { } key ? AppText.Format(key, Model.TextArgument) : Model.Description;
     public string IconKey => Model.Icon;
 
     public IBrush AccentBrush { get; }
@@ -247,7 +247,7 @@ public sealed class CleanupItemViewModel : ReactiveObject
 
     private void OnCultureChanged(object? sender, EventArgs args)
     {
-        foreach (var property in new[] { nameof(FileCountText), nameof(MetaText), nameof(RiskText), nameof(PathSourceText), nameof(ContextToggleText), nameof(ContextExpandText), nameof(Recommendation), nameof(SelectionToolTip), nameof(ReadOnlyText), nameof(ResultText), nameof(FreedText) })
+        foreach (var property in new[] { nameof(DisplayName), nameof(Description), nameof(RelativeTimeText), nameof(FileCountText), nameof(MetaText), nameof(RiskText), nameof(PathSourceText), nameof(ContextToggleText), nameof(ContextExpandText), nameof(Recommendation), nameof(SelectionToolTip), nameof(ReadOnlyText), nameof(ResultText), nameof(FreedText) })
         {
             this.RaisePropertyChanged(property);
         }

@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using System.Diagnostics;
 
 namespace ClearC.Desktop.Infrastructure.Cleanup;
@@ -45,7 +46,7 @@ internal sealed class ProcessRunner : IProcessRunner
         {
             if (!process.Start())
             {
-                return new(-1, string.Empty, $"无法启动 {fileName}。");
+                return new(-1, string.Empty, AppText.Format(Language.RuntimeCommandStartFailed, fileName));
             }
 
             var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);
@@ -59,7 +60,7 @@ internal sealed class ProcessRunner : IProcessRunner
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
                 TryKill(process);
-                return new(-1, string.Empty, "命令超时已终止。", TimedOut: true);
+                return new(-1, string.Empty, AppText.Get(Language.RuntimeCommandTimedOut), TimedOut: true);
             }
 
             return new(process.ExitCode, await standardOutput, await standardError);

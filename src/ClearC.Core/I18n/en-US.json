@@ -1,0 +1,24 @@
+﻿{
+  "language": "English",
+  "cultureName": "en-US",
+  "description": "ClearC core model and safety messages",
+  "ClearC": {
+    "Core": {
+      "SafetyAnalyzeOnly": "This item is for analysis only and cannot be cleaned.",
+      "SafetyProtected": "The path contains protected user data or source code.",
+      "SafetyProtectedPath": "The path contains protected user data or source code: {0}",
+      "SafetyConfirm": "This cleanup may be irreversible or require a new download. Confirm it separately.",
+      "GroupTemporaryFiles": "Temporary files",
+      "GroupSystemCache": "System cache",
+      "GroupRecycleBin": "Recycle bin",
+      "GroupBrowser": "Browsers",
+      "GroupUserFiles": "User files",
+      "GroupSystemFiles": "System files",
+      "TimeToday": "Today {0:HH:mm}",
+      "TimeYesterday": "Yesterday {0:HH:mm}",
+      "TimeDaysAgo": "{0} days ago",
+      "ScanGhost": "▍ Scanning {0} …",
+      "ScanSlow": " (slow target)"
+    }
+  }
+}

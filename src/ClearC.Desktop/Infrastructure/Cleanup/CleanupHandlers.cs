@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using ClearC.Core.Models;
 using ClearC.Desktop.Infrastructure.Scanning;
 
@@ -24,14 +25,14 @@ internal sealed class CleanupHandlerRegistry
             .ToArray();
         if (missing.Length > 0)
         {
-            throw new InvalidOperationException($"缺少清理器：{string.Join("、", missing)}");
+            throw new InvalidOperationException(AppText.Format(Language.RuntimeCleanerMissing, string.Join(", ", missing)));
         }
     }
 
     public ICleanupHandler Resolve(CleanerKind kind) =>
         _handlers.TryGetValue(kind, out var handler)
             ? handler
-            : throw new InvalidOperationException($"没有匹配 {kind} 的安全清理器。");
+            : throw new InvalidOperationException(AppText.Format(Language.RuntimeCleanerNotRegistered, kind));
 }
 
 internal sealed class DirectoryContentsHandler(IGuardedDirectoryCleaner directoryCleaner) : ICleanupHandler
@@ -48,16 +49,16 @@ internal sealed class DirectoryContentsHandler(IGuardedDirectoryCleaner director
             cancellationToken);
 
         var message = result.DeletedFiles == 0 && result.SkippedFiles == 0
-            ? "没有可删除的内容。"
-            : $"已删除 {result.DeletedFiles:N0} 个文件。";
+            ? AppText.Get(Language.RuntimeNothingToDelete)
+            : AppText.Format(Language.RuntimeDeletedFiles, result.DeletedFiles);
         if (result.SkippedFiles > 0)
         {
-            message += $"跳过 {result.SkippedFiles:N0} 个占用或无权限文件。";
+            message += AppText.Format(Language.RuntimeSkippedFiles, result.SkippedFiles);
         }
 
         if (result.LeftoverDirectories > 0)
         {
-            message += $"残留 {result.LeftoverDirectories:N0} 个非空目录。";
+            message += AppText.Format(Language.RuntimeLeftoverDirectories, result.LeftoverDirectories);
         }
 
         return new(request.Item.Id, CleanupOutcome.Completed, result.FreedBytes, message);
@@ -80,11 +81,11 @@ internal sealed class FilePatternHandler(IGuardedDirectoryCleaner directoryClean
             cancellationToken);
 
         var message = result.DeletedFiles == 0
-            ? "没有匹配的缓存文件。"
-            : $"已删除 {result.DeletedFiles:N0} 个缓存文件，保留目录结构。";
+            ? AppText.Get(Language.RuntimeNoMatchingCache)
+            : AppText.Format(Language.RuntimeDeletedCacheFiles, result.DeletedFiles);
         if (result.SkippedFiles > 0)
         {
-            message += $"跳过 {result.SkippedFiles:N0} 个占用或无权限文件。";
+            message += AppText.Format(Language.RuntimeSkippedFiles, result.SkippedFiles);
         }
 
         return new(request.Item.Id, CleanupOutcome.Completed, result.FreedBytes, message);
@@ -106,7 +107,7 @@ internal sealed class CommandHandler(
         var command = request.Target.Command;
         if (command is null)
         {
-            return new(request.Item.Id, CleanupOutcome.Skipped, 0, "目标没有配置清理命令。");
+            return new(request.Item.Id, CleanupOutcome.Skipped, 0, AppText.Get(Language.RuntimeNoCleanupCommand));
         }
 
         if (request.Target.CheckLoadedModules)
@@ -121,7 +122,7 @@ internal sealed class CommandHandler(
                     request.Item.Id,
                     CleanupOutcome.Skipped,
                     0,
-                    $"检测到 {processes} 正在加载缓存 DLL。为避免半清理已跳过；关闭相关 IDE 后重新扫描。");
+                    AppText.Format(Language.RuntimeLoadedCacheModules, processes));
             }
         }
 
@@ -138,7 +139,7 @@ internal sealed class CommandHandler(
 
         if (run.TimedOut)
         {
-            return new(request.Item.Id, CleanupOutcome.Failed, 0, "命令超时已终止。");
+            return new(request.Item.Id, CleanupOutcome.Failed, 0, AppText.Get(Language.RuntimeCommandTimedOut));
         }
 
         if (run.ExitCode == -1 && string.IsNullOrWhiteSpace(run.StandardOutput))
@@ -147,7 +148,7 @@ internal sealed class CommandHandler(
                 request.Item.Id,
                 CleanupOutcome.Skipped,
                 0,
-                $"未检测到命令 {command.FileName}，已跳过。{run.StandardError}".Trim());
+                AppText.Format(Language.RuntimeCommandMissing, command.FileName, run.StandardError).Trim());
         }
 
         var details = string.Join(" ", new[] { run.StandardError, run.StandardOutput }
@@ -163,7 +164,7 @@ internal sealed class CommandHandler(
             request.Item.Id,
             CleanupOutcome.Failed,
             0,
-            string.IsNullOrWhiteSpace(details) ? $"清理命令失败，退出代码 {run.ExitCode}。" : details);
+            string.IsNullOrWhiteSpace(details) ? AppText.Format(Language.RuntimeCommandFailed, run.ExitCode) : details);
     }
 }
 
@@ -176,7 +177,7 @@ internal sealed class RecycleBinHandler(IRecycleBinCleaner recycleBinCleaner) : 
         var driveRoot = Path.GetPathRoot(request.Item.Location) ?? @"C:\";
         var result = await recycleBinCleaner.EmptyAsync(driveRoot, cancellationToken);
         return result.Succeeded
-            ? new(request.Item.Id, CleanupOutcome.Completed, request.Item.SizeBytes, "回收站已清空。")
+            ? new(request.Item.Id, CleanupOutcome.Completed, request.Item.SizeBytes, AppText.Get(Language.RuntimeRecycleEmptied))
             : new(request.Item.Id, CleanupOutcome.Failed, 0, result.Error);
     }
 }
@@ -199,17 +200,17 @@ internal sealed class CodexConversationsHandler(ICodexConversationCleaner codexC
                 request.Item.Id,
                 CleanupOutcome.Skipped,
                 0,
-                "检测到 Codex 正在运行。为避免破坏当前会话，已跳过；请关闭 Codex 后重新扫描清理。");
+                AppText.Get(Language.RuntimeCodexRunning));
         }
 
         if (cleanup.DeletedFiles == 0)
         {
-            return new(request.Item.Id, CleanupOutcome.Skipped, 0, "没有可删除的 Codex 会话文件。");
+            return new(request.Item.Id, CleanupOutcome.Skipped, 0, AppText.Get(Language.RuntimeCodexNoFiles));
         }
 
         var message = cleanup.SkippedFiles == 0
-            ? $"已永久删除 {cleanup.DeletedFiles:N0} 个 Codex 会话文件。"
-            : $"已永久删除 {cleanup.DeletedFiles:N0} 个 Codex 会话文件，跳过 {cleanup.SkippedFiles:N0} 个占用、无权限或重解析点文件。";
+            ? AppText.Format(Language.RuntimeCodexDeleted, cleanup.DeletedFiles)
+            : AppText.Format(Language.RuntimeCodexDeletedSkipped, cleanup.DeletedFiles, cleanup.SkippedFiles);
         return new(request.Item.Id, CleanupOutcome.Completed, cleanup.FreedBytes, message);
     }
 }

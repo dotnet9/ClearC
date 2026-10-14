@@ -18,7 +18,10 @@ public sealed record CleanupItem(
     string? PathSource = null,
     string? ScanNote = null,
     string Icon = "i-file",
-    string Accent = "#2f6bff")
+    string Accent = "#2f6bff",
+    string? DisplayNameKey = null,
+    string? DescriptionKey = null,
+    string? TextArgument = null)
 {
     /// <summary>清理根目录；为空时回退到 <see cref="Location"/>。</summary>
     public IReadOnlyList<string> CleanRoots => Paths is { Count: > 0 } ? Paths : [Location];

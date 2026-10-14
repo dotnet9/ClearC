@@ -1,4 +1,4 @@
-{
+﻿{
   "language": "English",
   "cultureName": "en-US",
   "description": "ClearC application resources",
@@ -237,7 +237,596 @@
       "SelfCheckAccentMissing": "selfcheck: ClearCAccent theme resource was not resolved.",
       "SelfCheckIconMissing": "selfcheck: ClearCIconFile icon resource was not resolved.",
       "SelfCheckDirectorySize": "selfcheck: directory size calculation failed ({0} bytes / {1} files).",
-      "SelfCheckFailed": "selfcheck: failed {0}"
+      "SelfCheckFailed": "selfcheck: failed {0}",
+      "SelfCheckThemeMismatch": "Theme rendering check failed: {0} / {1}",
+      "SelfCheckLanguageMismatch": "UI language check failed: {0}"
+    },
+    "Appearance": {
+      "Title": "Appearance and language",
+      "Mode": "Theme mode",
+      "Palette": "Palette",
+      "Language": "Language",
+      "System": "System",
+      "Light": "Light",
+      "Dark": "Dark",
+      "DotNet": ".NET purple",
+      "Aurora": "AI aurora",
+      "Ember": "AI ember",
+      "Default": "Default blue",
+      "Aquatic": "Aquatic",
+      "Desert": "Desert",
+      "Dusk": "Dusk",
+      "NightSky": "Night sky",
+      "Chinese": "简体中文",
+      "English": "English",
+      "SaveFailed": "Unable to save appearance settings: {0}"
+    },
+    "About": {
+      "Title": "About ClearC",
+      "Description": "Analyze disk usage safely and confirm cleanup by risk.",
+      "UpdateHint": "Check for a new ClearC release and verify the package before installation.",
+      "Version": "Version",
+      "Platform": "Platform",
+      "CompileTime": "Build time",
+      "Author": "Author",
+      "AuthorName": "Dotnet9 and ClearC contributors",
+      "Repository": "Repository",
+      "Copyright": "Copyright",
+      "Close": "Close",
+      "Checking": "Checking…",
+      "Downloading": "Downloading…",
+      "Installing": "Starting installation…",
+      "Current": "You are up to date.",
+      "Available": "Version {0} is available.",
+      "DownloadProgress": "Download progress {0}",
+      "Downloaded": "Download complete; the package has been verified.",
+      "Failed": "Update failed: {0}",
+      "Canceled": "Operation canceled.",
+      "OpenFolder": "Open download folder",
+      "Cancel": "Cancel",
+      "ReleaseNotes": "Release notes"
+    },
+    "Runtime": {
+      "LocationManyDirectories": "{0} and {1} directories",
+      "GuardAbsoluteRoot": "The cleanup root must be an absolute path.",
+      "GuardDiskRoot": "A disk root cannot be a cleanup target.",
+      "CodexAbsoluteDirectory": "The Codex session directory must be an absolute path.",
+      "CodexExactRoots": "Codex cleanup targets must contain only sessions and archived_sessions.",
+      "CodexOutsideRoots": "The Codex cleanup target is outside the allowed session directories.",
+      "CodexCommonRoot": "The session directories must be in the same .codex directory.",
+      "CodexReparseRoot": "Cleanup refused: the Codex session directory is a reparse point.",
+      "CommandStartFailed": "Unable to start {0}.",
+      "CommandTimedOut": "The command timed out and was stopped.",
+      "CleanerMissing": "Missing cleanup handlers: {0}",
+      "CleanerNotRegistered": "No safe cleanup handler is registered for {0}.",
+      "NothingToDelete": "There is nothing to delete.",
+      "DeletedFiles": "Deleted {0:N0} files.",
+      "SkippedFiles": "Skipped {0:N0} files that are in use or inaccessible.",
+      "LeftoverDirectories": "{0:N0} nonempty directories remain.",
+      "NoMatchingCache": "No matching cache files were found.",
+      "DeletedCacheFiles": "Deleted {0:N0} cache files; the directory structure was preserved.",
+      "NoCleanupCommand": "No cleanup command is configured for this target.",
+      "LoadedCacheModules": "Cache DLLs are loaded by {0}. Cleanup was skipped; close the IDE and scan again.",
+      "CommandMissing": "Command {0} was not found and was skipped. {1}",
+      "CommandFailed": "The cleanup command failed with exit code {0}.",
+      "RecycleEmptied": "The recycle bin was emptied.",
+      "CodexRunning": "Codex is running. Cleanup was skipped to protect the current session; close Codex and scan again.",
+      "CodexNoFiles": "There are no Codex session files to delete.",
+      "CodexDeleted": "Permanently deleted {0:N0} Codex session files.",
+      "CodexDeletedSkipped": "Permanently deleted {0:N0} Codex session files; skipped {1:N0} files that are in use, inaccessible, or reparse points.",
+      "CleanupCanceled": "Canceled by the user; remaining items were not processed.",
+      "AnalyzeOnly": "This item is for analysis only.",
+      "NotInAllowlist": "The target is not in the cleanup allowlist for this session.",
+      "CleanerChanged": "The cleanup method does not match the session allowlist.",
+      "OutsideAllowedPath": "The path is outside the allowed cleanup scope: {0}",
+      "RequiresAdmin": "Administrator access is required. Restart as administrator and try again.",
+      "WindowsOnly": "Supported on Windows only.",
+      "WindowsError": "Windows returned error 0x{0:X8}.",
+      "RecycleBin": "Recycle bin",
+      "ScanCompleted": "Scan complete",
+      "ScanTimeout": "Analysis timed out",
+      "ScanFailed": "Analysis failed: {0}",
+      "RecycleWarning": "Files cannot be restored from the recycle bin after emptying it. Confirm separately.",
+      "PathsTooLong": "{0:N0} files with excessively long paths were not counted",
+      "DismAdmin": "Administrator access is required for both DISM results and WinSxS directory analysis.",
+      "DismTimeout": "DISM analysis timed out. Directory totals are shown and may count hard links more than once.",
+      "DismFailed": "DISM analysis failed. Directory totals are shown and may count hard links more than once.",
+      "DismUnparsed": "DISM results could not be parsed. Directory totals are shown and may overcount hard links.",
+      "DismReclaimable": "DISM reported size · approximately {0} reclaimable",
+      "DismOfficial": "DISM reported size",
+      "VssAdmin": "Administrator access is required to inspect shadow storage.",
+      "VssUnparsed": "Unable to parse vssadmin output. Inspect it in an elevated command prompt.",
+      "VssUsageLimit": "Used {0} · limit {1}",
+      "VssUsage": "Used {0}",
+      "SourceDefault": "Default path",
+      "SourceCli": "CLI discovery",
+      "SourceEnvironment": "Environment variable",
+      "SourceRegistry": "Registry",
+      "SourceDirectory": "Directory discovery",
+      "SourceCandidate": "Candidate path",
+      "ExcludedCbs": "CBS servicing logs are excluded",
+      "AnalysisOnlyNote": "Analysis only; cleanup is unavailable",
+      "VssLabel": "Shadow copies and restore points (vssadmin)",
+      "BrowserCacheLocation": "Edge / Chrome web cache",
+      "ProbeMissing": "Missing scan probes: {0}",
+      "ProbeNotRegistered": "No scan probe is registered for {0}.",
+      "ThumbnailFilesOnly": "Only thumbcache and iconcache database files are cleaned",
+      "DismLabel": "WinSxS component store (DISM analysis)"
+    },
+    "Targets": {
+      "WinTemp": {
+        "Name": "Windows temporary files",
+        "Description": "System temporary files; files used by installers or Defender are skipped."
+      },
+      "WuDownload": {
+        "Name": "Windows Update download cache",
+        "Description": "Leftover downloads from installed updates; active downloads are skipped."
+      },
+      "DeliveryOptimization": {
+        "Name": "Delivery Optimization cache",
+        "Description": "Windows Update and Store P2P delivery cache; rebuilt automatically."
+      },
+      "Prefetch": {
+        "Name": "Prefetch files",
+        "Description": "Startup prefetch data; initial launches may be slower until it is rebuilt."
+      },
+      "ThumbnailIconCache": {
+        "Name": "Thumbnail and icon cache",
+        "Description": "Explorer thumbnails and icons; rebuilt when folders are opened."
+      },
+      "WerArchive": {
+        "Name": "Windows error reports",
+        "Description": "Crash diagnostic reports; reports in use are skipped."
+      },
+      "WerUser": {
+        "Name": "User error reports",
+        "Description": "The current user's queued and archived crash reports."
+      },
+      "CrashDumps": {
+        "Name": "Application crash dumps",
+        "Description": "Application dump files; remove them after troubleshooting."
+      },
+      "Minidump": {
+        "Name": "Small memory dumps",
+        "Description": "Blue-screen diagnostics; remove only when no longer needed."
+      },
+      "LiveKernelReports": {
+        "Name": "Live kernel reports",
+        "Description": "LiveKernelEvent reports used for hardware and driver diagnostics."
+      },
+      "WindowsPanther": {
+        "Name": "Panther setup logs",
+        "Description": "Windows installation and upgrade logs."
+      },
+      "WindowsLogs": {
+        "Name": "Windows log directory",
+        "Description": "System component logs; CBS servicing logs are listed separately and excluded here."
+      },
+      "PerfLogs": {
+        "Name": "PerfLogs performance logs",
+        "Description": "Logs produced by Performance Monitor."
+      },
+      "WmiRtbackup": {
+        "Name": "WMI real-time backup logs",
+        "Description": "WMI event logs; files used by the WMI service are skipped."
+      },
+      "UpgradeBt": {
+        "Name": "Upgrade temporary files $WINDOWS.~BT",
+        "Description": "Upgrade temporary files; deletion prevents rollback. Many files may be in use during an upgrade; try later."
+      },
+      "UpgradeWs": {
+        "Name": "Upgrade temporary files $WINDOWS.~WS",
+        "Description": "Upgrade working directory; deletion prevents rollback."
+      },
+      "GetCurrent": {
+        "Name": "Upgrade assistant leftovers $GetCurrent",
+        "Description": "Temporary files left by Media Creation Tool and Upgrade Assistant."
+      },
+      "Esd": {
+        "Name": "ESD upgrade image cache",
+        "Description": "Downloaded upgrade images; later upgrades require another download."
+      },
+      "WinSystemTemp": {
+        "Name": "SystemTemp temporary files",
+        "Description": "System temporary directory introduced in Windows 11 24H2."
+      },
+      "RetailDemo": {
+        "Name": "Retail Demo cache",
+        "Description": "Content left by Windows Retail Demo mode."
+      },
+      "DownloadedProgramFiles": {
+        "Name": "Downloaded Program Files",
+        "Description": "Legacy ActiveX and plugin download cache."
+      },
+      "WinreAgent": {
+        "Name": "WinRE leftovers $WinREAgent",
+        "Description": "Recovery environment update leftovers; usage is shown for analysis only. Managed by Windows."
+      },
+      "Diagnosis": {
+        "Name": "Diagnostic telemetry data",
+        "Description": "Local Windows diagnostic and telemetry cache."
+      },
+      "UsoShared": {
+        "Name": "USOShared update session cache",
+        "Description": "Shared Update Session Orchestrator logs and state."
+      },
+      "UsoPrivate": {
+        "Name": "USOPrivate update session cache",
+        "Description": "Private Update Session Orchestrator state."
+      },
+      "DefenderHistory": {
+        "Name": "Defender scan history",
+        "Description": "Protected by Tamper Protection; usage is shown for analysis only."
+      },
+      "NvidiaShaderUser": {
+        "Name": "NVIDIA shader cache",
+        "Description": "DX and GL shader cache produced by NVIDIA drivers; games rebuild it as needed."
+      },
+      "NvidiaNvCache": {
+        "Name": "NVIDIA installation cache",
+        "Description": "NVIDIA driver installation and download cache."
+      },
+      "AmdShader": {
+        "Name": "AMD shader cache",
+        "Description": "DX and GL shader cache produced by AMD drivers."
+      },
+      "IntelShader": {
+        "Name": "Intel shader cache",
+        "Description": "Shader cache produced by Intel graphics drivers."
+      },
+      "D3dShaderCache": {
+        "Name": "Direct3D shader cache",
+        "Description": "D3DSCache contains compiled Direct3D shaders."
+      },
+      "SteamShadercache": {
+        "Name": "Steam shader cache",
+        "Description": "Precompiled game shaders; the first launch after cleanup recompiles them."
+      },
+      "SteamDepotAppcache": {
+        "Name": "Steam download and web cache",
+        "Description": "Depot manifests, application cache, and built-in browser cache."
+      },
+      "EpicWebcache": {
+        "Name": "Epic launcher web cache",
+        "Description": "The Epic Games launcher's built-in browser cache."
+      },
+      "GogBattlenetCache": {
+        "Name": "GOG / Battle.net cache",
+        "Description": "Web and download caches; candidate paths appear only when found."
+      },
+      "BrowserCache": {
+        "Name": "Edge / Chrome cache",
+        "Description": "Web, code, GPU and shader caches; excludes browsing history, sign-ins and bookmarks."
+      },
+      "FirefoxCache": {
+        "Name": "Firefox cache",
+        "Description": "Web, startup and shader caches for Firefox profiles; excludes history and sign-in data."
+      },
+      "Webview2Cache": {
+        "Name": "WebView2 application cache",
+        "Description": "Web and GPU caches used by desktop applications such as Teams and Office add-ins."
+      },
+      "ChromiumFamilyCache": {
+        "Name": "Brave / Vivaldi / Opera cache",
+        "Description": "Web caches for other Chromium browsers; excludes history and sign-in data."
+      },
+      "CnBrowserCache": {
+        "Name": "360 / QQ / Sogou browser cache",
+        "Description": "Candidate web cache paths appear only when found; machine-specific verification is still needed."
+      },
+      "Inetcache": {
+        "Name": "Legacy browser cache INetCache",
+        "Description": "Web cache shared by IE mode and embedded browsers; excludes cookies, history and form data."
+      },
+      "DiscordCache": {
+        "Name": "Discord cache",
+        "Description": "Web, code and GPU caches; chat history is preserved."
+      },
+      "SlackCache": {
+        "Name": "Slack cache",
+        "Description": "Web, code and GPU caches; chat history is preserved."
+      },
+      "TeamsClassicCache": {
+        "Name": "Teams classic cache",
+        "Description": "Web, code and GPU caches for classic Teams."
+      },
+      "TeamsNewCache": {
+        "Name": "New Teams cache",
+        "Description": "The new Teams client's LocalCache directory."
+      },
+      "OfficeFileCache": {
+        "Name": "Office document cache",
+        "Description": "Cached Office files; opening a document after cleanup downloads it again."
+      },
+      "OnedriveLogs": {
+        "Name": "OneDrive logs",
+        "Description": "OneDrive synchronization and setup logs."
+      },
+      "RdpCache": {
+        "Name": "Remote Desktop bitmap cache",
+        "Description": "Cached remote desktop images; regenerated on reconnection."
+      },
+      "SignalCache": {
+        "Name": "Signal cache",
+        "Description": "Web and GPU caches; chat history and the encrypted local database are preserved."
+      },
+      "WhatsappCache": {
+        "Name": "WhatsApp cache",
+        "Description": "Web and GPU caches; chat history on the phone is preserved."
+      },
+      "NotionCache": {
+        "Name": "Notion cache",
+        "Description": "Web and GPU caches; pages are downloaded again when opened."
+      },
+      "PostmanCache": {
+        "Name": "Postman cache",
+        "Description": "Web and GPU caches; collections and history are preserved."
+      },
+      "FigmaCache": {
+        "Name": "Figma cache",
+        "Description": "Web and GPU caches; local drafts are preserved."
+      },
+      "ObsidianCache": {
+        "Name": "Obsidian cache",
+        "Description": "GPU and code caches; vault contents are preserved."
+      },
+      "CursorCache": {
+        "Name": "Cursor cache",
+        "Description": "Extension and network caches; excludes settings, installed extensions and project indexes."
+      },
+      "StoreTempstate": {
+        "Name": "Store application temporary state",
+        "Description": "TempState directories used by UWP and Store applications."
+      },
+      "StoreAcTemp": {
+        "Name": "Store application AC temporary files",
+        "Description": "AC/Temp directories used by UWP and Store applications."
+      },
+      "StoreLocalcache": {
+        "Name": "Store application local cache",
+        "Description": "Some applications store local data here. Cleanup may remove their local state."
+      },
+      "HuggingfaceCache": {
+        "Name": "Hugging Face model cache",
+        "Description": "Downloaded models and datasets; they must be downloaded again after cleanup."
+      },
+      "TorchCache": {
+        "Name": "PyTorch cache",
+        "Description": "PyTorch Hub and compilation caches; downloads or compilation must be repeated."
+      },
+      "CondaPkgs": {
+        "Name": "Conda package cache",
+        "Description": "Downloaded packages; creating environments may require another download."
+      },
+      "ComposerCache": {
+        "Name": "Composer cache",
+        "Description": "PHP Composer download cache."
+      },
+      "ChocolateyTemp": {
+        "Name": "Chocolatey logs and leftovers",
+        "Description": "Chocolatey logs and damaged package directories."
+      },
+      "ScoopCache": {
+        "Name": "Scoop cache",
+        "Description": "Cached installation packages downloaded by Scoop."
+      },
+      "WingetLocalstate": {
+        "Name": "winget local state",
+        "Description": "DesktopAppInstaller's local cache and logs."
+      },
+      "VcpkgDownloads": {
+        "Name": "vcpkg download and build cache",
+        "Description": "Downloaded source archives and intermediate builds; downloads and compilation must be repeated."
+      },
+      "Msys2PacmanCache": {
+        "Name": "MSYS2 pacman package cache",
+        "Description": "Packages downloaded by MSYS2 pacman."
+      },
+      "UnityCache": {
+        "Name": "Unity cache",
+        "Description": "Unity editor asset import and download caches."
+      },
+      "UnrealDdc": {
+        "Name": "Unreal derived data cache",
+        "Description": "DerivedDataCache; rebuilt when projects are opened after cleanup."
+      },
+      "AndroidSdkTemp": {
+        "Name": "Android SDK temporary files",
+        "Description": "Temporary SDK downloads and extracted files."
+      },
+      "AndroidAvd": {
+        "Name": "Android emulator images",
+        "Description": "Usage is shown for analysis only; deleting an image loses emulator data."
+      },
+      "RustupToolchains": {
+        "Name": "Rust toolchains",
+        "Description": "Installed toolchains; usage is shown for analysis only. Manage them with rustup."
+      },
+      "NugetGlobal": {
+        "Name": "NuGet global package cache",
+        "Description": "Restored package copies; the next build downloads dependencies again."
+      },
+      "NugetHttp": {
+        "Name": "NuGet HTTP cache",
+        "Description": "Download cache that the official dotnet command can safely rebuild."
+      },
+      "NugetTemp": {
+        "Name": "NuGet temporary cache",
+        "Description": "Temporary NuGet content managed by the official dotnet command."
+      },
+      "NugetPlugins": {
+        "Name": "NuGet plugin cache",
+        "Description": "Credential and plugin process caches managed by the official dotnet command."
+      },
+      "UserTemp": {
+        "Name": "Expired temporary files",
+        "Description": "User temporary files unchanged for more than seven days; files in use or inaccessible are skipped."
+      },
+      "NpmCache": {
+        "Name": "npm cache",
+        "Description": "Download cache; installing dependencies after cleanup downloads them again."
+      },
+      "PnpmStore": {
+        "Name": "pnpm store",
+        "Description": "Content-addressed storage. pnpm store prune removes only unreferenced packages, so the size may not decrease."
+      },
+      "YarnCache": {
+        "Name": "yarn cache",
+        "Description": "Download cache; installing dependencies after cleanup downloads them again."
+      },
+      "PipCache": {
+        "Name": "pip cache",
+        "Description": "Cached wheels and source packages downloaded by pip."
+      },
+      "UvCache": {
+        "Name": "uv cache",
+        "Description": "Package and build caches managed by uv."
+      },
+      "CargoRegistry": {
+        "Name": "Cargo registry cache",
+        "Description": "Downloaded crate archives; later builds download them again."
+      },
+      "GoModcache": {
+        "Name": "Go module cache",
+        "Description": "go clean -modcache clears the entire module cache; packages must be downloaded again."
+      },
+      "GradleCaches": {
+        "Name": "Gradle cache",
+        "Description": "Dependency and build caches; the next build downloads dependencies again."
+      },
+      "MavenRepository": {
+        "Name": "Maven local repository",
+        "Description": "Cached dependencies; later builds download them again."
+      },
+      "VscodeCache": {
+        "Name": "VS Code cache",
+        "Description": "Extension and network caches; excludes settings and installed extensions."
+      },
+      "JetbrainsCaches": {
+        "Name": "JetBrains index cache",
+        "Description": "IDE indexes and caches; opening projects after cleanup rebuilds the indexes."
+      },
+      "OemIntel": {
+        "Name": "Intel installation leftovers",
+        "Description": "Extracted driver files; usage is shown for analysis only. Delete manually only if no longer needed."
+      },
+      "OemAmd": {
+        "Name": "AMD installation leftovers",
+        "Description": "Extracted driver files; usage is shown for analysis only."
+      },
+      "OemNvidia": {
+        "Name": "NVIDIA installation leftovers",
+        "Description": "Extracted driver files; usage is shown for analysis only."
+      },
+      "OemSwsetup": {
+        "Name": "OEM software leftovers",
+        "Description": "SWSetup installation sources; usage is shown for analysis only."
+      },
+      "OemInetpub": {
+        "Name": "IIS logs inetpub",
+        "Description": "Site logs; usage is shown for analysis only. Manage them with IIS tools."
+      },
+      "Winsxs": {
+        "Name": "WinSxS component store",
+        "Description": "Uses DISM-reported totals with administrator access. Otherwise, directory totals may overcount hard links."
+      },
+      "WindowsInstaller": {
+        "Name": "Windows Installer cache",
+        "Description": "Cached MSI packages; deletion prevents repair or uninstall of the corresponding applications."
+      },
+      "PackageCache": {
+        "Name": "Visual Studio package cache",
+        "Description": "VS and MSI setup sources; repairing installations after cleanup requires another download."
+      },
+      "SearchIndex": {
+        "Name": "Windows search index",
+        "Description": "Windows.edb usage is shown for analysis only. Rebuild through Indexing Options."
+      },
+      "FontCache": {
+        "Name": "Font Cache service data",
+        "Description": "Stop the FontCache service before cleaning its files."
+      },
+      "VssShadow": {
+        "Name": "Shadow copies and restore points",
+        "Description": "Shadow storage usage reported by vssadmin. Manage through System Protection settings."
+      },
+      "CbsLogs": {
+        "Name": "CBS servicing logs",
+        "Description": "Component installation logs; files in use are skipped."
+      },
+      "EtlLogs": {
+        "Name": "ETL trace logs",
+        "Description": "System and driver ETL trace files."
+      },
+      "WslDockerVhdx": {
+        "Name": "WSL / Docker virtual disks",
+        "Description": "ext4.vhdx disk images; counts file sizes without invoking wsl.exe."
+      },
+      "Swapfile": {
+        "Name": "Swap file swapfile.sys",
+        "Description": "System swap file; usage is shown for analysis only."
+      },
+      "WindowsOld": {
+        "Name": "Previous Windows installation",
+        "Description": "Upgrade backup; deletion prevents rollback. Manage through Windows settings."
+      },
+      "Hiberfil": {
+        "Name": "Hibernation file hiberfil.sys",
+        "Description": "Usage is shown for analysis only. Manage hibernation with powercfg."
+      },
+      "Pagefile": {
+        "Name": "Paging file pagefile.sys",
+        "Description": "Virtual memory swap file; usage is shown for analysis only and direct cleanup is unavailable."
+      },
+      "MemoryDump": {
+        "Name": "System memory dump",
+        "Description": "Blue-screen diagnostics; usage is shown for analysis only. Remove through Windows settings when no longer needed."
+      },
+      "CodexData": {
+        "Name": "Codex session history",
+        "Description": "Only active and archived sessions are counted. Selected files are permanently deleted. Cleanup is skipped if Codex is running."
+      },
+      "DriveTemp": {
+        "Name": "Temporary files ({0})",
+        "Description": "Temp and tmp directories in the drive root; only files unchanged for more than seven days are cleaned."
+      },
+      "DriveWindowsOld": {
+        "Name": "Previous Windows installation ({0})",
+        "Description": "Upgrade backup on this drive; deletion prevents rollback. Manage through Windows settings."
+      },
+      "DrivePagefile": {
+        "Name": "Paging file pagefile.sys ({0})",
+        "Description": "Virtual memory on this drive; usage is shown for analysis only and direct cleanup is unavailable."
+      },
+      "DriveIntel": {
+        "Name": "Intel installation leftovers ({0})",
+        "Description": "Extracted driver files; usage is shown for analysis only. Remove manually if no longer needed."
+      },
+      "DriveAmd": {
+        "Name": "AMD installation leftovers ({0})",
+        "Description": "Extracted driver files; usage is shown for analysis only. Remove manually if no longer needed."
+      },
+      "DriveNvidia": {
+        "Name": "NVIDIA installation leftovers ({0})",
+        "Description": "Extracted driver files; usage is shown for analysis only. Remove manually if no longer needed."
+      },
+      "DriveSwsetup": {
+        "Name": "OEM software leftovers ({0})",
+        "Description": "SWSetup installation sources; usage is shown for analysis only."
+      },
+      "DriveRecycleBin": {
+        "Name": "Recycle bin ({0})",
+        "Description": "Files cannot be restored after emptying the recycle bin. Confirm separately."
+      }
+    },
+    "CleanupCommand": {
+      "NuGetGlobal": "NuGet global-packages was cleaned with the official command.",
+      "NuGetHttp": "NuGet http-cache was cleaned with the official command.",
+      "NuGetTemp": "NuGet temporary files were cleaned with the official command.",
+      "NuGetPlugins": "NuGet plugins-cache was cleaned with the official command.",
+      "Npm": "npm cache was cleaned with the official command.",
+      "Pnpm": "pnpm storage was cleaned with the official command; only unreferenced packages were removed.",
+      "Yarn": "yarn cache was cleaned with the official command."
     }
   }
 }

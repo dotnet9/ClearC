@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using ClearC.Core.Formatting;
@@ -30,14 +31,14 @@ internal sealed class ScanProbeRegistry
         var missing = Enum.GetValues<ScanKind>().Where(kind => !_probes.ContainsKey(kind)).ToArray();
         if (missing.Length > 0)
         {
-            throw new InvalidOperationException($"缺少扫描探测器：{string.Join("、", missing)}");
+            throw new InvalidOperationException(AppText.Format(Language.RuntimeProbeMissing, string.Join(", ", missing)));
         }
     }
 
     public IScanProbe Resolve(CleanupTargetDefinition target) =>
         _probes.TryGetValue(target.ScanKind, out var probe)
             ? probe
-            : throw new InvalidOperationException($"没有匹配 {target.ScanKind} 的扫描探测器。");
+            : throw new InvalidOperationException(AppText.Format(Language.RuntimeProbeNotRegistered, target.ScanKind));
 }
 
 /// <summary>目录 / 文件模式 / 单文件都由目录大小计算器完成，区别只在过滤条件。</summary>
@@ -54,7 +55,7 @@ internal sealed class DirectorySizeProbe(IDirectorySizeCalculator sizeCalculator
             target.ExcludePaths);
         var size = await sizeCalculator.CalculateAsync(request, cancellationToken);
         var note = size.TooLongPathFiles > 0
-            ? $"有 {size.TooLongPathFiles:N0} 个超长路径文件未统计"
+            ? AppText.Format(Language.RuntimePathsTooLong, size.TooLongPathFiles)
             : target.ScanNote;
         return new(size.Bytes, size.FileCount, size.LastWriteTimeUtc, note, size.TooLongPathFiles > 0);
     }
@@ -94,7 +95,7 @@ internal sealed partial class DismProbe(
     {
         if (!elevationService.IsElevated)
         {
-            return new(0, 0, null, "需管理员：WinSxS 官方数字与目录扫描都需要管理员权限");
+            return new(0, 0, null, AppText.Get(Language.RuntimeDismAdmin));
         }
 
         var run = await processRunner.RunAsync(
@@ -104,26 +105,26 @@ internal sealed partial class DismProbe(
             Timeout);
         if (run.TimedOut)
         {
-            return await FallbackAsync(target, "DISM 分析超时：当前显示目录扫描数字（含硬链接，偏大）", cancellationToken);
+            return await FallbackAsync(target, AppText.Get(Language.RuntimeDismTimeout), cancellationToken);
         }
 
         if (!run.Succeeded)
         {
-            return await FallbackAsync(target, "DISM 分析失败：当前显示目录扫描数字（含硬链接，偏大）", cancellationToken);
+            return await FallbackAsync(target, AppText.Get(Language.RuntimeDismFailed), cancellationToken);
         }
 
         var sizes = ParseSizes(run.StandardOutput);
         if (sizes.Count < 2)
         {
-            return await FallbackAsync(target, "无法解析 DISM 数字：当前显示目录扫描数字（含硬链接，偏大）", cancellationToken);
+            return await FallbackAsync(target, AppText.Get(Language.RuntimeDismUnparsed), cancellationToken);
         }
 
         // DISM 输出的顺序固定：报告大小 / 实际大小 / 与 Windows 共享 / 备份与禁用功能 / 缓存与临时数据。
         var actual = sizes[1];
         var reclaimable = sizes.Count >= 5 ? sizes[3] + sizes[4] : sizes.Count >= 4 ? sizes[3] : 0;
         var note = reclaimable > 0
-            ? $"DISM 官方数字 · 可回收约 {ByteSizeFormatter.Format(reclaimable)}"
-            : "DISM 官方数字";
+            ? AppText.Format(Language.RuntimeDismReclaimable, ByteSizeFormatter.Format(reclaimable))
+            : AppText.Get(Language.RuntimeDismOfficial);
         return new(actual, 0, null, note);
     }
 
@@ -178,24 +179,24 @@ internal sealed partial class VssProbe(IProcessRunner processRunner, IElevationS
     {
         if (!elevationService.IsElevated)
         {
-            return new(0, 0, null, "需管理员查看卷影副本占用");
+            return new(0, 0, null, AppText.Get(Language.RuntimeVssAdmin));
         }
 
         var run = await processRunner.RunAsync("vssadmin", ["list", "shadowstorage"], cancellationToken, Timeout);
         if (!run.Succeeded)
         {
-            return new(0, 0, null, "需管理员查看卷影副本占用");
+            return new(0, 0, null, AppText.Get(Language.RuntimeVssAdmin));
         }
 
         var sizes = DismProbe.ParseSizes(run.StandardOutput);
         if (sizes.Count == 0)
         {
-            return new(0, 0, null, "无法解析 vssadmin 输出，请用管理员命令行查看");
+            return new(0, 0, null, AppText.Get(Language.RuntimeVssUnparsed));
         }
 
         var note = sizes.Count >= 2
-            ? $"已用 {ByteSizeFormatter.Format(sizes[0])} · 上限 {ByteSizeFormatter.Format(sizes[1])}"
-            : $"已用 {ByteSizeFormatter.Format(sizes[0])}";
+            ? AppText.Format(Language.RuntimeVssUsageLimit, ByteSizeFormatter.Format(sizes[0]), ByteSizeFormatter.Format(sizes[1]))
+            : AppText.Format(Language.RuntimeVssUsage, ByteSizeFormatter.Format(sizes[0]));
         return new(sizes[0], 0, null, note);
     }
 }

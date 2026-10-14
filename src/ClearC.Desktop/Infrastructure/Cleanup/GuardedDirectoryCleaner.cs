@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 namespace ClearC.Desktop.Infrastructure.Cleanup;
 
 internal readonly record struct DirectoryCleanupResult(
@@ -116,14 +117,14 @@ internal sealed class GuardedDirectoryCleaner : IGuardedDirectoryCleaner
     {
         if (string.IsNullOrWhiteSpace(root) || !Path.IsPathFullyQualified(root))
         {
-            throw new InvalidOperationException("清理根目录必须是完整路径。");
+            throw new InvalidOperationException(AppText.Get(Language.RuntimeGuardAbsoluteRoot));
         }
 
         var normalized = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
         var pathRoot = Path.TrimEndingDirectorySeparator(Path.GetPathRoot(normalized) ?? string.Empty);
         if (string.Equals(normalized, pathRoot, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("拒绝以磁盘根目录作为清理目标。");
+            throw new InvalidOperationException(AppText.Get(Language.RuntimeGuardDiskRoot));
         }
 
         return normalized;

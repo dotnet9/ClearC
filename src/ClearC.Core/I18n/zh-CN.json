@@ -1,0 +1,24 @@
+﻿{
+  "language": "简体中文",
+  "cultureName": "zh-CN",
+  "description": "ClearC 核心模型和安全提示资源",
+  "ClearC": {
+    "Core": {
+      "SafetyAnalyzeOnly": "此项目仅供分析，未提供清理操作。",
+      "SafetyProtected": "路径属于用户数据或源码保护范围。",
+      "SafetyProtectedPath": "路径属于用户数据或源码保护范围：{0}",
+      "SafetyConfirm": "该项目有不可恢复或需要重新下载的影响，必须单独确认。",
+      "GroupTemporaryFiles": "临时文件",
+      "GroupSystemCache": "系统缓存",
+      "GroupRecycleBin": "回收站",
+      "GroupBrowser": "浏览器",
+      "GroupUserFiles": "用户文件",
+      "GroupSystemFiles": "系统文件",
+      "TimeToday": "今天 {0:HH:mm}",
+      "TimeYesterday": "昨天 {0:HH:mm}",
+      "TimeDaysAgo": "{0} 天前",
+      "ScanGhost": "▍ 正在扫描 {0} …",
+      "ScanSlow": "（慢速目标）"
+    }
+  }
+}

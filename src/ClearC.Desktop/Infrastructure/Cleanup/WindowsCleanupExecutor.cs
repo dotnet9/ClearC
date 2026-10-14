@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using System.Diagnostics;
 using ClearC.Core.Models;
 using ClearC.Core.Services;
@@ -75,7 +76,7 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
             }
             catch (OperationCanceledException)
             {
-                result = new(item.Id, CleanupOutcome.Cancelled, 0, "用户取消，当前项之后的任务未执行。");
+                result = new(item.Id, CleanupOutcome.Cancelled, 0, AppText.Get(Language.RuntimeCleanupCanceled));
                 results.Add(result);
                 progress?.Report(new(index + 1, plan.Count, item, result));
                 break;
@@ -113,28 +114,28 @@ public sealed class WindowsCleanupExecutor : ICleanupExecutor
     {
         if (item.CleanerKind == CleanerKind.None)
         {
-            return new(item.Id, CleanupOutcome.Skipped, 0, "此项目仅供分析。");
+            return new(item.Id, CleanupOutcome.Skipped, 0, AppText.Get(Language.RuntimeAnalyzeOnly));
         }
 
         if (!targets.TryGetValue(item.Id, out var target))
         {
-            return new(item.Id, CleanupOutcome.Skipped, 0, "目标不在本次启动生成的清理白名单中。");
+            return new(item.Id, CleanupOutcome.Skipped, 0, AppText.Get(Language.RuntimeNotInAllowlist));
         }
 
         if (target.CleanerKind != item.CleanerKind)
         {
-            return new(item.Id, CleanupOutcome.Skipped, 0, "目标清理方式与本次启动的白名单不一致。");
+            return new(item.Id, CleanupOutcome.Skipped, 0, AppText.Get(Language.RuntimeCleanerChanged));
         }
 
         var outside = item.CleanRoots.FirstOrDefault(root => !IsAllowed(root, target.EffectiveAllowedRoots));
         if (outside is not null)
         {
-            return new(item.Id, CleanupOutcome.Skipped, 0, $"路径不在允许的清理范围内：{outside}");
+            return new(item.Id, CleanupOutcome.Skipped, 0, AppText.Format(Language.RuntimeOutsideAllowedPath, outside));
         }
 
         if (target.RequiresElevation && !_elevation.IsElevated)
         {
-            return new(item.Id, CleanupOutcome.Skipped, 0, "需要管理员权限：请点击「以管理员重启」后重试。");
+            return new(item.Id, CleanupOutcome.Skipped, 0, AppText.Get(Language.RuntimeRequiresAdmin));
         }
 
         var handler = _handlers.Resolve(item.CleanerKind);

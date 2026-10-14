@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CodeWF.Avalonia.Lang;
 using CodeWF.Avalonia.Lang.Json;
 
@@ -9,18 +10,18 @@ namespace ClearC.Desktop.I18n;
 /// <summary>ClearC 应用国际化入口，资源由宿主输出目录 JSON 提供。</summary>
 public sealed class AppLocalizer
 {
-    private static readonly IReadOnlyDictionary<string, ResourceDictionary> SemiCultures =
-        new Dictionary<string, ResourceDictionary>(StringComparer.OrdinalIgnoreCase)
+    private static readonly IReadOnlyDictionary<string, Func<ResourceDictionary>> SemiCultures =
+        new Dictionary<string, Func<ResourceDictionary>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["en-US"] = new Semi.Avalonia.Locale.en_us(),
-            ["zh-CN"] = new Semi.Avalonia.Locale.zh_cn()
+            ["en-US"] = () => new Semi.Avalonia.Locale.en_us(),
+            ["zh-CN"] = () => new Semi.Avalonia.Locale.zh_cn()
         };
 
-    private static readonly IReadOnlyDictionary<string, ResourceDictionary> UrsaCultures =
-        new Dictionary<string, ResourceDictionary>(StringComparer.OrdinalIgnoreCase)
+    private static readonly IReadOnlyDictionary<string, Func<ResourceDictionary>> UrsaCultures =
+        new Dictionary<string, Func<ResourceDictionary>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["en-US"] = new Ursa.Themes.Semi.Locale.en_us(),
-            ["zh-CN"] = new Ursa.Themes.Semi.Locale.zh_cn()
+            ["en-US"] = () => new Ursa.Themes.Semi.Locale.en_us(),
+            ["zh-CN"] = () => new Ursa.Themes.Semi.Locale.zh_cn()
         };
 
     public static AppLocalizer Instance { get; } = new();
@@ -92,9 +93,15 @@ public sealed class AppLocalizer
 
     public static void ApplyThirdPartyCulture(string cultureName)
     {
-        if (Application.Current is not { } application) return;
-        if (SemiCultures.TryGetValue(cultureName, out var semi)) MergeCultureResources(application.Resources, semi);
-        if (UrsaCultures.TryGetValue(cultureName, out var ursa)) MergeCultureResources(application.Resources, ursa);
+        if (Application.Current is not { PlatformSettings: not null } application) return;
+        // 目录扫描可在线程池初始化文本资源，第三方 XAML 资源必须在界面线程创建和合并。
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(() => ApplyThirdPartyCulture(cultureName));
+            return;
+        }
+        if (SemiCultures.TryGetValue(cultureName, out var semi)) MergeCultureResources(application.Resources, semi());
+        if (UrsaCultures.TryGetValue(cultureName, out var ursa)) MergeCultureResources(application.Resources, ursa());
     }
 
     private static bool IsSupported(string? value) => value is "zh-CN" or "en-US";

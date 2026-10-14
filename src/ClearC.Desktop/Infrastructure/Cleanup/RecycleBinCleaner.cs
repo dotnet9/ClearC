@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using System.Runtime.InteropServices;
 using ClearC.Desktop.Infrastructure.Windows;
 
@@ -35,13 +36,13 @@ internal sealed class RecycleBinCleaner : IRecycleBinCleaner
     {
         if (!_platform.IsWindows)
         {
-            return new(false, "仅支持 Windows。");
+            return new(false, AppText.Get(Language.RuntimeWindowsOnly));
         }
 
         var result = SHEmptyRecycleBin(IntPtr.Zero, driveRoot, NoConfirmation | NoProgressUi | NoSound);
         return result == 0
             ? new(true)
-            : new(false, $"Windows 返回错误 0x{result:X8}。");
+            : new(false, AppText.Format(Language.RuntimeWindowsError, result));
     }
 
     [DllImport("shell32.dll", EntryPoint = "SHEmptyRecycleBinW", CharSet = CharSet.Unicode)]

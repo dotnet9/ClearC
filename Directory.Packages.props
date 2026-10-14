@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageVersionOverrideEnabled>true</CentralPackageVersionOverrideEnabled>
@@ -8,10 +8,11 @@
     <PackageVersion Include="Avalonia" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
-    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.14" />
-    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.14" />
-    <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.0.0.16" />
-    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.16" />
+    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.16" />
+    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.16" />
+    <PackageVersion Include="CodeWF.Toolkit.Lang" Version="1.0.0.17" />
+    <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.0.0.17" />
+    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.17" />
     <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.2.0" />
     <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
     <PackageVersion Include="ReactiveUI" Version="24.1.0" />

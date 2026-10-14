@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using ClearC.Core.Models;
 
 namespace ClearC.Desktop.Infrastructure.Scanning;
@@ -46,7 +47,10 @@ internal sealed record CleanupTargetDefinition(
     string? LocationOverride = null,
     string? PathSource = null,
     string? ScanNote = null,
-    string? ScanLabel = null)
+    string? ScanLabel = null,
+    string? DisplayNameKey = null,
+    string? DescriptionKey = null,
+    string? TextArgument = null)
 {
     /// <summary>执行白名单：清理时 <see cref="CleanupItem.CleanRoots"/> 必须落在这些父目录内。</summary>
     public IReadOnlyList<string> EffectiveAllowedRoots => AllowedRoots is { Count: > 0 } ? AllowedRoots : Paths;
@@ -56,7 +60,7 @@ internal sealed record CleanupTargetDefinition(
     {
         0 => string.Empty,
         1 => Paths[0],
-        _ => $"{Paths[0]} 等 {Paths.Count} 个目录"
+        _ => AppText.Format(Language.RuntimeLocationManyDirectories, Paths[0], Paths.Count)
     };
 
     /// <summary>幽灵行文案：命令类目标（vssadmin / DISM）显示可读标签，其余显示真实路径。</summary>
@@ -93,5 +97,8 @@ internal sealed record CleanupTargetDefinition(
         PathSource,
         scanNote ?? ScanNote,
         Icon,
-        Accent);
+        Accent,
+        DisplayNameKey,
+        DescriptionKey,
+        TextArgument);
 }

@@ -1,6 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>Core cleanup models and safety policies for ClearC.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CodeWF.Toolkit.Lang" />
+    <EmbeddedResource Include="I18n\*.json" />
+    <None Update="I18n\CoreLanguage.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CoreLanguage.cs</LastGenOutput>
+    </None>
+    <Compile Update="I18n\CoreLanguage.cs"><DependentUpon>CoreLanguage.tt</DependentUpon></Compile>
+  </ItemGroup>
 </Project>

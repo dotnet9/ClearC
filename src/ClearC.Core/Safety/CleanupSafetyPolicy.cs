@@ -1,3 +1,5 @@
+﻿using ClearC.Core.I18n;
+
 using ClearC.Core.Models;
 
 namespace ClearC.Core.Safety;
@@ -35,12 +37,12 @@ public sealed class CleanupSafetyPolicy
 
         if (!item.CanClean)
         {
-            return new(SafetyDecisionKind.Denied, "此项目仅供分析，未提供清理操作。");
+            return new(SafetyDecisionKind.Denied, CoreText.Get(CoreLanguage.CoreSafetyAnalyzeOnly));
         }
 
         if (item.IsProtected)
         {
-            return new(SafetyDecisionKind.Denied, "路径属于用户数据或源码保护范围。");
+            return new(SafetyDecisionKind.Denied, CoreText.Get(CoreLanguage.CoreSafetyProtected));
         }
 
         if (!IsCodexConversationCleaner(item))
@@ -48,13 +50,13 @@ public sealed class CleanupSafetyPolicy
             var offending = item.CleanRoots.FirstOrDefault(ContainsProtectedDirectory);
             if (offending is not null)
             {
-                return new(SafetyDecisionKind.Denied, $"路径属于用户数据或源码保护范围：{offending.Trim()}");
+                return new(SafetyDecisionKind.Denied, CoreText.Format(CoreLanguage.CoreSafetyProtectedPath, offending.Trim()));
             }
         }
 
         if (item.Risk != CleanupRisk.Low && !riskAcknowledged)
         {
-            return new(SafetyDecisionKind.ConfirmationRequired, "该项目有不可恢复或需要重新下载的影响，必须单独确认。");
+            return new(SafetyDecisionKind.ConfirmationRequired, CoreText.Get(CoreLanguage.CoreSafetyConfirm));
         }
 
         return new(SafetyDecisionKind.Allowed, string.Empty);

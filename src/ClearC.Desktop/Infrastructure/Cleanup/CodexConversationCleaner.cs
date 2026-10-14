@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using ClearC.Desktop.I18n;
+using System.Diagnostics;
 
 namespace ClearC.Desktop.Infrastructure.Cleanup;
 
@@ -81,7 +82,7 @@ internal sealed class CodexConversationCleaner : ICodexConversationCleaner
         ArgumentNullException.ThrowIfNull(roots);
         if (roots.Any(string.IsNullOrWhiteSpace))
         {
-            throw new InvalidOperationException("Codex 会话目录必须是完整路径。");
+            throw new InvalidOperationException(AppText.Get(Language.RuntimeCodexAbsoluteDirectory));
         }
 
         var normalizedRoots = roots
@@ -90,7 +91,7 @@ internal sealed class CodexConversationCleaner : ICodexConversationCleaner
             .ToArray();
         if (normalizedRoots.Length != AllowedDirectoryNames.Count)
         {
-            throw new InvalidOperationException("Codex 清理目标必须且只能包含 sessions 与 archived_sessions。");
+            throw new InvalidOperationException(AppText.Get(Language.RuntimeCodexExactRoots));
         }
 
         string? codexHome = null;
@@ -102,18 +103,18 @@ internal sealed class CodexConversationCleaner : ICodexConversationCleaner
                 parent is null ||
                 !string.Equals(Path.GetFileName(parent), ".codex", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Codex 清理目标超出允许的会话目录。");
+                throw new InvalidOperationException(AppText.Get(Language.RuntimeCodexOutsideRoots));
             }
 
             codexHome ??= parent;
             if (!string.Equals(codexHome, parent, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Codex 会话目录必须位于同一个 .codex 目录下。");
+                throw new InvalidOperationException(AppText.Get(Language.RuntimeCodexCommonRoot));
             }
 
             if (Directory.Exists(root) && (File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
             {
-                throw new InvalidOperationException("Codex 会话目录是重解析点，已拒绝清理。");
+                throw new InvalidOperationException(AppText.Get(Language.RuntimeCodexReparseRoot));
             }
         }
 

@@ -1,3 +1,5 @@
+﻿using ClearC.Core.I18n;
+
 namespace ClearC.Core.Models;
 
 /// <summary>
@@ -17,7 +19,7 @@ public sealed record ScanProgress(
     public bool IsItemCompleted => Item is not null;
 
     /// <summary>幽灵行文案：优先显示正在分析的真实路径，取不到时退回目标名。</summary>
-    public string GhostText => $"▍ 正在扫描 {TargetPath ?? CurrentTarget} …";
+    public string GhostText => CoreText.Format(CoreLanguage.CoreScanGhost, TargetPath ?? CurrentTarget);
 
     /// <summary>原型里的进度文案：<c>NN/NN · 当前目标</c>，慢档追加“（慢速目标）”。</summary>
     public string DisplayText
@@ -25,7 +27,7 @@ public sealed record ScanProgress(
         get
         {
             var index = Math.Clamp(IsItemCompleted ? Completed : Completed + 1, 0, Math.Max(Total, 1));
-            var suffix = Tier == ScanTier.Slow ? "（慢速目标）" : string.Empty;
+            var suffix = Tier == ScanTier.Slow ? CoreText.Get(CoreLanguage.CoreScanSlow) : string.Empty;
             return $"{index:00}/{Total:00} · {CurrentTarget}{suffix}";
         }
     }

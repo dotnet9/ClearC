@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using ClearC.Desktop.I18n;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using Microsoft.Win32;
@@ -103,8 +104,8 @@ internal sealed partial class TargetPathResolver : ITargetPathResolver
         Set(results, "nuget", ResolveNuGetPackages() ?? FromProfile(".nuget", "packages"));
         Set(results, "composer", Local("Composer", "cache"));
         Set(results, "scoop", FromEnvironment("SCOOP") ?? FromProfile("scoop"));
-        Set(results, "vcpkg", FromEnvironment("VCPKG_ROOT") ?? new(Path.Combine(_systemDrive, "vcpkg"), "默认路径"));
-        Set(results, "msys2", FromEnvironment("MSYS2_ROOT") ?? new(Path.Combine(_systemDrive, "msys64"), "默认路径"));
+        Set(results, "vcpkg", FromEnvironment("VCPKG_ROOT") ?? new(Path.Combine(_systemDrive, "vcpkg"), AppText.Get(Language.RuntimeSourceDefault)));
+        Set(results, "msys2", FromEnvironment("MSYS2_ROOT") ?? new(Path.Combine(_systemDrive, "msys64"), AppText.Get(Language.RuntimeSourceDefault)));
         Set(results, "anaconda", FromProfile("anaconda3"));
         Set(results, "conda", FirstExisting(FromEnvironment("CONDA_PKGS_DIRS")) ?? FromProfile(".conda", "pkgs"));
         Set(results, "huggingface", FromEnvironment("HF_HOME") ?? FromProfile(".cache", "huggingface"));
@@ -123,7 +124,7 @@ internal sealed partial class TargetPathResolver : ITargetPathResolver
             Local("GOG.com", "Galaxy")));
         Set(results, "battlenet", FirstExisting(
             FromRegistry(RegistryHive.LocalMachine, @"SOFTWARE\WOW6432Node\Blizzard Entertainment", "InstallPath"),
-            new(Path.Combine(_programData, "Battle.net"), "默认路径")));
+            new(Path.Combine(_programData, "Battle.net"), AppText.Get(Language.RuntimeSourceDefault))));
         Set(results, "cn360", Local("360Chrome", "Chrome", "User Data"));
         Set(results, "cnqq", Local("Tencent", "QQBrowser", "User Data"));
         Set(results, "cnsogou", Local("SogouExplorer", "User Data"));
@@ -147,7 +148,7 @@ internal sealed partial class TargetPathResolver : ITargetPathResolver
     private static PathResolution? ExtractCondaPackages(string output)
     {
         var match = CondaPackagesPattern().Match(output);
-        return match.Success ? new(match.Groups[1].Value.Replace(@"\\", @"\"), "CLI 探测") : null;
+        return match.Success ? new(match.Groups[1].Value.Replace(@"\\", @"\"), AppText.Get(Language.RuntimeSourceCli)) : null;
     }
 
     private async Task ProbeAsync(
@@ -176,7 +177,7 @@ internal sealed partial class TargetPathResolver : ITargetPathResolver
                 .ReplaceLineEndings("\n")
                 .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .LastOrDefault();
-            resolution = string.IsNullOrWhiteSpace(value) ? null : new(value, "CLI 探测");
+            resolution = string.IsNullOrWhiteSpace(value) ? null : new(value, AppText.Get(Language.RuntimeSourceCli));
         }
 
         if (resolution is null ||
@@ -245,7 +246,7 @@ internal sealed partial class TargetPathResolver : ITargetPathResolver
         var value = Environment.GetEnvironmentVariable(name);
         return string.IsNullOrWhiteSpace(value)
             ? null
-            : new(Path.TrimEndingDirectorySeparator(value), "环境变量");
+            : new(Path.TrimEndingDirectorySeparator(value), AppText.Get(Language.RuntimeSourceEnvironment));
     }
 
     private PathResolution? FromRegistry(RegistryHive hive, string subKey, string valueName)
@@ -253,14 +254,14 @@ internal sealed partial class TargetPathResolver : ITargetPathResolver
         var value = _registry.ReadString(hive, subKey, valueName);
         return string.IsNullOrWhiteSpace(value)
             ? null
-            : new(Path.TrimEndingDirectorySeparator(value), "注册表");
+            : new(Path.TrimEndingDirectorySeparator(value), AppText.Get(Language.RuntimeSourceRegistry));
     }
 
-    private PathResolution Local(params string[] segments) => new(Join(_localAppData, segments), "默认路径");
+    private PathResolution Local(params string[] segments) => new(Join(_localAppData, segments), AppText.Get(Language.RuntimeSourceDefault));
 
-    private PathResolution Roaming(params string[] segments) => new(Join(_roamingAppData, segments), "默认路径");
+    private PathResolution Roaming(params string[] segments) => new(Join(_roamingAppData, segments), AppText.Get(Language.RuntimeSourceDefault));
 
-    private PathResolution FromProfile(params string[] segments) => new(Join(_userProfile, segments), "默认路径");
+    private PathResolution FromProfile(params string[] segments) => new(Join(_userProfile, segments), AppText.Get(Language.RuntimeSourceDefault));
 
     private static string Join(string root, params string[] segments) =>
         Path.Combine([root, .. segments]);

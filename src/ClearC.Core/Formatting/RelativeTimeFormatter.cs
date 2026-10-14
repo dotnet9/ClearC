@@ -1,3 +1,5 @@
+﻿using ClearC.Core.I18n;
+
 namespace ClearC.Core.Formatting;
 
 public static class RelativeTimeFormatter
@@ -16,16 +18,16 @@ public static class RelativeTimeFormatter
 
         if (day == today)
         {
-            return $"今天 {local:HH:mm}";
+            return CoreText.Format(CoreLanguage.CoreTimeToday, local);
         }
 
         if (day == today.AddDays(-1))
         {
-            return $"昨天 {local:HH:mm}";
+            return CoreText.Format(CoreLanguage.CoreTimeYesterday, local);
         }
 
         var days = (today - day).Days;
-        return days > 1 ? $"{days} 天前" : $"{local:yyyy-MM-dd}";
+        return days > 1 ? CoreText.Format(CoreLanguage.CoreTimeDaysAgo, days) : $"{local:yyyy-MM-dd}";
     }
 
     public static string Format(DateTimeOffset? value) => Format(value, DateTimeOffset.Now);

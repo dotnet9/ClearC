@@ -1,3 +1,5 @@
+﻿using ClearC.Core.I18n;
+
 namespace ClearC.Core.Models;
 
 /// <summary>界面上的 6 个固定展示分组（原型 <c>CATS.slice(1)</c>）。</summary>
@@ -25,11 +27,11 @@ public static class CleanupDisplayGroupMap
 
     public static string ToDisplayName(this CleanupDisplayGroup group) => group switch
     {
-        CleanupDisplayGroup.TemporaryFiles => "临时文件",
-        CleanupDisplayGroup.SystemCache => "系统缓存",
-        CleanupDisplayGroup.RecycleBin => "回收站",
-        CleanupDisplayGroup.Browser => "浏览器",
-        CleanupDisplayGroup.UserFiles => "用户文件",
-        _ => "系统文件"
+        CleanupDisplayGroup.TemporaryFiles => CoreText.Get(CoreLanguage.CoreGroupTemporaryFiles),
+        CleanupDisplayGroup.SystemCache => CoreText.Get(CoreLanguage.CoreGroupSystemCache),
+        CleanupDisplayGroup.RecycleBin => CoreText.Get(CoreLanguage.CoreGroupRecycleBin),
+        CleanupDisplayGroup.Browser => CoreText.Get(CoreLanguage.CoreGroupBrowser),
+        CleanupDisplayGroup.UserFiles => CoreText.Get(CoreLanguage.CoreGroupUserFiles),
+        _ => CoreText.Get(CoreLanguage.CoreGroupSystemFiles)
     };
 }

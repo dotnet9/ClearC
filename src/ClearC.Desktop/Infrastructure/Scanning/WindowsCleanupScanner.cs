@@ -1,3 +1,4 @@
+﻿using ClearC.Desktop.I18n;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using ClearC.Core.Models;
@@ -99,9 +100,9 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
         // 回收站按扫描范围顺序输出：系统盘在前，其他盘符随后，逐盘用 Shell 数字产出条目。
         if (includeSystem)
         {
-            progress?.Report(new(Volatile.Read(ref completed), total, "回收站"));
+            progress?.Report(new(Volatile.Read(ref completed), total, AppText.Get(Language.RuntimeRecycleBin)));
             items["recycle-bin"] = await ScanRecycleBinAsync(
-                disk, "recycle-bin", "回收站", $"{disk.DriveName}\\$Recycle.Bin", cancellationToken);
+                disk, "recycle-bin", AppText.Get(Language.RuntimeRecycleBin), $"{disk.DriveName}\\$Recycle.Bin", cancellationToken);
             ordered.Add(items["recycle-bin"]);
             Interlocked.Increment(ref completed);
         }
@@ -111,12 +112,13 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
             var driveName = Path.GetPathRoot(row.Paths.FirstOrDefault() ?? row.Location)?.TrimEnd('\\', '/') ?? string.Empty;
             var snapshot = new DiskSnapshot(driveName, string.Empty, 0, 0);
             progress?.Report(new(Volatile.Read(ref completed), total, row.DisplayName, ScanTier.Fast, null, row.ScanTarget));
-            items[row.Id] = await ScanRecycleBinAsync(snapshot, row.Id, row.DisplayName, row.Location, cancellationToken);
+            items[row.Id] = await ScanRecycleBinAsync(snapshot, row.Id, row.DisplayName, row.Location, cancellationToken,
+                row.DisplayNameKey, row.TextArgument);
             ordered.Add(items[row.Id]);
             Interlocked.Increment(ref completed);
         }
 
-        progress?.Report(new(Volatile.Read(ref completed), total, "扫描完成"));
+        progress?.Report(new(Volatile.Read(ref completed), total, AppText.Get(Language.RuntimeScanCompleted)));
         stopwatch.Stop();
 
         return new(disk, ordered, stopwatch.Elapsed);
@@ -188,11 +190,11 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return target.ToItem(0, 0, null, "分析超时");
+            return target.ToItem(0, 0, null, AppText.Get(Language.RuntimeScanTimeout));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            return target.ToItem(0, 0, null, $"分析失败：{exception.Message}");
+            return target.ToItem(0, 0, null, AppText.Format(Language.RuntimeScanFailed, exception.Message));
         }
     }
 
@@ -201,7 +203,9 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
         string id,
         string displayName,
         string location,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? displayNameKey = null,
+        string? textArgument = null)
     {
         var size = _platform.IsWindows
             ? await _recycleBinInfoProvider.GetInfoAsync($"{disk.DriveName}\\", cancellationToken)
@@ -214,11 +218,14 @@ public sealed class WindowsCleanupScanner : ICleanupScanner
             CleanupRisk.Medium,
             size.Bytes,
             size.FileCount,
-            "清空后文件无法从回收站恢复，执行前必须单独确认。",
+            AppText.Get(Language.RuntimeRecycleWarning),
             id,
             CleanerKind: CleanerKind.RecycleBin,
             Paths: [location],
             Icon: "i-trash",
-            Accent: "#64748b");
+            Accent: "#64748b",
+            DisplayNameKey: displayNameKey ?? Language.RuntimeRecycleBin,
+            DescriptionKey: Language.RuntimeRecycleWarning,
+            TextArgument: textArgument);
     }
 }
