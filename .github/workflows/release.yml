@@ -30,6 +30,9 @@ jobs:
 
       - name: 测试
         run: dotnet test ClearC.slnx -c Release
+      - name: 校验安装包名称与哈希门禁
+        shell: pwsh
+        run: ./scripts/tests/release_installers_test.ps1
       - name: 校验 T4 国际化资源键
         shell: pwsh
         run: ./scripts/sync_localization_keys.ps1 -Check
