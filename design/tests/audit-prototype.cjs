@@ -19,11 +19,18 @@ fs.mkdirSync(output,{recursive:true});
       fs.writeFileSync(path.join(output,name+'.geometry.csv'),'key,x,y,width,height\n'+geometry.join('\n')+'\n');
     }
     const state=()=>page.locator('body').getAttribute('data-state');
+    assert.ok(await page.evaluate(()=>['btnMin','btnMax','btnClose'].every(id=>document.getElementById(id).closest('#titlebar')&&!document.getElementById(id).closest('.appearance-tools'))),'Caption actions belong to the three desktop controls');
+    await page.locator('#btnMax').click();assert.ok(await page.locator('#appWindow').evaluate(el=>el.classList.contains('maximized')));await page.locator('#btnMax').click();assert.ok(await page.locator('#appWindow').evaluate(el=>!el.classList.contains('maximized')));
+    await page.locator('#btnMin').click();assert.equal(await page.locator('#appWindow').isVisible(),false);await page.locator('#btnRestore').click();assert.equal(await page.locator('#appWindow').isVisible(),true);
+    await page.locator('#btnClose').click();assert.equal(await page.locator('#appWindow').isVisible(),false);await page.locator('#btnRelaunch').click();assert.equal(await page.locator('#appWindow').isVisible(),true);
+    const nativeSwatches=await page.locator('#paletteDots button').evaluateAll(items=>items.map(item=>({key:item.dataset.paletteKey,color:item.style.getPropertyValue('--swatch')})));
+    assert.deepEqual(nativeSwatches.map(item=>item.key),['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky']);assert.ok(await page.evaluate(items=>items.every(item=>item.color===window.CLEARC_PALETTES[item.key].Light.StudioAccentColor),nativeSwatches));
     for(const culture of ['zh-CN','en-US'])for(const palette of ['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky'])for(const mode of ['Light','Dark']){
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture,palette,mode});
       assert.equal(await page.locator('[data-culture="'+culture+'"]').getAttribute('aria-checked'),'true');
       assert.equal(await page.locator('.palette-dot.on').getAttribute('data-palette-key'),palette);
       assert.equal(await page.locator('.palette-dot.on').count(),1);
+      assert.deepEqual(await page.locator('#paletteDots button').evaluateAll(items=>items.map(item=>({key:item.dataset.paletteKey,color:item.style.getPropertyValue('--swatch')}))),nativeSwatches);
       if(culture==='en-US')assert.deepEqual(await page.evaluate(()=>{
         const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),found=[];let node;
         while(node=walker.nextNode()){const parent=node.parentElement;if(!parent||parent.closest('script,style,select,svg')||!parent.checkVisibility())continue;if(/[\u4e00-\u9fff]/.test(node.textContent))found.push(node.textContent.trim());}return found;
