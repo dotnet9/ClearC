@@ -5,6 +5,7 @@
     x:Class="ClearC.Desktop.Views.AboutWindow" x:DataType="vm:AboutViewModel"
     Title="{codewf:I18n {x:Static l:Language.AboutTitle}}" Icon="/Assets/logo.ico"
     Width="620" Height="560" MinWidth="540" MinHeight="460" ShowInTaskbar="False"
+    CanMinimize="False" CanMaximize="False"
     WindowStartupLocation="CenterOwner" Background="{DynamicResource StudioBackground}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="24" Spacing="18">

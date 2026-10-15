@@ -8,8 +8,8 @@
     <PackageVersion Include="Avalonia" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
-    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.21" />
-    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.21" />
+    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.22" />
+    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.22" />
     <PackageVersion Include="CodeWF.Toolkit.Lang" Version="1.0.0.19" />
     <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.0.0.19" />
     <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.19" />

@@ -129,6 +129,17 @@ internal static partial class SelfCheck
 
             var about = new AboutWindow { DataContext = new AboutViewModel(model.Update) };
             about.Show(window);
+            Dispatcher.UIThread.RunJobs();
+            about.UpdateLayout();
+            var aboutMinimize = about.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "PART_MinimizeButton");
+            var aboutMaximize = about.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "PART_MaximizeRestoreButton");
+            if (!aboutMinimize.IsEffectivelyVisible || aboutMinimize.IsEnabled || !aboutMaximize.IsEffectivelyVisible || aboutMaximize.IsEnabled)
+                throw new InvalidOperationException("Actual About caption must disable minimizing and maximizing.");
+            aboutMinimize.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            aboutMaximize.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            if (about.WindowState != WindowState.Normal ||
+                !about.GetVisualDescendants().OfType<Button>().Single(button => button.Name == "PART_CloseButton").IsEnabled)
+                throw new InvalidOperationException("Disabled About actions must preserve the normal window and leave closing available.");
             foreach (var culture in new[] { "zh-CN", "en-US" })
             {
                 AppLocalizer.Instance.SetCulture(culture);
