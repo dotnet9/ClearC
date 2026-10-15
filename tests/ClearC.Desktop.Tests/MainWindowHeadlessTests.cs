@@ -27,7 +27,10 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
 
             Assert.Equal(1060, window.Width);
             Assert.Equal(700, window.Height);
-            Assert.Single(window.GetVisualDescendants().OfType<DiskDonut>());
+            Assert.Equal(44, window.TitleBarHeight);
+            var donut = Assert.Single(window.GetVisualDescendants().OfType<DiskDonut>());
+            Assert.Equal(132, donut.Bounds.Width);
+            Assert.Equal(132, donut.Bounds.Height);
             Assert.Single(window.GetVisualDescendants().OfType<LogPanelView>());
             Assert.Single(window.GetVisualDescendants().OfType<CleanupListView>());
             // 标题栏品牌区已迁入 CodeWFWindow.LeftContent（原 TitleBarView 已删除）
@@ -36,6 +39,13 @@ public sealed class MainWindowHeadlessTests(AvaloniaHeadlessFixture fixture)
             Assert.IsType<LogPanelViewModel>(Assert.Single(window.GetVisualDescendants().OfType<LogPanelView>()).DataContext);
             Assert.IsType<StatusBarViewModel>(Assert.Single(window.GetVisualDescendants().OfType<StatusBarView>()).DataContext);
             Assert.IsType<WorkflowOverlayViewModel>(Assert.Single(window.GetVisualDescendants().OfType<WorkflowOverlayView>()).DataContext);
+
+            // 工具条、结果列表及日志保持独立布局，防止列表覆盖筛选和全选控件。
+            var workspace = Assert.Single(window.GetVisualDescendants().OfType<CleanupWorkspaceView>());
+            var selectAll = workspace.GetVisualDescendants().OfType<CheckBox>().First();
+            var list = Assert.Single(workspace.GetVisualDescendants().OfType<CleanupListView>());
+            Assert.True(list.TranslatePoint(default, window)!.Value.Y >=
+                        selectAll.TranslatePoint(new Point(0, selectAll.Bounds.Height), window)!.Value.Y);
 
             window.Close();
         }, TestContext.Current.CancellationToken);

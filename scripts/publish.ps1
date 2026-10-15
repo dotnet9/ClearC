@@ -68,8 +68,8 @@ foreach ($rid in $rids) {
         "--self-contained", "true",
         "-p:RestoreForce=true",
         "-p:PublishTrimmed=true",
-        "-p:DebugType=None",
-        "-p:DebugSymbols=false",
+        "-p:DebugType=portable",
+        "-p:DebugSymbols=true",
         "-p:TreatWarningsAsErrors=false",
         "-p:ILLinkTreatWarningsAsErrors=false",
         "-o", $resolvedOutputPath
