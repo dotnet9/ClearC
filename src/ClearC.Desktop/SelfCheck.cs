@@ -94,6 +94,40 @@ internal static partial class SelfCheck
                     throw new InvalidOperationException("Language menu must update the single global culture.");
             }
             var previousCulture = AppLocalizer.Instance.Culture.Name;
+            var localeEditor = new TextBox { Text = window.Title };
+            var localeWindow = new Window { Content = localeEditor, Width = 320, Height = 100 };
+            localeWindow.Show(window);
+            Dispatcher.UIThread.RunJobs();
+            var editMenu = localeEditor.ContextFlyout as MenuFlyout ?? throw new InvalidOperationException("Semi editor menu is missing.");
+            foreach (var culture in new[] { "zh-CN", "en-US", "zh-CN", "en-US" })
+            {
+                CodeWF.Toolkit.Lang.I18nManager.Instance.Culture = CultureInfo.GetCultureInfo(culture);
+                Dispatcher.UIThread.RunJobs();
+                ResourceDictionary semiText = culture == "en-US" ? new Semi.Avalonia.Locale.en_us() : new Semi.Avalonia.Locale.zh_cn();
+                ResourceDictionary ursaText = culture == "en-US" ? new Ursa.Themes.Semi.Locale.en_us() : new Ursa.Themes.Semi.Locale.zh_cn();
+                editMenu.ShowAt(localeEditor);
+                Dispatcher.UIThread.RunJobs();
+                if (((MenuItem)editMenu.Items[1]!).Header?.ToString() != semiText["STRING_MENU_COPY"]?.ToString() ||
+                    ((MenuItem)editMenu.Items[2]!).Header?.ToString() != semiText["STRING_MENU_PASTE"]?.ToString())
+                    throw new InvalidOperationException("Existing Semi copy and paste menus must follow the global culture.");
+                editMenu.Hide();
+                var ursaTheme = application.Styles.OfType<Ursa.Themes.Semi.UrsaSemiTheme>().Single();
+                if (ursaTheme.Resources["STRING_MENU_DIALOG_CANCEL"]?.ToString() != ursaText["STRING_MENU_DIALOG_CANCEL"]?.ToString())
+                    throw new InvalidOperationException("Existing Ursa resources must follow the global culture.");
+            }
+            var hostCopyText = window.Title;
+            application.Resources["STRING_MENU_COPY"] = hostCopyText;
+            AppLocalizer.Instance.SetCulture("zh-CN");
+            Dispatcher.UIThread.RunJobs();
+            editMenu.ShowAt(localeEditor);
+            Dispatcher.UIThread.RunJobs();
+            if (((MenuItem)editMenu.Items[1]!).Header?.ToString() != hostCopyText)
+                throw new InvalidOperationException("Host resource overrides must survive third-party language updates.");
+            editMenu.Hide();
+            application.Resources.Remove("STRING_MENU_COPY");
+            AppLocalizer.Instance.SetCulture(previousCulture);
+            localeWindow.Close();
+            Console.WriteLine("Global culture, existing Semi/Ursa controls and host resource override verification passed.");
             foreach (var culture in new[] { "zh-CN", "en-US" })
                 foreach (var palette in Enum.GetValues<StudioPalette>())
                     foreach (var mode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark })

@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Threading;
 using CodeWF.Toolkit.Lang;
 using CodeWF.Toolkit.Lang.Json;
@@ -10,20 +9,6 @@ namespace ClearC.Desktop.I18n;
 /// <summary>ClearC 应用国际化入口，资源由宿主输出目录 JSON 提供。</summary>
 public sealed class AppLocalizer
 {
-    private static readonly IReadOnlyDictionary<string, Func<ResourceDictionary>> SemiCultures =
-        new Dictionary<string, Func<ResourceDictionary>>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["en-US"] = () => new Semi.Avalonia.Locale.en_us(),
-            ["zh-CN"] = () => new Semi.Avalonia.Locale.zh_cn()
-        };
-
-    private static readonly IReadOnlyDictionary<string, Func<ResourceDictionary>> UrsaCultures =
-        new Dictionary<string, Func<ResourceDictionary>>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["en-US"] = () => new Ursa.Themes.Semi.Locale.en_us(),
-            ["zh-CN"] = () => new Ursa.Themes.Semi.Locale.zh_cn()
-        };
-
     public static AppLocalizer Instance { get; } = new();
     private static bool _initialized;
 
@@ -44,7 +29,6 @@ public sealed class AppLocalizer
     {
         var culture = IsSupported(cultureName) ? CultureInfo.GetCultureInfo(cultureName) : CultureInfo.GetCultureInfo("zh-CN");
         I18nManager.Instance.Culture = culture;
-        ApplyThirdPartyCulture(culture.Name);
     }
 
     public string Get(string key)
@@ -76,7 +60,8 @@ public sealed class AppLocalizer
             throw new InvalidOperationException(error ?? "Unable to load application language resources.");
         }
 
-        ApplyThirdPartyCulture(culture.Name);
+        I18nManager.Instance.CultureChanged += OnCultureChanged;
+        ApplyThirdPartyCulture();
         _initialized = true;
     }
 
@@ -97,27 +82,23 @@ public sealed class AppLocalizer
         }
     }
 
-    public static void ApplyThirdPartyCulture(string cultureName)
+    private static void OnCultureChanged(object? sender, EventArgs args) => ApplyThirdPartyCulture();
+
+    /// <summary>更新主题自身的内建资源，保留宿主与局部资源的同键覆盖。</summary>
+    private static void ApplyThirdPartyCulture()
     {
         if (Application.Current is not { PlatformSettings: not null } application) return;
-        // 目录扫描可在线程池初始化文本资源，第三方 XAML 资源必须在界面线程创建和合并。
+        // 目录扫描可在线程池初始化文本资源，第三方主题必须在界面线程更新。
         if (!Dispatcher.UIThread.CheckAccess())
         {
-            Dispatcher.UIThread.Post(() => ApplyThirdPartyCulture(cultureName));
+            Dispatcher.UIThread.Post(ApplyThirdPartyCulture);
             return;
         }
-        if (SemiCultures.TryGetValue(cultureName, out var semi)) MergeCultureResources(application.Resources, semi());
-        if (UrsaCultures.TryGetValue(cultureName, out var ursa)) MergeCultureResources(application.Resources, ursa());
+        var culture = Instance.Culture;
+        foreach (var theme in application.Styles.OfType<Semi.Avalonia.SemiTheme>()) theme.Locale = culture;
+        foreach (var theme in application.Styles.OfType<Ursa.Themes.Semi.UrsaSemiTheme>()) theme.Locale = culture;
     }
 
     private static bool IsSupported(string? value) => value is "zh-CN" or "en-US";
 
-    private static void MergeCultureResources(IResourceDictionary target, ResourceDictionary culture)
-    {
-        foreach (var item in culture)
-        {
-            if (target.ContainsKey(item.Key)) target.Remove(item.Key);
-            target.Add(item);
-        }
-    }
 }
