@@ -15,6 +15,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
     private readonly StudioThemeController _controller;
     private readonly AppearanceSettingsStore _store;
     private readonly Action<Exception>? _onSaveError;
+    private bool _disposed;
 
     public AppearanceViewModel(StudioThemeController controller, AppearanceSettingsStore store,
         Action<Exception>? onSaveError = null)
@@ -69,6 +70,12 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
 
     private void OnCultureChanged(object? sender, EventArgs args)
     {
+        if (_disposed) return;
+        if (!global::Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        {
+            global::Avalonia.Threading.Dispatcher.UIThread.Post(() => OnCultureChanged(sender, args));
+            return;
+        }
         foreach (var option in Modes) option.Refresh();
         foreach (var option in Palettes) option.Refresh();
         foreach (var option in Languages) option.Refresh();
@@ -84,6 +91,8 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
         _controller.PropertyChanged -= OnThemeChanged;
         AppLocalizer.Instance.CultureChanged -= OnCultureChanged;
         _controller.Dispose();

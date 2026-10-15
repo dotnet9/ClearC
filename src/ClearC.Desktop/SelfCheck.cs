@@ -93,6 +93,32 @@ internal static partial class SelfCheck
                 if (model.Appearance.CultureName != item.CommandParameter?.ToString())
                     throw new InvalidOperationException("Language menu must update the single global culture.");
             }
+            // 后台模块切语必须回到界面线程；同一个实际菜单仍能选回原语言。
+            foreach (var culture in new[] { "zh-CN", "en-US", "zh-CN", "en-US" })
+            {
+                languageMenu.ShowAt(window.FindControl<Button>("TitleLanguageButton")!);
+                Dispatcher.UIThread.RunJobs();
+                Task.Run(() => CodeWF.Toolkit.Lang.I18nManager.Instance.Culture = CultureInfo.GetCultureInfo(culture)).GetAwaiter().GetResult();
+                Dispatcher.UIThread.RunJobs();
+                if (model.Appearance.CultureName != culture || new AppearanceSettingsStore(appearancePath).Load().CultureName != culture)
+                    throw new InvalidOperationException("Background global culture must synchronize the current appearance and saved preference.");
+                var returnCulture = culture == "en-US" ? "zh-CN" : "en-US";
+                var returnItem = languageMenu.Items.OfType<MenuItem>().Single(item => item.CommandParameter as string == returnCulture);
+                returnItem.Command!.Execute(returnItem.CommandParameter);
+                Dispatcher.UIThread.RunJobs();
+                if (AppLocalizer.Instance.Culture.Name != returnCulture || new AppearanceSettingsStore(appearancePath).Load().CultureName != returnCulture)
+                    throw new InvalidOperationException("The existing language menu must switch back after a background global change.");
+                languageMenu.Hide();
+            }
+            var scopedAppearancePath = Path.Combine(probeDirectory, "closed-appearance.json");
+            var scopedAppearance = new AppearanceViewModel(new StudioThemeController(application), new AppearanceSettingsStore(scopedAppearancePath));
+            var savedBeforeClose = File.Exists(scopedAppearancePath) ? File.ReadAllText(scopedAppearancePath) : null;
+            var queuedCulture = AppLocalizer.Instance.Culture.Name == "en-US" ? "zh-CN" : "en-US";
+            Task.Run(() => CodeWF.Toolkit.Lang.I18nManager.Instance.Culture = CultureInfo.GetCultureInfo(queuedCulture)).GetAwaiter().GetResult();
+            scopedAppearance.Dispose();
+            Dispatcher.UIThread.RunJobs();
+            if ((File.Exists(scopedAppearancePath) ? File.ReadAllText(scopedAppearancePath) : null) != savedBeforeClose)
+                throw new InvalidOperationException("Disposed appearance must ignore already queued culture notifications.");
             var previousCulture = AppLocalizer.Instance.Culture.Name;
             var localeEditor = new TextBox { Text = window.Title };
             var localeWindow = new Window { Content = localeEditor, Width = 320, Height = 100 };
