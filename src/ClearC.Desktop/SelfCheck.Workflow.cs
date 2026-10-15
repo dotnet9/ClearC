@@ -6,10 +6,13 @@ using Avalonia.VisualTree;
 using ClearC.Core.Models;
 using ClearC.Core.Safety;
 using ClearC.Core.Services;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Scanning;
+using ClearC.Desktop.Services;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
+using CodeWF.Avalonia.Controls.Themes;
 
 namespace ClearC.Desktop;
 
@@ -20,9 +23,15 @@ internal static partial class SelfCheck
     {
         var scanner = new WorkflowScanner();
         var executor = new WorkflowExecutor();
+        var preferencePath = Path.Combine(Path.GetTempPath(), "clearc-workflow-" + Guid.NewGuid().ToString("N"), "appearance.json");
+        var appearance = new AppearanceViewModel(new StudioThemeController(Application.Current!), new AppearanceSettingsStore(preferencePath));
+        appearance.Mode = StudioThemeMode.Light;
+        appearance.Palette = StudioPalette.DotNet;
         using var model = new MainWindowViewModel(scanner, executor, new CleanupSafetyPolicy(),
             new DiskSnapshot("C:", "NTFS", 256L * 1024 * 1024 * 1024, 64L * 1024 * 1024 * 1024),
-            new InMemoryLogStore(NullApplicationLogger.Instance));
+            new InMemoryLogStore(NullApplicationLogger.Instance), elevationService: new FixtureElevation(),
+            initialDrives: [new("C:", "NTFS", 256L << 30, 64L << 30), new("D:", "NTFS", 128L << 30, 16L << 30)],
+            appearance: appearance);
         var window = new MainWindow { DataContext = model };
         try
         {
@@ -66,7 +75,12 @@ internal static partial class SelfCheck
             if (!model.Items.Any(item => item.HasResult))
                 throw new InvalidOperationException("Completed cleanup did not update the rendered result model.");
         }
-        finally { window.Close(); }
+        finally
+        {
+            window.Close();
+            var directory = Path.GetDirectoryName(preferencePath)!;
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
 
         void WaitFor(WorkflowState state)
         {
@@ -83,7 +97,7 @@ internal static partial class SelfCheck
 
         void Save(string state)
         {
-            if (captureDirectory is not null) Capture(window, captureDirectory, "workflow-" + state + ".png");
+            if (captureDirectory is not null) Capture(window, captureDirectory, "workflow-" + AppLocalizer.Instance.Culture.Name + "-" + state + ".png");
         }
     }
 

@@ -712,3 +712,83 @@ body[data-state="scanning"] .list-zone::after {
 ::-webkit-scrollbar-thumb { background: #cdd7e6; border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-thumb:hover { background: #b3c1d8; border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+/* 外观语义与共享 Studio 主题一致，深浅色不重建布局。 */
+.app-window { border-color:var(--line); }
+.stage { background:var(--bg); }
+.titlebar { flex:none; }
+.appearance-tools { display:flex;align-items:center;gap:6px;margin-right:8px; }
+.appearance-tools select { height:28px;min-width:90px;border:0;border-radius:4px;background:var(--panel);color:var(--text);font:12px var(--sans);padding:0 8px;text-align:left; }
+.appearance-tools select[data-choice="palette"] { width:140px; }
+.appearance-tools select[data-choice="culture"] { width:94px; }
+.palette-dots { display:flex;gap:2px;align-items:center; }
+.palette-dot { width:20px;height:24px;padding:3px;border:1px solid transparent;border-radius:10px;background:transparent;cursor:pointer;display:grid;place-items:center; }
+.palette-dot::after { content:'';display:block;width:12px;height:12px;border-radius:50%;background:var(--swatch); }
+.palette-dot.on { border-color:var(--acc);background:var(--raised); }
+.hero { height:160px; }
+.hi-stat b { background:var(--grad);background-clip:text; }
+.hi-stat b.placeholder { background:none; }
+.d-track,.pbar,.dc-bar { stroke:var(--raised);background:var(--raised); }
+.tb-btn:hover { background:var(--raised); }
+.elevation-banner { flex:none;min-height:43px;margin:0 26px 10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid color-mix(in srgb,var(--amber) 45%,var(--win));border-radius:8px;background:color-mix(in srgb,var(--amber) 8%,var(--win));color:var(--amber);font-size:12px; }
+.elevation-banner>span { display:flex;align-items:center;gap:9px; }
+.elevation-banner .icon { width:15px;height:15px; }
+.elevation-banner .mini { height:24px; }
+.db-cards { flex-wrap:nowrap; }
+.dcard { flex:none;width:330px;min-height:65px;border-color:var(--line2);background:var(--win);padding:10px 14px; }
+.dcard.on,.dcard.on.locked { border-color:color-mix(in srgb,var(--acc) 35%,transparent);background:color-mix(in srgb,var(--acc) 8%,var(--win));box-shadow:none; }
+.dcard:hover,.dcard.locked:hover { border-color:var(--acc);background:var(--panel); }
+.dc-bar { width:150px; }
+.dc-type,.dc-type.data,.ds-letter { background:var(--raised);color:var(--acc);border-color:var(--line); }
+.listbar { min-height:26px; }
+.listbar .chk { font-size:11.5px; }
+.list-zone { padding:0 16px 10px; }
+.list { margin:0;padding-right:10px; }
+.g-head,.ds-head { background:var(--win); }
+.row:hover,.row.current,.ctx-item:hover,.row-detail { background:var(--raised); }
+.row .row-size s { display:block;opacity:.4;font-weight:400; }
+.row .row-size .freed { display:block; }
+.row-open:hover,.btn.ghost:hover { background:var(--panel);border-color:var(--acc); }
+.empty-icon { width:56px;height:56px;background:color-mix(in srgb,var(--acc) 8%,transparent);border-color:color-mix(in srgb,var(--acc) 35%,transparent); }
+.empty-icon .icon { width:25px;height:25px; }
+.console { background:var(--panel); }
+.con-body { color:var(--text);line-height:17px; }
+.log-time { color:var(--text3); }
+.lvl-INFO { color:var(--acc); }
+.lvl-OK { color:var(--green); }.lvl-WARN { color:var(--amber); }.lvl-ERR { color:var(--red); }
+.con-title em { background:var(--raised); }
+.statusbar { background:var(--panel); }
+.sb-right { display:flex;align-items:center;gap:12px;font:11px var(--mono); }
+.sb-right .mini { height:24px;font-family:var(--sans); }
+.ctx { background:var(--win);border-color:var(--line); }
+.ctx-item { width:100%;background:transparent;border:0;color:var(--text);font-family:var(--sans);text-align:left; }
+.m-list { background:var(--panel); }
+.m-warn { background:color-mix(in srgb,var(--amber) 8%,var(--win));border-color:color-mix(in srgb,var(--amber) 35%,transparent);color:var(--amber); }
+.m-note { background:var(--raised);border-color:var(--line);color:var(--text2); }
+.about-window { width:620px;height:560px;max-height:90vh;margin:auto;border:1px solid var(--line);border-radius:12px;padding:0;color:var(--text);background:var(--win);box-shadow:0 30px 80px #0004;font:13px var(--sans); }
+.about-window::backdrop { background:#0005; }
+.about-window header { height:44px;display:flex;align-items:center;justify-content:space-between;padding-left:16px;border-bottom:1px solid var(--line); }
+.about-content { padding:24px; }
+.about-content h2 { font-size:22px;margin-bottom:6px; }
+.about-content p { color:var(--text2);line-height:1.5;margin:6px 0; }
+.about-update { margin:18px 0;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel); }
+.about-update-heading { display:flex;align-items:center;gap:14px;justify-content:space-between; }
+.about-update-heading>div { flex:1; }
+.about-update-heading p { font-size:12px; }
+.about-update .btn { min-width:100px;padding:0 12px; }
+.about-update progress { width:100%;accent-color:var(--acc); }
+.about-content dl { display:grid;grid-template-columns:auto 1fr;gap:12px 20px;margin-top:18px; }
+.about-content dt { color:var(--text2); }.about-content a { color:var(--acc); }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important;transition:none!important; } }
+body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:176px; }
+.empty { min-height:0; }
+.empty-icon { border-style:solid; }
+.appearance-tools select[data-choice="mode"] { width:104px; }
+.appearance-tools select[data-choice="palette"] { width:148px; }
+.appearance-tools select[data-choice="culture"] { width:116px; }
+.hero-info { flex:1; }
+.hi-title { height:20px;line-height:20px; }
+.hi-stat { height:30px;margin:3px 0;line-height:30px; }
+.hi-sub { height:16px;line-height:16px; }
+.hi-actions { margin-top:6px; }
+.hi-progress { margin-top:4px;height:14px;line-height:14px; }
+body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:160px; }

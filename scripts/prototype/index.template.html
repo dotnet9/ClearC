@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClearC · 磁盘清理交互原型</title>
+<link rel="stylesheet" href="assets/theme.css">
+</head>
+<body data-state="idle">
+<div class="stage">
+
+  <!-- ══════════ 主窗体（唯一入口，所有状态由交互推进） ══════════ -->
+  <div class="app-window" id="appWindow">
+
+    <!-- 标题栏：可拖动 / 双击最大化 -->
+    <header class="titlebar" id="titlebar">
+      <div class="tb-left">
+        <span class="app-logo"><svg class="icon"><use href="#i-logo"/></svg></span>
+        <b class="app-name">CLEARC</b>
+        <span class="tb-sub" data-i18n="Tagline"></span>
+      </div>
+      <div class="tb-right">
+        <div class="appearance-tools"><select data-choice="mode" aria-label="Theme"></select><div class="palette-dots" id="paletteDots"></div><select data-choice="palette" aria-label="Palette"></select><select data-choice="culture" aria-label="Language"></select></div>
+        <button class="tb-btn" id="btnMin" data-title="Prototype.Minimize"><svg class="icon"><use href="#i-min"/></svg></button>
+        <button class="tb-btn" id="btnMax" data-title="Prototype.Maximize"><svg class="icon"><use href="#i-max"/></svg></button>
+        <button class="tb-btn tb-close" id="btnClose" data-title="Prototype.Close"><svg class="icon"><use href="#i-close"/></svg></button>
+      </div>
+    </header>
+
+    <main class="page">
+
+      <!-- ── 总览：磁盘环图 + 统计 + 操作 ── -->
+      <section class="hero">
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 150 150">
+            <defs>
+              <linearGradient id="dg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#2f6bff"/><stop offset="1" stop-color="#7c5cff"/>
+              </linearGradient>
+            </defs>
+            <circle class="d-track" cx="75" cy="75" r="56"/>
+            <circle class="d-fill" id="donutFill" cx="75" cy="75" r="56" transform="rotate(-90 75 75)"/>
+          </svg>
+          <div class="d-center"><b id="donutPct">67%</b><span data-i18n="Workspace.Used"></span></div>
+        </div>
+
+        <div class="hero-info">
+          <div class="hi-title"><b id="hiTitle">C: 系统盘</b><span id="hiSub">Win 10 Pro x64 · SSD · 535.9 GB · NTFS</span></div>
+          <div class="hi-stat"><span id="heroLabel">可释放空间</span><b id="heroStat" class="placeholder">待扫描</b></div>
+          <div class="hi-sub"><span data-i18n="Workspace.Used"></span> <b id="diskUsed"></b> · <span data-i18n="Workspace.Available"></span> <b id="diskFree"></b><span id="diskScope"></span></div>
+          <div class="hi-actions">
+            <button class="btn primary" id="btnMain"></button>
+            <button class="btn ghost" id="btnSecond"></button>
+          </div>
+          <div class="hi-progress" id="progressWrap" hidden>
+            <div class="pbar"><i id="pbarFill"></i></div>
+            <span id="progressText"></span>
+          </div>
+        </div>
+      </section>
+
+      <div class="elevation-banner"><span><svg class="icon"><use href="#i-alert"/></svg><span data-i18n="Workspace.NotElevated"></span></span><button class="mini" id="btnAdmin" data-i18n="Workspace.RestartElevated"></button></div>
+
+      <!-- ── 盘符选择（扫描范围，复选框勾选需要扫描的盘符） ── -->
+      <section class="diskbar">
+        <div class="db-head"><span class="db-title" data-i18n="Workspace.ScanScope"></span><span class="db-hint" id="dbHint"></span></div>
+        <div class="db-cards" id="dbCards"></div>
+      </section>
+
+      <!-- ── 全选 + 已选统计 ── -->
+      <div class="listbar">
+        <label class="chk">
+          <input type="checkbox" id="checkAll">
+          <span class="box"><svg class="icon"><use href="#i-check"/></svg></span><span data-i18n="Workspace.SelectAll"></span>
+        </label>
+        <div class="listbar-right"><span class="sel-info" id="selInfo"></span>
+          <label class="chk"><input type="checkbox" id="hideZero" checked><span class="box"><svg class="icon"><use href="#i-check"/></svg></span><span data-i18n="Workspace.HideZeroByte"></span></label>
+          <label class="chk"><input type="checkbox" id="fastMode" checked><span class="box"><svg class="icon"><use href="#i-check"/></svg></span><span data-i18n="Workspace.FastMode"></span></label></div>
+      </div>
+
+      <!-- ── 结果清单 ── -->
+      <div class="list-zone">
+        <div class="list" id="list"></div>
+      </div>
+    </main>
+
+    <!-- ── 日志视图 ── -->
+    <section class="console">
+      <div class="con-head">
+        <span class="con-title"><i class="tick"></i><span data-i18n="Log.Title"></span><em id="logCount">0</em></span>
+        <span class="con-actions"><button class="mini" id="btnCopyLog" data-i18n="Log.Copy"></button><button class="mini" id="btnExportLog" data-i18n="Log.Export"></button><button class="mini" id="btnClearLog" data-i18n="Log.Clear"></button></span>
+      </div>
+      <div class="con-body" id="logBody"></div>
+    </section>
+
+    <!-- ── 状态栏 ── -->
+    <footer class="statusbar">
+      <span class="sb-left"><i class="dot" id="sbDot"></i><span id="sbText">SYSTEM READY · 等待指令</span></span>
+      <span class="sb-right"><span id="stateCode"></span><button class="mini" id="btnAbout" data-i18n="About.Title"></button></span>
+    </footer>
+  </div>
+
+  <!-- 最小化后的任务栏胶囊（点击恢复窗口） -->
+  <div class="taskbar" id="taskbar" hidden>
+    <button id="btnRestore" data-title="Prototype.Restore">
+      <span class="app-logo"><svg class="icon"><use href="#i-logo"/></svg></span>
+      CLEARC · <span data-i18n="Prototype.Restore"></span>
+    </button>
+  </div>
+</div>
+
+<!-- 右键菜单（打开所在目录 / 复制路径 / 勾选 / 详情） -->
+<div class="ctx" id="ctxMenu" hidden></div>
+
+<!-- 确认清理模态框（按当前勾选动态生成） -->
+<div class="mask" id="mask" hidden>
+  <div class="modal">
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-body" id="mBody"></div>
+    <div class="m-actions" id="mActions"></div>
+  </div>
+</div>
+
+<!-- 关闭应用后的重启层 -->
+<div class="mask" id="relaunch" hidden>
+  <div class="relaunch-box">
+    <span class="app-logo"><svg class="icon"><use href="#i-logo"/></svg></span>
+    <div class="relaunch-title" data-i18n="Prototype.RelaunchTitle"></div>
+    <div class="relaunch-sub" data-i18n="Prototype.RelaunchHint"></div>
+    <button class="btn primary" id="btnRelaunch" data-i18n="Prototype.Relaunch"></button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" hidden></div>
+
+<dialog id="about" class="about-window">
+  <header><b data-i18n="About.Title"></b><button class="tb-btn" id="aboutClose">×</button></header>
+  <div class="about-content"><h2>ClearC</h2><p data-i18n="About.Description"></p>
+    <section class="about-update"><div class="about-update-heading"><div><b data-i18n="Update.Check"></b><p data-i18n="About.UpdateHint"></p></div><button class="btn primary" id="updateAction"></button></div><p id="updateStatus" role="status"></p><progress id="updateProgress" value="52" max="100" hidden></progress><button id="updateCancel" class="mini" data-i18n="About.Cancel" hidden></button></section>
+    <dl><dt data-i18n="About.Version"></dt><dd>0.2.7</dd><dt data-i18n="About.Platform"></dt><dd>.NET 10 · Avalonia 12.1.4</dd><dt data-i18n="About.CompileTime"></dt><dd>2026-10-15</dd><dt data-i18n="About.Author"></dt><dd data-i18n="About.AuthorName"></dd><dt data-i18n="About.Repository"></dt><dd><a href="https://github.com/dotnet9/ClearC">github.com/dotnet9/ClearC</a></dd><dt data-i18n="About.Copyright"></dt><dd>Copyright © 2026 Dotnet9</dd></dl>
+  </div>
+</dialog>
+<script src="assets/resources.js"></script>
+<script src="assets/palette-tokens.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
