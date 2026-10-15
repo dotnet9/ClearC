@@ -1,9 +1,9 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using CodeWF.Avalonia.Lang;
-using CodeWF.Avalonia.Lang.Json;
+using CodeWF.Toolkit.Lang;
+using CodeWF.Toolkit.Lang.Json;
 
 namespace ClearC.Desktop.I18n;
 
@@ -64,7 +64,13 @@ public sealed class AppLocalizer
         }
 
         var culture = IsSupported(cultureName) ? CultureInfo.GetCultureInfo(cultureName) : CultureInfo.GetCultureInfo("zh-CN");
-        var plugin = new JsonLangPlugin { ResourceFolder = Path.Combine(AppContext.BaseDirectory, "I18n") };
+        // macOS 标准应用包把宿主资源放在 Contents/Resources。
+        var bundledResources = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "Resources", "I18n"));
+        var plugin = new JsonLangPlugin
+        {
+            ResourceFolder = OperatingSystem.IsMacOS() && Directory.Exists(bundledResources)
+                ? bundledResources : Path.Combine(AppContext.BaseDirectory, "I18n")
+        };
         if (!I18nManager.Instance.Register(plugin, culture, out var error))
         {
             throw new InvalidOperationException(error ?? "Unable to load application language resources.");

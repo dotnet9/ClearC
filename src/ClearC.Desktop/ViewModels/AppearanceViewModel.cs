@@ -1,3 +1,6 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using ClearC.Desktop.I18n;
 using ClearC.Desktop.Services;
 using CodeWF.Avalonia.Controls.Themes;
@@ -32,7 +35,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
         new(StudioThemeMode.Dark, Language.AppearanceDark)
     ];
 
-    public IReadOnlyList<AppearanceOption<StudioPalette>> Palettes { get; } =
+    public IReadOnlyList<PaletteChoice> Palettes { get; } =
     [
         new(StudioPalette.DotNet, Language.AppearanceDotNet),
         new(StudioPalette.Aurora, Language.AppearanceAurora),
@@ -85,9 +88,18 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
 }
 
 /// <summary>选择项保持实例稳定，切换语言仅刷新显示文本。</summary>
-public sealed class AppearanceOption<T>(T value, string resourceKey) : ReactiveObject
+public class AppearanceOption<T>(T value, string resourceKey) : ReactiveObject
 {
     public T Value { get; } = value;
     public string DisplayName => AppText.Get(resourceKey);
     internal void Refresh() => this.RaisePropertyChanged(nameof(DisplayName));
+}
+
+/// <summary>配色预览从共享主题字典读取，不在业务代码中重复维护颜色。</summary>
+public sealed class PaletteChoice(StudioPalette value, string resourceKey) : AppearanceOption<StudioPalette>(value, resourceKey)
+{
+    public IBrush PreviewBrush { get; } = Application.Current is { } application &&
+        application.TryGetResource("StudioAccentColor", StudioTheme.GetVariant(value, false), out var color) && color is Color resolved
+            ? new SolidColorBrush(resolved)
+            : Brushes.Transparent;
 }

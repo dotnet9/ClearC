@@ -8,11 +8,11 @@
     <PackageVersion Include="Avalonia" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
-    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.18" />
-    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.18" />
-    <PackageVersion Include="CodeWF.Toolkit.Lang" Version="1.0.0.17" />
-    <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.0.0.17" />
-    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.17" />
+    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.20" />
+    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.20" />
+    <PackageVersion Include="CodeWF.Toolkit.Lang" Version="1.0.0.19" />
+    <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.0.0.19" />
+    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.19" />
     <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.2.0" />
     <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
     <PackageVersion Include="ReactiveUI" Version="24.1.0" />

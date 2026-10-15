@@ -1,4 +1,4 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:ClearC.Desktop.Controls">
   <Styles.Resources>
@@ -430,5 +430,23 @@
 
   <Style Selector="ScrollViewer">
     <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+  </Style>
+  <!-- 标题栏配色圆点保留紧凑尺寸和明确的选中环。 -->
+  <Style Selector="ListBox.paletteSwatches">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="ListBox.paletteSwatches ListBoxItem">
+    <Setter Property="Width" Value="20" /><Setter Property="Height" Value="24" />
+    <Setter Property="MinHeight" Value="0" /><Setter Property="Padding" Value="3" />
+    <Setter Property="CornerRadius" Value="10" /><Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ListBox.paletteSwatches ListBoxItem:selected">
+    <Setter Property="BorderBrush" Value="{DynamicResource StudioAccent}" />
+    <Setter Property="Background" Value="{DynamicResource StudioRaised}" />
   </Style>
 </Styles>

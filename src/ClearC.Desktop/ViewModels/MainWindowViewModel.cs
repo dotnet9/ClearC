@@ -8,9 +8,9 @@ using ClearC.Core.Models;
 using ClearC.Core.Safety;
 using ClearC.Core.Selection;
 using ClearC.Core.Services;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
-using ClearC.Desktop.I18n;
 using ClearC.Desktop.Themes;
 using ReactiveUI;
 
@@ -1435,6 +1435,7 @@ public sealed class MainWindowViewModel : ReactiveObject, IDisposable
         this.RaisePropertyChanged(nameof(ToastText));
         this.RaisePropertyChanged(nameof(IsToastSuccess));
         this.RaisePropertyChanged(nameof(IsElevationBannerVisible));
+        this.RaisePropertyChanged(nameof(ElevationBannerText));
         this.RaisePropertyChanged(nameof(ScopeHint));
         RefreshSelectionProperties();
     }

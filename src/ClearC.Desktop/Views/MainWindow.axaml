@@ -1,4 +1,4 @@
-﻿<codewf:CodeWFWindow xmlns="https://github.com/avaloniaui"
+<codewf:CodeWFWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:codewf="https://codewf.com"
         xmlns:controls="using:ClearC.Desktop.Controls"
@@ -44,28 +44,31 @@
     </StackPanel>
   </codewf:CodeWFWindow.LeftContent>
   <codewf:CodeWFWindow.RightContent>
-    <Button Margin="0,0,8,0" Padding="10,3" Height="28" MinHeight="0"
-            Content="{i18n:I18n {x:Static l:Language.AppearanceTitle}}">
-      <Button.Flyout>
-        <Flyout Placement="BottomEdgeAlignedRight">
-          <Grid Width="290" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="12" ColumnSpacing="14"
-                DataContext="{Binding Appearance}" x:DataType="vm:AppearanceViewModel">
-            <TextBlock VerticalAlignment="Center" Text="{i18n:I18n {x:Static l:Language.AppearanceMode}}" />
-            <ComboBox Grid.Column="1" ItemsSource="{Binding Modes}" SelectedValueBinding="{Binding Value}"
-                      SelectedValue="{Binding Mode, Mode=TwoWay}" DisplayMemberBinding="{Binding DisplayName}"
-                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
-            <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{i18n:I18n {x:Static l:Language.AppearancePalette}}" />
-            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Palettes}" SelectedValueBinding="{Binding Value}"
-                      SelectedValue="{Binding Palette, Mode=TwoWay}" DisplayMemberBinding="{Binding DisplayName}"
-                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
-            <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{i18n:I18n {x:Static l:Language.AppearanceLanguage}}" />
-            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Languages}" SelectedValueBinding="{Binding Value}"
-                      SelectedValue="{Binding CultureName, Mode=TwoWay}" DisplayMemberBinding="{Binding DisplayName}"
-                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
-          </Grid>
-        </Flyout>
-      </Button.Flyout>
-    </Button>
+    <Grid ColumnDefinitions="104,Auto,148,116" ColumnSpacing="6" Margin="0,0,8,0"
+          DataContext="{Binding Appearance}" x:DataType="vm:AppearanceViewModel" VerticalAlignment="Center">
+      <ComboBox Height="28" MinHeight="0" Padding="8,0" ItemsSource="{Binding Modes}"
+                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Mode, Mode=TwoWay}"
+                DisplayMemberBinding="{Binding DisplayName}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceMode}}" />
+      <ListBox Grid.Column="1" Classes="paletteSwatches" ItemsSource="{Binding Palettes}"
+               SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Palette, Mode=TwoWay}"
+               AutoScrollToSelectedItem="False">
+        <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:PaletteChoice">
+            <Ellipse Width="12" Height="12" Fill="{Binding PreviewBrush}" ToolTip.Tip="{Binding DisplayName}" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <ComboBox Grid.Column="2" Height="28" MinHeight="0" Padding="8,0" ItemsSource="{Binding Palettes}"
+                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Palette, Mode=TwoWay}"
+                DisplayMemberBinding="{Binding DisplayName}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearancePalette}}" />
+      <ComboBox Grid.Column="3" Height="28" MinHeight="0" Padding="8,0" ItemsSource="{Binding Languages}"
+                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding CultureName, Mode=TwoWay}"
+                DisplayMemberBinding="{Binding DisplayName}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceLanguage}}" />
+    </Grid>
   </codewf:CodeWFWindow.RightContent>
   <Grid RowDefinitions="Auto,*,160,28">
     <Border x:Name="PlatformNoticeBanner" Grid.Row="0" IsVisible="False"

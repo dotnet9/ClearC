@@ -24,18 +24,18 @@
 
       <StackPanel Grid.Column="2" VerticalAlignment="Center">
         <StackPanel Orientation="Horizontal" Spacing="10">
-          <TextBlock FontSize="15" FontWeight="Bold" Text="{Binding DriveTitle}" />
+          <TextBlock FontSize="15" LineHeight="20" FontWeight="Bold" Text="{Binding DriveTitle}" />
           <TextBlock VerticalAlignment="Center" FontSize="11"
                      Foreground="{DynamicResource ClearCText3}" Text="{Binding DriveInfo}" />
         </StackPanel>
 
-        <StackPanel Margin="0,9,0,3" Orientation="Horizontal" Spacing="12">
+        <StackPanel Margin="0,3,0,3" Orientation="Horizontal" Spacing="12">
           <TextBlock VerticalAlignment="Bottom" Margin="0,0,0,3" FontSize="12"
                      Foreground="{DynamicResource ClearCText2}" Text="{Binding HeroLabel}" />
-          <TextBlock FontSize="26" FontWeight="ExtraBold" LetterSpacing="-0.5"
+          <TextBlock FontSize="26" LineHeight="30" FontWeight="ExtraBold" LetterSpacing="-0.5"
                      Foreground="{DynamicResource ClearCTextGradient}"
                      IsVisible="{Binding !IsHeroPlaceholder}" Text="{Binding HeroValue}" />
-          <TextBlock FontSize="16" FontWeight="Normal"
+          <TextBlock FontSize="16" LineHeight="30" FontWeight="Normal"
                      Foreground="{DynamicResource ClearCText3}"
                      IsVisible="{Binding IsHeroPlaceholder}" Text="{Binding HeroValue}" />
         </StackPanel>
@@ -48,7 +48,7 @@
           <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding DiskFreeText}" />
         </StackPanel>
 
-        <StackPanel Margin="0,15,0,0" Orientation="Horizontal" Spacing="10">
+        <StackPanel Margin="0,6,0,0" Orientation="Horizontal" Spacing="10">
           <Grid>
             <Border Classes="btnGlow"
                     Margin="-3"
@@ -66,7 +66,7 @@
                   IsEnabled="{Binding IsSecondaryEnabled}" Content="{Binding SecondaryButtonText}" />
         </StackPanel>
 
-        <StackPanel Margin="0,13,0,0" Orientation="Horizontal" Spacing="12"
+        <StackPanel Margin="0,4,0,0" Orientation="Horizontal" Spacing="12"
                     IsVisible="{Binding IsProgressVisible}">
           <Border Width="230" Height="6" VerticalAlignment="Center"
                   Background="{DynamicResource ClearCProgressTrack}"
@@ -75,7 +75,7 @@
                     Background="{DynamicResource ClearCAccentGradient}"
                     CornerRadius="{DynamicResource ClearCRadiusPill}" />
           </Border>
-          <TextBlock MaxWidth="330" VerticalAlignment="Center" FontSize="11.5"
+          <TextBlock MaxWidth="330" VerticalAlignment="Center" FontSize="11.5" LineHeight="14"
                      TextTrimming="CharacterEllipsis"
                      Foreground="{DynamicResource ClearCText2}" Text="{Binding ProgressText}" />
         </StackPanel>
