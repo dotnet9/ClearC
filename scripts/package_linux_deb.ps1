@@ -37,6 +37,9 @@ if ((Test-Path -LiteralPath $outputPath) -and -not $Force) {
 }
 
 $staging = Join-Path $repositoryRoot "artifacts/deb/$RuntimeIdentifier/clearc"
+$staging = [IO.Path]::GetFullPath($staging)
+$stagingPrefix = [IO.Path]::GetFullPath((Join-Path $repositoryRoot 'artifacts/deb')).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+if (-not $staging.StartsWith($stagingPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw "Unexpected staging path: $staging" }
 if (Test-Path -LiteralPath $staging) {
     Remove-Item -LiteralPath $staging -Recurse -Force
 }
@@ -45,10 +48,34 @@ New-Item -ItemType Directory -Path (Join-Path $staging "usr/local/share/ClearC")
 
 # 程序文件
 Copy-Item -Path (Join-Path $SourceDirectory "*") -Destination (Join-Path $staging "usr/local/share/ClearC/") -Recurse -Force
+# 调试符号保留在独立构建产物，不进入安装包。
+Get-ChildItem -LiteralPath (Join-Path $staging 'usr/local/share/ClearC') -Recurse -File |
+    Where-Object { $_.Extension -in '.pdb', '.dbg' } | Remove-Item -Force
+
+# 安装后提供标准命令和桌面入口；功能仍遵循应用自身的平台限制。
+$launcherDirectory = Join-Path $staging 'usr/local/bin'
+$desktopDirectory = Join-Path $staging 'usr/share/applications'
+$iconDirectory = Join-Path $staging 'usr/share/pixmaps'
+New-Item -ItemType Directory -Path $launcherDirectory, $desktopDirectory, $iconDirectory -Force | Out-Null
+$launcherPath = Join-Path $launcherDirectory 'clearc'
+[IO.File]::WriteAllText($launcherPath, '#!/bin/sh' + "`n" + 'exec /usr/local/share/ClearC/ClearC.Desktop "$@"' + "`n")
+$desktopPath = Join-Path $desktopDirectory 'clearc.desktop'
+$desktop = @'
+[Desktop Entry]
+Type=Application
+Name=ClearC
+Comment=Windows disk cleanup tool; other platforms are not supported yet
+Exec=clearc
+Icon=clearc
+Terminal=false
+Categories=Utility;System;
+'@
+[IO.File]::WriteAllText($desktopPath, $desktop.ReplaceLineEndings("`n") + "`n")
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'logo.png') -Destination (Join-Path $iconDirectory 'clearc.png') -Force
 
 # control（dpkg-deb 要求 DEBIAN/control 为 root 所属、644）
 $installedSizeKb = [Math]::Ceiling(
-    ((Get-ChildItem -LiteralPath $SourceDirectory -Recurse -File | Measure-Object Length -Sum).Sum) / 1KB)
+    ((Get-ChildItem -LiteralPath (Join-Path $staging 'usr') -Recurse -File | Measure-Object Length -Sum).Sum) / 1KB)
 $control = @"
 Package: clearc
 Version: $Version
@@ -65,6 +92,9 @@ Set-Content -LiteralPath (Join-Path $staging "DEBIAN/control") -Value ($control 
 # dpkg-deb 需要 posix 权限语义；control 文件权限固定 644
 if ($IsLinux) {
     $null = chmod 644 (Join-Path $staging "DEBIAN/control")
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to set control file permissions.' }
+    $null = chmod 755 $launcherPath (Join-Path $staging 'usr/local/share/ClearC/ClearC.Desktop')
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to set executable permissions.' }
 }
 
 dpkg-deb --build --root-owner-group $staging $outputPath

@@ -2,13 +2,15 @@
 
 ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使用 .NET 10、Avalonia 12、Semi.Avalonia 和 ReactiveUI 构建。
 
+当前版本：**0.2.7**。
+
 项目的重点不是“尽可能多删”，而是把每个清理目标的容量、风险、执行方式和失败原因展示清楚。仅系统盘上的低风险缓存默认选中；中高风险项目与其他盘符的全部结果默认不勾选，由用户决策，并必须手动选择再次确认。
 
 ![ClearC 原生界面](docs/media/native-main.png)
 
 ![原生控件工作流演示](docs/media/native-workflow.gif)
 
-上图来自 Windows x64 NativeAOT `--selfcheck` 离屏渲染；工作流使用受控样例驱动真实视图，不扫描或清理用户文件。原型对照、验证方法与边界见 [界面验收记录](docs/UI-VERIFICATION.md)。
+上图来自 Windows x64 NativeAOT 独立验证器对真实视图的 Skia 离屏渲染；工作流由受控样例驱动，不扫描或清理用户文件。原型对照、验证方法与边界见 [界面验收记录](docs/UI-VERIFICATION.md)。
 
 ## 下载安装
 
@@ -16,6 +18,7 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 
 - Windows x64：`ClearC-v*-win-x64-setup.exe`（简体中文安装向导）
+- Linux x64 / arm64：`.deb`，macOS Intel / Apple Silicon：`.dmg`。这些安装包目前验证构建和分发，实际磁盘清理仍仅支持 Windows；非 Windows 正式程序会提示后退出。
 
 ## 功能
 
@@ -174,7 +177,7 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 | 目标 | 来源 | 说明 |
 | --- | --- | --- |
-| winsxs | `dism /Online /Cleanup-Image /AnalyzeComponentStore` | 提权时用官方数字；未提权或分析失败回退目录扫描，数字含硬链接、偏大 |
+| winsxs | `dism /Online /Cleanup-Image /AnalyzeComponentStore` | 提权时使用官方数字；未提权时标注需管理员，不退化成目录扫描 |
 | windows-installer | `C:\Windows\Installer` | 删后无法修复/卸载 |
 | package-cache | `C:\ProgramData\Package Cache` | VS/MSI 安装源 |
 | search-index | `C:\ProgramData\Microsoft\Search\Data` | Windows.edb |
@@ -229,7 +232,7 @@ G11 全部目标、G12 全部目标、`android-avd`、`rustup-toolchains`、`win
 - 隐私与登录数据：Cookie/登录态、`IndexedDB`、`Local Storage`、浏览历史、`%APPDATA%\Microsoft\Windows\Recent`、Jump List、剪贴板历史。
 - iPhone 备份（`Apple Computer\MobileSync\Backup`）、微信/QQ 聊天记录。
 - `.codex` 下除 `sessions` / `archived_sessions` 以外的任何数据；用户文档、下载、桌面、源码仓库。
-- 其他磁盘卷（`D:\` 等）的分析与清理；本版本只处理系统盘。
+- 未经用户选择的其他磁盘卷；其他盘仅扫描已列出的通用目标，所有结果默认不勾选。
 - WinSxS、`Windows\Installer`、`Package Cache`、搜索索引、还原点的实际清理（只显示数字）。
 - 不提供“移到回收站”作为删除方式，删除一律是永久删除。
 
@@ -256,7 +259,7 @@ dotnet build ClearC.slnx
 dotnet run --project src/ClearC.Desktop/ClearC.Desktop.csproj
 ```
 
-`ClearC.Desktop.exe --selfcheck` 会在初始化 Avalonia、构建主窗口视图模型、解析主题资源并跑一次目录大小计算后退出，用于 AOT 产物的冒烟验证（`scripts/smoke.ps1` 即调用它）。
+`ClearC.Desktop.exe --selfcheck` 用于正常桌面环境的冒烟验证。锁屏或 CI 离屏验收使用 `scripts/ui-verification/UiVerification.csproj`：真实 Skia 渲染，无系统窗口，检查双语八色、偏好、清理流程、关于和更新行为。
 
 ## 测试
 
@@ -290,7 +293,7 @@ publish_all.bat --no-pause
 artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 ```
 
-目标机器不需要预装 .NET Runtime。Windows x64 发布生成 NativeAOT、裁剪后的自包含程序；Linux x64/arm64 发布生成裁剪后的单文件程序。所有平台都会剥离 PDB/XML 符号文件。
+目标机器不需要预装 .NET Runtime。五个 RID 都在对应平台原生编译 NativeAOT 自包含程序；安装包排除调试符号，macOS 翻译资源位于标准 `Contents/Resources/I18n`。
 
 发布时可通过 `-Version` 把版本号写入程序集元数据（`scripts/publish.ps1 -RuntimeIdentifiers win-x64 -Version 0.2.0`）。
 
@@ -299,11 +302,11 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 推送 `v*` 或纯数字标签（例如 `v0.2.0` 或 `0.2.0`）会触发 [.github/workflows/release.yml](.github/workflows/release.yml)：
 
 1. 跑一遍全部测试；
-2. 为 win-x64 / linux-x64 / linux-arm64 / osx-x64 / osx-arm64 五个平台发布并执行 `--selfcheck` 冒烟验证；
+2. 在 win-x64 / linux-x64 / linux-arm64 / osx-x64 / osx-arm64 五个平台原生发布并执行独立 AOT 离屏验证器；Windows 另外执行正式程序的冒烟验证；
 3. 分别生成 Windows 安装包（Inno Setup 中文向导 `ClearC-v0.2.0-win-x64-setup.exe`）、Linux `.deb` 与 macOS `.dmg`，均附 `.sha256` 校验文件；
-4. 创建 GitHub Release 并附上全部安装包。
+4. 严格检查五安装包、版本及各自真实 SHA-256，拒绝缺包、便携 ZIP 和额外文件，再创建 GitHub Release。
 
-也可以在 GitHub Actions 页面手动触发 `release` 工作流并输入版本号。若仓库中存在 `.github/release-notes/v0.2.0.md`，Release 正文会使用它，否则自动生成变更说明。
+也可以在 GitHub Actions 页面手动触发 `release` 工作流并输入版本号。发布正文优先使用对应 `.github/release-notes/v*.md`，否则使用附注标签说明；两者均缺失时发布失败。
 
 本机构建安装包（需安装 [Inno Setup 6](https://jrsoftware.org/isinfo.php)）：
 
@@ -325,8 +328,8 @@ artifacts\publish\win-x64\ClearC\ClearC.Desktop.exe
 src/ClearC.Core/          清理模型、选择规则、安全策略与接口
 src/ClearC.Desktop/       Avalonia UI、目标清单、路径探测、Windows 扫描和清理实现
 tests/                    核心测试、Windows 适配器测试和无窗口 UI 测试
-design/                   六个状态的 HTML/CSS/JS 视觉原型
-scripts/                  可重复执行的发布脚本与冒烟脚本
+design/                   单个自包含 HTML 交互原型与离线审计
+scripts/                  原型源码、T4 生成、真实 UI 验证与发布脚本
 ```
 
 ## 贡献

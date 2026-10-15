@@ -1,7 +1,6 @@
-﻿name: release
+name: release
 
-# 推送 v* 或纯数字标签（如 0.2.0）即发布：win-x64 生成 NativeAOT 自包含程序、
-# 冒烟验证后用 Inno Setup 打中文安装包，并创建 GitHub Release。
+# 推送版本标签后，在五个平台原生编译、离屏验证并生成安装包及校验文件。
 on:
   push:
     tags:
@@ -31,6 +30,28 @@ jobs:
 
       - name: 测试
         run: dotnet test ClearC.slnx -c Release
+      - name: 校验 T4 国际化资源键
+        shell: pwsh
+        run: ./scripts/sync_localization_keys.ps1 -Check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: 校验离线交互原型
+        shell: pwsh
+        run: |
+          ./scripts/build_standalone_prototype.ps1 -Check
+          npm ci --prefix design/tests
+          if ($LASTEXITCODE -ne 0) { throw 'Prototype tools restore failed.' }
+          Push-Location design/tests
+          npx playwright install chromium
+          if ($LASTEXITCODE -ne 0) { throw 'Chromium install failed.' }
+          Pop-Location
+          npm test --prefix design/tests
+          if ($LASTEXITCODE -ne 0) { throw 'Offline prototype audit failed.' }
+      - name: 真实应用离屏验证
+        run: dotnet run --project scripts/ui-verification/UiVerification.csproj -c Release -- artifacts/ui-managed
+      - name: 对照原型与实现尺寸
+        run: node design/tests/compare-layout.cjs artifacts/ui-managed artifacts/prototype-audit
 
   publish:
     name: 发布 ${{ matrix.rid }}
@@ -47,9 +68,9 @@ jobs:
           - rid: linux-arm64
             os: ubuntu-24.04-arm
           - rid: osx-x64
-            os: macos-14
+            os: macos-15-intel
           - rid: osx-arm64
-            os: macos-14
+            os: macos-15
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -57,7 +78,7 @@ jobs:
 
       - name: 安装 NativeAOT 依赖 (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev libfontconfig1 libx11-6 fonts-noto-cjk
 
       - name: 安装 .NET SDK
         uses: actions/setup-dotnet@v4
@@ -86,6 +107,24 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: pwsh scripts/smoke.ps1 -Path 'artifacts/publish/${{ matrix.rid }}/ClearC/ClearC.Desktop.exe'
+
+      - name: 编译并执行原生离屏验证
+        shell: pwsh
+        run: |
+          $rid = '${{ matrix.rid }}'
+          $output = "artifacts/ui-native/$rid"
+          dotnet publish scripts/ui-verification/UiVerification.csproj -c Release -r $rid --self-contained true -p:Version=$env:APP_VERSION -p:PublishAot=true -p:PublishTrimmed=true -p:DebugType=portable -p:DebugSymbols=true -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true -o $output
+          if ($LASTEXITCODE -ne 0) { throw 'Native UI verification publish failed.' }
+          $executable = if ($IsWindows) { 'UiVerification.exe' } else { 'UiVerification' }
+          & (Join-Path (Resolve-Path $output) $executable) "artifacts/ui-evidence/$rid"
+          if ($LASTEXITCODE -ne 0) { throw 'Native UI verification failed.' }
+      - name: 保存原生界面验收证据
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearC-ui-${{ matrix.rid }}
+          path: artifacts/ui-evidence/${{ matrix.rid }}
+          if-no-files-found: ignore
 
       - name: 打包 Linux deb 安装包
         if: runner.os == 'Linux'
@@ -125,7 +164,7 @@ jobs:
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: ClearC-${{ matrix.rid }}
+          name: ClearC-installer-${{ matrix.rid }}
           path: artifacts/release/*
           if-no-files-found: error
 
@@ -139,7 +178,7 @@ jobs:
       - name: 下载构建产物
         uses: actions/download-artifact@v4
         with:
-          pattern: ClearC-*
+          pattern: ClearC-installer-*
           path: artifacts/release
           merge-multiple: true
 
@@ -173,19 +212,18 @@ jobs:
           if (Test-Path -LiteralPath $curated -PathType Leaf) {
             Copy-Item -LiteralPath $curated -Destination $bodyPath -Force
             Write-Host "使用发布说明：$curated"
+          } else {
+            git fetch --quiet --tags origin
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to fetch release tag.' }
+            $tagMessage = git tag -l "$env:TAG_NAME" --format='%(contents)'
+            if ([string]::IsNullOrWhiteSpace($tagMessage)) { throw 'Release notes and annotated tag message are both missing.' }
+            $tagMessage | Set-Content -LiteralPath $bodyPath -Encoding utf8
+            Write-Host '使用附注 tag 说明作为发布说明。'
           }
-                    # 附注 tag 的说明就是发布说明（Release 页直接可读，不点开 tag 也能看到）
-                    git fetch --quiet --tags origin 2>$null
-                    $tagMessage = git tag -l "$env:TAG_NAME" --format='%(contents)'
-                    if (-not [string]::IsNullOrWhiteSpace($tagMessage)) {
-                      $tagMessage | Set-Content -LiteralPath $bodyPath -Encoding utf8
-                      Write-Host "使用附注 tag 说明作为发布说明。"
-                    }
-                    else {
-        
-            "ClearC v$env:VERSION" | Set-Content -LiteralPath $bodyPath -Encoding utf8
-            Write-Host "未找到 $curated，将只使用自动生成的变更说明。"
-          }
+
+      - name: 校验五平台安装包与 SHA-256
+        shell: pwsh
+        run: ./scripts/verify_release_installers.ps1 -Version '${{ steps.version.outputs.version }}'
 
       - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2
@@ -198,5 +236,4 @@ jobs:
             artifacts/release/*.exe
             artifacts/release/*.deb
             artifacts/release/*.dmg
-            artifacts/release/*.zip
             artifacts/release/*.sha256

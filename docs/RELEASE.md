@@ -1,60 +1,49 @@
-# 发布流程规范（RELEASE）
+# ClearC 发布流程
 
-> 本文档是各仓库统一的标准发布流程。**每次发版都按本文档执行**，避免出现
-> 「Release 页只有 Full Changelog 链接」「安装包缺失」「版本号不一致」这类不规范情况。
+版本号取自 `Directory.Build.props`；本轮版本为 0.2.7。主分支提交与附注标签 `v0.2.7` 保持一致，发布说明维护在 `.github/release-notes/v0.2.7.md`，标签附注复用该文件。
 
-## 1. 版本号约定
+## 发布前验证
 
-- 版本号唯一来源：根目录 `Directory.Build.props` 的 `<Version>`（个别仓库在主 csproj，如 IEditor/QuickApp）。
-- 发布 tag 必须与该版本一致：`<Version>1.2.3</Version>` ↔ tag `v1.2.3`。
-- README 的「当前版本」行（如有）同步更新。
-- 更新日志：有 `UpdateLog.md` 的仓库，发布前新增对应版本条目（`## 版本 (YYYY-MM-DD)`）。
+执行 [界面验收记录](UI-VERIFICATION.md) 中的单元测试、T4、单文件原型生成校验、浏览器离线审计、真实应用离屏验证和布局对照。Windows 正式发布必须成功，独立原生验证器也必须编译并实际运行成功：
 
-## 2. 标准发布流程
-
-```text
-1. 改版本号（Directory.Build.props / csproj）+ 更新 UpdateLog.md + 同步 README 版本行
-2. 提交：chore(release): vX.Y.Z（英文规范提交，仓库另有约定从其约定）
-3. 打附注 tag —— tag 的附注消息就是 GitHub Release 的发布说明（见下节）：
-       git tag -a vX.Y.Z -m "应用名 X.Y.Z\n\n- 要点一\n- 要点二 ..."
-4. 推送分支与 tag：git push origin <branch> && git push origin vX.Y.Z
-5. CI（release.yml）自动：测试 → 全平台 NativeAOT 发布 → 制作安装包 → 创建 GitHub Release
-6. 到 Release 页确认：说明可读、各平台安装包齐全（win exe / linux deb / mac dmg）
+```powershell
+pwsh scripts/publish.ps1 -RuntimeIdentifiers win-x64
+dotnet publish scripts/ui-verification/UiVerification.csproj -c Release -r win-x64 --self-contained true -p:PublishAot=true -p:PublishTrimmed=true -p:DebugType=portable -p:DebugSymbols=true -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true -o artifacts/ui-native/win-x64
+artifacts/ui-native/win-x64/UiVerification.exe artifacts/ui-evidence/win-x64
+node design/tests/compare-layout.cjs artifacts/ui-evidence/win-x64 artifacts/prototype-audit
 ```
 
-## 3. 发布说明规范（重要）
+本地验证 NuGet 可使用 `temp_nugets` 环境变量指向的源；提交的包引用使用公开版本，不提交本地源配置。
 
-**Release 页的说明来自附注 tag 的消息**。打 tag 时必须写清楚：
+## 提交、标签与 CI
 
-```bash
-git tag -a vX.Y.Z -m "应用名 X.Y.Z
+按修改范围用中文简体规范提交并推送 main，然后创建附注标签：
 
-本版本做了什么（第一段概览）
-
-- 变更要点 1
-- 变更要点 2"
+```powershell
+git tag -a v0.2.7 -F .github/release-notes/v0.2.7.md
+git push origin v0.2.7
 ```
 
-- 工作流的「准备发布说明」步骤会按以下优先级取内容：
-  1. 精选说明 `.github/release-notes/vX.Y.Z.md`（存在则优先）；
-  2. **附注 tag 消息**（`git tag -l vX.Y.Z --format='%(contents)'`）；
-  3. 兜底：仅版本标题 + 自动生成的 Full Changelog（**不允许停留在这一档**）。
-- 不确定时，发布后打开 Release 页检查说明是否可读。
+`release.yml` 先测试并检查原型与真实界面，再分别在五个原生 runner 编译正式程序和 NativeAOT 界面验证器。界面证据单独上传，不能混入 Release 安装包目录。准备发布说明时优先读取精选说明文件，再读取附注标签；两者均缺失会失败，不能生成只有版本标题的发布页。
 
-## 4. 平台与安装包矩阵
+## 安装包矩阵
 
-| 平台 | 产物 | 说明 |
+| RID | 安装包 | 原生 runner |
 | --- | --- | --- |
-| win-x64 | 安装器或 zip（各仓既有形态） | NativeAOT |
-| linux-x64 / linux-arm64 | `.deb`（amd64/arm64） | NativeAOT；arm64 在 arm runner 上原生编译 |
-| osx-x64 / osx-arm64 | `.dmg` | NativeAOT；保留符号（Apple ld_classic 不支持压缩调试段） |
+| win-x64 | Inno Setup `.exe` | Windows x64 |
+| linux-x64 | `.deb`（amd64） | Linux x64 |
+| linux-arm64 | `.deb`（arm64） | Linux arm64 |
+| osx-x64 | `.dmg` | macOS Intel |
+| osx-arm64 | `.dmg` | macOS Apple Silicon |
 
-- 统一配方：`-p:PublishAot=true -p:PublishTrimmed=true -p:PublishSingleFile=false
-  -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true`。
-- Linux runner 需 `clang zlib1g-dev`；不要在 x64 runner 上交叉编译其他架构的 AOT。
-- 平台相关功能未适配时，应用内以「当前平台功能正在开发中」友好提示，不阻塞发布与启动。
+只发布五个安装包及各自的 `.sha256`；不发布便携 ZIP、PDB、DBG 或 dSYM。`verify_release_installers.ps1` 会检查版本、平台、非空、唯一性、真实散列和多余文件，缺任一项即阻止发布。
 
-## 5. 发布后检查
+Linux deb 提供命令行启动器、桌面菜单及图标，安装容量按剔除符号后的分发文件计算。本机通过隔离 staging 夹具检查目录结构、参数、翻译、图标与符号剔除；真实 dpkg 构建由 Linux runner 执行。
 
-- Release 页：说明可读、资产齐全（对照矩阵）、带 `.sha256` 的照旧。
-- 安装包抽查：至少在 Windows 本机跑一次发布产物。
+macOS 使用标准 `.app/Contents/MacOS` 与 `Contents/Resources/I18n` 布局，打包后必须成功签名并执行严格签名校验。默认使用 ad-hoc 签名，不等于 Apple 公证；配置 Developer ID 时使用对应身份，不允许签名失败降级继续发布。
+
+## 完成判据与限制
+
+标签触发不等于发布完成。须确认五个平台任务通过、Release 说明可读、10 个资产齐全且散列正确。Windows 本机已验证正式 AOT 及原生离屏行为；跨平台安装器的实际安装和桌面交互须在各自系统验证。
+
+ClearC 的实际清理能力仍仅支持 Windows。Linux/macOS 正式程序会提示并退出（码 2），相应安装包目前只验证分发和构建能力，不应描述为已支持这些平台的清理功能。
