@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -15,6 +16,7 @@ using ClearC.Desktop.Services;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
 using CodeWF.Avalonia.Controls.Themes;
+using Ursa.Controls;
 
 namespace ClearC.Desktop;
 
@@ -68,6 +70,29 @@ internal static partial class SelfCheck
                     .Any(button => button.Bounds.Height != 44 || button.Bounds.Width != 44))
                 throw new InvalidOperationException("Window dimensions differ from the prototype.");
             var model = (MainWindowViewModel)window.DataContext!;
+            var themeControl = window.GetVisualDescendants().OfType<ThemeToggleButton>().Single();
+            var themeButton = themeControl.GetVisualDescendants().OfType<Button>().Single(button => button.Name == ThemeToggleButton.PART_ThemeButton);
+            model.Appearance!.Palette = StudioPalette.Aurora;
+            model.Appearance.Mode = StudioThemeMode.System;
+            foreach (var expectedMode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark, StudioThemeMode.System })
+            {
+                themeButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Dispatcher.UIThread.RunJobs();
+                if (model.Appearance.Mode != expectedMode || model.Appearance.Palette != StudioPalette.Aurora)
+                    throw new InvalidOperationException("Title theme button must cycle three modes without replacing the palette.");
+            }
+            if (window.FindControl<Button>("TitleLanguageButton")?.Flyout is not MenuFlyout { Items.Count: 2 } languageMenu)
+                throw new InvalidOperationException("Title language icon must open the actual language menu.");
+            foreach (var item in languageMenu.Items.OfType<MenuItem>())
+            {
+                languageMenu.ShowAt(window.FindControl<Button>("TitleLanguageButton")!);
+                Dispatcher.UIThread.RunJobs();
+                item.Command!.Execute(item.CommandParameter);
+                Dispatcher.UIThread.RunJobs();
+                languageMenu.Hide();
+                if (model.Appearance.CultureName != item.CommandParameter?.ToString())
+                    throw new InvalidOperationException("Language menu must update the single global culture.");
+            }
             var previousCulture = AppLocalizer.Instance.Culture.Name;
             foreach (var culture in new[] { "zh-CN", "en-US" })
                 foreach (var palette in Enum.GetValues<StudioPalette>())
@@ -83,9 +108,10 @@ internal static partial class SelfCheck
                         {
                             throw new InvalidOperationException(AppText.Format(Language.SystemSelfCheckThemeMismatch, palette, mode));
                         }
-                        var choices = window.GetVisualDescendants().OfType<ComboBox>().Where(combo => combo.IsEffectivelyVisible).ToArray();
-                        if (choices.Length != 3 || choices.Any(combo => combo.SelectedItem is null))
-                            throw new InvalidOperationException("Theme, palette and language selection must remain visible after a language change.");
+                        var swatches = window.GetVisualDescendants().OfType<ListBox>().Single(list => list.Classes.Contains("paletteSwatches"));
+                        if (swatches.Items.Count != 8 || swatches.SelectedItem is null ||
+                            window.GetVisualDescendants().OfType<ComboBox>().Any(combo => combo.IsEffectivelyVisible))
+                            throw new InvalidOperationException("Title appearance tools must retain eight swatches and avoid duplicate selectors.");
                         if (culture == "en-US" && window.GetVisualDescendants().OfType<TextBlock>()
                             .Where(text => text.IsEffectivelyVisible && !text.GetVisualAncestors().OfType<LogPanelView>().Any())
                             .Any(text => System.Text.RegularExpressions.Regex.IsMatch(text.Text ?? string.Empty, @"[\u4e00-\u9fff]")))

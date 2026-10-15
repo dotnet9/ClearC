@@ -6,6 +6,7 @@
         xmlns:vm="using:ClearC.Desktop.ViewModels"
         xmlns:views="using:ClearC.Desktop.Views"
         xmlns:l="using:ClearC.Desktop.I18n"
+        xmlns:u="https://irihi.tech/ursa"
         x:Class="ClearC.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="ClearC"
@@ -44,12 +45,12 @@
     </StackPanel>
   </codewf:CodeWFWindow.LeftContent>
   <codewf:CodeWFWindow.RightContent>
-    <Grid ColumnDefinitions="104,Auto,148,116" ColumnSpacing="6" Margin="0,0,8,0"
+    <Grid ColumnDefinitions="32,Auto,32" ColumnSpacing="6" Margin="0,0,8,0"
           DataContext="{Binding Appearance}" x:DataType="vm:AppearanceViewModel" VerticalAlignment="Center">
-      <ComboBox Height="28" MinHeight="0" Padding="8,0" ItemsSource="{Binding Modes}"
-                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Mode, Mode=TwoWay}"
-                DisplayMemberBinding="{Binding DisplayName}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceMode}}" />
+      <ThemeVariantScope x:Name="TitleBarThemeScope" RequestedThemeVariant="{Binding Mode, Mode=TwoWay, Converter={x:Static codewf:StudioThemeModeConverter.Instance}}">
+        <u:ThemeToggleButton Width="32" Height="28" IsThreeState="True" TargetScope="{Binding #TitleBarThemeScope}"
+                            ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceMode}}" />
+      </ThemeVariantScope>
       <ListBox Grid.Column="1" Classes="paletteSwatches" ItemsSource="{Binding Palettes}"
                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Palette, Mode=TwoWay}"
                AutoScrollToSelectedItem="False">
@@ -60,14 +61,16 @@
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
-      <ComboBox Grid.Column="2" Height="28" MinHeight="0" Padding="8,0" ItemsSource="{Binding Palettes}"
-                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Palette, Mode=TwoWay}"
-                DisplayMemberBinding="{Binding DisplayName}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearancePalette}}" />
-      <ComboBox Grid.Column="3" Height="28" MinHeight="0" Padding="8,0" ItemsSource="{Binding Languages}"
-                SelectedValueBinding="{Binding Value}" SelectedValue="{Binding CultureName, Mode=TwoWay}"
-                DisplayMemberBinding="{Binding DisplayName}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceLanguage}}" />
+      <Button x:Name="TitleLanguageButton" Grid.Column="2" Width="32" Height="28" MinHeight="0" Padding="6" Background="Transparent" BorderThickness="0"
+              ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceLanguage}}">
+        <PathIcon Width="16" Height="16" Data="{StaticResource SemiIconLanguage}" />
+        <Button.Flyout>
+          <MenuFlyout>
+            <MenuItem Header="{i18n:I18n {x:Static l:Language.AppearanceChinese}}" Command="{Binding SelectLanguageCommand}" CommandParameter="zh-CN" />
+            <MenuItem Header="{i18n:I18n {x:Static l:Language.AppearanceEnglish}}" Command="{Binding SelectLanguageCommand}" CommandParameter="en-US" />
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
     </Grid>
   </codewf:CodeWFWindow.RightContent>
   <Grid RowDefinitions="Auto,*,160,28">

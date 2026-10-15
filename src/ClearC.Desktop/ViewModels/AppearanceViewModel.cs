@@ -5,6 +5,7 @@ using ClearC.Desktop.I18n;
 using ClearC.Desktop.Services;
 using CodeWF.Avalonia.Controls.Themes;
 using ReactiveUI;
+using ReactiveUI.Primitives;
 
 namespace ClearC.Desktop.ViewModels;
 
@@ -26,6 +27,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
         _controller.Palette = settings.Palette;
         _controller.PropertyChanged += OnThemeChanged;
         AppLocalizer.Instance.CultureChanged += OnCultureChanged;
+        SelectLanguageCommand = ReactiveCommand.Create<string>(value => { CultureName = value; });
     }
 
     public IReadOnlyList<AppearanceOption<StudioThemeMode>> Modes { get; } =
@@ -56,6 +58,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
     public StudioThemeMode Mode { get => _controller.Mode; set => _controller.Mode = value; }
     public StudioPalette Palette { get => _controller.Palette; set => _controller.Palette = value; }
     public string CultureName { get => AppLocalizer.Instance.Culture.Name; set => AppLocalizer.Instance.SetCulture(value); }
+    public ReactiveCommand<string, RxVoid> SelectLanguageCommand { get; }
 
     private void OnThemeChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs args)
     {
@@ -84,6 +87,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
         _controller.PropertyChanged -= OnThemeChanged;
         AppLocalizer.Instance.CultureChanged -= OnCultureChanged;
         _controller.Dispose();
+        SelectLanguageCommand.Dispose();
     }
 }
 

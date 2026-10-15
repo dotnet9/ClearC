@@ -793,3 +793,6 @@ body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:176
 .hi-progress { margin-top:4px;height:14px;line-height:14px; }
 body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:160px; }
 .about-captions{display:flex;height:44px}.about-captions .tb-btn{width:34px;height:44px}.about-window{border-radius:0}.about-window.about-maximized{width:90vw;height:90vh}
+
+/* 标题栏只保留三态按钮、八色圆点及真实语言菜单。 */
+.appearance-icon{width:32px;height:28px;border:0;background:transparent;color:var(--text);font:20px "Segoe UI",sans-serif;display:grid;place-items:center;padding:5px;cursor:pointer;border-radius:4px}.appearance-icon:hover{background:var(--raised)}.appearance-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.language-picker{position:relative}.language-menu{position:absolute;z-index:60;right:0;top:32px;min-width:160px;padding:4px;background:var(--panel);border:1px solid var(--line);box-shadow:0 6px 20px #0003;border-radius:5px}.language-menu button{display:block;width:100%;padding:8px 12px;background:transparent;color:var(--text);border:0;text-align:left;cursor:pointer}.language-menu button:hover,.language-menu button[aria-checked=true]{background:var(--raised);color:var(--acc)}

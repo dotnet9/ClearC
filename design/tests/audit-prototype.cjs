@@ -21,8 +21,8 @@ fs.mkdirSync(output,{recursive:true});
     const state=()=>page.locator('body').getAttribute('data-state');
     for(const culture of ['zh-CN','en-US'])for(const palette of ['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky'])for(const mode of ['Light','Dark']){
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture,palette,mode});
-      assert.equal(await page.locator('[data-choice="culture"]').inputValue(),culture);
-      assert.equal(await page.locator('[data-choice="palette"]').inputValue(),palette);
+      assert.equal(await page.locator('[data-culture="'+culture+'"]').getAttribute('aria-checked'),'true');
+      assert.equal(await page.locator('.palette-dot.on').getAttribute('data-palette-key'),palette);
       assert.equal(await page.locator('.palette-dot.on').count(),1);
       if(culture==='en-US')assert.deepEqual(await page.evaluate(()=>{
         const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),found=[];let node;
@@ -30,8 +30,10 @@ fs.mkdirSync(output,{recursive:true});
       }),[],'Untranslated English interface');
       await capture(`main-${culture}-${palette}-${mode}`);
     }
-    await page.locator('[data-choice="mode"]').selectOption('System');assert.equal(await page.evaluate(()=>window.ClearCPrototype.getState().mode),'System');
-    await page.reload();assert.equal(await page.locator('[data-choice="mode"]').inputValue(),'System');
+    while(await page.locator('#themeMode').getAttribute('data-mode')!=='System')await page.locator('#themeMode').click();assert.equal(await page.evaluate(()=>window.ClearCPrototype.getState().mode),'System');
+    await page.reload();assert.equal(await page.locator('#themeMode').getAttribute('data-mode'),'System');
+    assert.equal(await page.locator('.appearance-tools select').count(),0);assert.equal(await page.locator('.palette-dot').count(),8);
+    await page.locator('#languageButton').click();assert.equal(await page.locator('#languageMenu').isVisible(),true);await page.locator('[data-culture="zh-CN"]').click();assert.equal(await page.locator('#languageMenu').isVisible(),false);assert.equal(await page.locator('html').getAttribute('lang'),'zh-CN');
     for(const culture of ['zh-CN','en-US']){
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture,palette:'DotNet',mode:'Light'});
       await page.locator('#btnAbout').click();assert.equal(await page.locator('#about').isVisible(),true);

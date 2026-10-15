@@ -20,7 +20,7 @@
         <span class="tb-sub" data-i18n="Tagline"></span>
       </div>
       <div class="tb-right">
-        <div class="appearance-tools"><select data-choice="mode" aria-label="Theme"></select><div class="palette-dots" id="paletteDots"></div><select data-choice="palette" aria-label="Palette"></select><select data-choice="culture" aria-label="Language"></select></div>
+        <div class="appearance-tools"><button id="themeMode" class="appearance-icon" type="button"></button><div class="palette-dots" id="paletteDots"></div><div class="language-picker"><button id="languageButton" class="appearance-icon" type="button" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h12M9 3v2m4 0c-1 6-5 10-10 12m2-9c2 4 4 6 8 8m1 5 4-11 4 11m-7-3h6"/></svg></button><div id="languageMenu" class="language-menu" role="menu" hidden><button role="menuitem" data-culture="zh-CN"></button><button role="menuitem" data-culture="en-US"></button></div></div></div>
         <button class="tb-btn" id="btnMin" data-title="Prototype.Minimize"><svg class="icon"><use href="#i-min"/></svg></button>
         <button class="tb-btn" id="btnMax" data-title="Prototype.Maximize"><svg class="icon"><use href="#i-max"/></svg></button>
         <button class="tb-btn tb-close" id="btnClose" data-title="Prototype.Close"><svg class="icon"><use href="#i-close"/></svg></button>
@@ -138,7 +138,7 @@
   <header><b data-i18n="About.Title"></b><div class="about-captions"><button class="tb-btn" id="aboutMinimize">−</button><button class="tb-btn" id="aboutMaximize">□</button><button class="tb-btn" id="aboutClose">×</button></div></header>
   <div class="about-content"><h2>ClearC</h2><p data-i18n="About.Description"></p>
     <section class="about-update"><div class="about-update-heading"><div><b data-i18n="Update.Check"></b><p data-i18n="About.UpdateHint"></p></div><button class="btn primary" id="updateAction"></button></div><p id="updateStatus" role="status"></p><progress id="updateProgress" value="52" max="100" hidden></progress><button id="updateCancel" class="mini" data-i18n="About.Cancel" hidden></button></section>
-    <dl><dt data-i18n="About.Version"></dt><dd>0.2.9</dd><dt data-i18n="About.Platform"></dt><dd>.NET 10 · Avalonia 12.1.4</dd><dt data-i18n="About.CompileTime"></dt><dd>2026-10-15 00:00:00</dd><dt data-i18n="About.Author"></dt><dd data-i18n="About.AuthorName"></dd><dt data-i18n="About.Repository"></dt><dd><a href="https://github.com/dotnet9/ClearC">github.com/dotnet9/ClearC</a></dd><dt data-i18n="About.Copyright"></dt><dd>Copyright © 2026 Dotnet9</dd></dl>
+    <dl><dt data-i18n="About.Version"></dt><dd>0.2.10</dd><dt data-i18n="About.Platform"></dt><dd>.NET 10 · Avalonia 12.1.4</dd><dt data-i18n="About.CompileTime"></dt><dd>2026-10-15 00:00:00</dd><dt data-i18n="About.Author"></dt><dd data-i18n="About.AuthorName"></dd><dt data-i18n="About.Repository"></dt><dd><a href="https://github.com/dotnet9/ClearC">github.com/dotnet9/ClearC</a></dd><dt data-i18n="About.Copyright"></dt><dd>Copyright © 2026 Dotnet9</dd></dl>
   </div>
 </dialog>
 <script src="assets/resources.js"></script>

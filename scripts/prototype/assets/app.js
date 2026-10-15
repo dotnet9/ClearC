@@ -41,12 +41,9 @@
     document.documentElement.style.setProperty('--grad',`linear-gradient(135deg,${token.StudioGradientStartColor},${token.StudioSecondaryColor})`);
     document.body.dataset.theme=dark?'dark':'light';document.documentElement.lang=state.culture;
     const stops=document.querySelectorAll('#dg stop');stops[0].setAttribute('stop-color',token.StudioGradientStartColor);stops[1].setAttribute('stop-color',token.StudioSecondaryColor);
-    for(const select of document.querySelectorAll('[data-choice]')) {
-      const choice=select.dataset.choice;
-      const values=choice==='mode'?['System','Light','Dark']:choice==='palette'?Object.keys(paletteTokens):['zh-CN','en-US'];
-      select.replaceChildren(...values.map(value=>new Option(t('Appearance.'+(choice==='culture'?(value==='zh-CN'?'Chinese':'English'):value)),value)));
-      select.value=state[choice];select.title=t('Appearance.'+({mode:'Mode',palette:'Palette',culture:'Language'})[choice]);
-    }
+    el('themeMode').textContent=({System:'▣',Light:'☀',Dark:'☾'})[state.mode];el('themeMode').dataset.mode=state.mode;el('themeMode').title=t('Appearance.Mode')+': '+t('Appearance.'+state.mode);el('themeMode').setAttribute('aria-label',el('themeMode').title);
+    el('languageButton').title=t('Appearance.Language');el('languageButton').setAttribute('aria-label',el('languageButton').title);
+    document.querySelectorAll('[data-culture]').forEach(button=>{button.textContent=t('Appearance.'+(button.dataset.culture==='zh-CN'?'Chinese':'English'));button.setAttribute('aria-checked',button.dataset.culture===state.culture);});
     for(const button of document.querySelectorAll('[data-palette-key]')) { button.classList.toggle('on',button.dataset.paletteKey===state.palette);button.title=t('Appearance.'+button.dataset.paletteKey);button.setAttribute('aria-pressed',button.dataset.paletteKey===state.palette); }
     document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=t(node.dataset.i18n));
     document.querySelectorAll('[data-title]').forEach(node=>node.title=t(node.dataset.title));
@@ -138,7 +135,11 @@
     el('updateCancel').hidden=!['checking','downloading'].includes(state.update);el('updateProgress').hidden=state.update!=='downloading';
   }
   function reset() { stopTimers();Object.assign(state,{phase:'idle',drives:['C'],scope:[],scanList:[],scanIndex:0,checked:new Set(),collapsed:new Set(),cleaned:{},freed:0,lastFreed:0,baseline:{C:0,D:0},logs:[],expanded:null});render();log('OK','Prototype.LogInit');log('INFO','Prototype.LogDisks',drives.length);log('INFO','Main.ScopeIdle'); }
-  document.querySelectorAll('[data-choice]').forEach(select=>select.onchange=()=>{state[select.dataset.choice]=select.value;persist();render();});
+  el('themeMode').onclick=()=>{const modes=['System','Light','Dark'];state.mode=modes[(modes.indexOf(state.mode)+1)%3];persist();render();};
+  el('languageButton').onclick=event=>{event.stopPropagation();const open=el('languageMenu').hidden;el('languageMenu').hidden=!open;el('languageButton').setAttribute('aria-expanded',open);};
+  document.querySelectorAll('[data-culture]').forEach(button=>button.onclick=()=>{state.culture=button.dataset.culture;el('languageMenu').hidden=true;el('languageButton').setAttribute('aria-expanded','false');persist();render();});
+  document.addEventListener('click',event=>{if(!event.target.closest('.language-picker')){el('languageMenu').hidden=true;el('languageButton').setAttribute('aria-expanded','false');}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){el('languageMenu').hidden=true;el('languageButton').setAttribute('aria-expanded','false');el('languageButton').focus();}});
   for(const palette of Object.keys(paletteTokens)){const button=document.createElement('button');button.className='palette-dot';button.dataset.paletteKey=palette;button.style.setProperty('--swatch',paletteTokens[palette].Light.StudioAccentColor);button.onclick=()=>{state.palette=palette;persist();render();};el('paletteDots').append(button);}
   el('checkAll').onchange=event=>{state.checked.clear();if(event.target.checked)state.scanList.filter(item=>item.cleanable&&!Object.hasOwn(state.cleaned,item.id)).forEach(item=>state.checked.add(item.id));render();};
   el('hideZero').onchange=event=>{state.hideZero=event.target.checked;renderList();};el('fastMode').onchange=event=>state.fast=event.target.checked;
