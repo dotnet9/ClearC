@@ -17,6 +17,11 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        if (args is ["--verify-runtime", var directory])
+        {
+            RuntimeVerification.Run(directory);
+            return 0;
+        }
         if (!OperatingSystem.IsWindows())
         {
             Console.Error.WriteLine(AppText.Get("ClearC.System.PlatformWindowsOnly"));

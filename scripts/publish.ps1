@@ -66,6 +66,7 @@ foreach ($rid in $rids) {
         "-f", $targetFramework,
         "-r", $rid,
         "--self-contained", "true",
+        "-m:1",
         "-p:RestoreForce=true",
         "-p:PublishTrimmed=true",
         "-p:DebugType=portable",
@@ -75,7 +76,14 @@ foreach ($rid in $rids) {
         "-o", $resolvedOutputPath
     )
     if ($isWindowsRid) {
-        $publishArguments += @("-p:PublishAot=true", "-p:StripSymbols=true", "-p:IlcSingleThreaded=true")
+        $publishArguments += @(
+            "-p:PublishAot=true",
+            "-p:PublishSingleFile=false",
+            "-p:IlcGenerateCompleteTypeMetadata=true",
+            "-p:IlcTrimMetadata=false",
+            "-p:StripSymbols=true",
+            "-p:IlcSingleThreaded=true"
+        )
     } else {
         # 全平台 NativeAOT：完整反射元数据保全，单线程 ILC；
         # Apple ld_classic 不支持压缩调试段（-gz=zlib），macOS 保留符号

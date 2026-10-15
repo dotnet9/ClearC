@@ -103,6 +103,24 @@ jobs:
         shell: pwsh
         run: pwsh scripts/publish.ps1 -RuntimeIdentifiers '${{ matrix.rid }}' -Version $env:APP_VERSION
 
+      - name: 执行正式原生产物的无窗口验收
+        shell: pwsh
+        run: |
+          $rid = '${{ matrix.rid }}'
+          $executable = if ($IsWindows) { 'ClearC.Desktop.exe' } else { 'ClearC.Desktop' }
+          $verificationDirectory = Join-Path $PWD "artifacts/runtime-verification/$rid"
+          $start = [Diagnostics.ProcessStartInfo]::new((Join-Path (Resolve-Path "artifacts/publish/$rid/ClearC") $executable))
+          $start.UseShellExecute = $false
+          $start.CreateNoWindow = $true
+          $start.ArgumentList.Add('--verify-runtime')
+          $start.ArgumentList.Add($verificationDirectory)
+          $process = [Diagnostics.Process]::Start($start)
+          if (!$process.WaitForExit(60000)) { $process.Kill($true); throw 'Published runtime verification timed out.' }
+          if ($process.ExitCode -ne 0) { throw "Published runtime verification failed: $($process.ExitCode)" }
+          $result = Join-Path $verificationDirectory 'runtime-verification.txt'
+          if (!(Test-Path -LiteralPath $result)) { throw 'Runtime verification did not produce its result.' }
+          Get-Content -LiteralPath $result
+
       - name: 冒烟测试（--selfcheck，Windows）
         if: runner.os == 'Windows'
         shell: pwsh
@@ -113,7 +131,7 @@ jobs:
         run: |
           $rid = '${{ matrix.rid }}'
           $output = "artifacts/ui-native/$rid"
-          dotnet publish scripts/ui-verification/UiVerification.csproj -c Release -r $rid --self-contained true -p:Version=$env:APP_VERSION -p:PublishAot=true -p:PublishTrimmed=true -p:DebugType=portable -p:DebugSymbols=true -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true -o $output
+          dotnet publish scripts/ui-verification/UiVerification.csproj -c Release -r $rid --self-contained true -m:1 -p:Version=$env:APP_VERSION -p:PublishAot=true -p:PublishTrimmed=true -p:DebugType=portable -p:DebugSymbols=true -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true -o $output
           if ($LASTEXITCODE -ne 0) { throw 'Native UI verification publish failed.' }
           $executable = if ($IsWindows) { 'UiVerification.exe' } else { 'UiVerification' }
           & (Join-Path (Resolve-Path $output) $executable) "artifacts/ui-evidence/$rid"
