@@ -1,0 +1,11 @@
+<Project>
+  <!-- Apple 新链接器处理大型 AOT 对象时会触发 largeAddends 断言。
+       正式程序与离屏验证器统一使用经典链接器，并关闭其不支持的压缩符号。
+       上游问题：https://github.com/dotnet/runtime/issues/119380 -->
+  <PropertyGroup Condition="'$(PublishAot)' == 'true' and ('$(RuntimeIdentifier)' == 'osx-x64' or '$(RuntimeIdentifier)' == 'osx-arm64')">
+    <CompressSymbols>false</CompressSymbols>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PublishAot)' == 'true' and ('$(RuntimeIdentifier)' == 'osx-x64' or '$(RuntimeIdentifier)' == 'osx-arm64')">
+    <LinkerArg Include="-Wl,-ld_classic" />
+  </ItemGroup>
+</Project>
