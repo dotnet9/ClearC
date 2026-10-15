@@ -10,6 +10,8 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 ![原生控件工作流演示](docs/media/native-workflow.gif)
 
+静态图与动图均来自 0.2.12 本轮 Windows NativeAOT 的真实视图。动图是六个受控工作流状态组成的 12.2 秒序列，不是人工桌面操作录像；验证边界见 [界面验证记录](docs/UI-VERIFICATION.md)。
+
 上图来自 Windows x64 NativeAOT 独立验证器对真实视图的 Skia 离屏渲染；工作流由受控样例驱动，不扫描或清理用户文件。原型对照、验证方法与边界见 [界面验收记录](docs/UI-VERIFICATION.md)。
 
 ## 下载安装
