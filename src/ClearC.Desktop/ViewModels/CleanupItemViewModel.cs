@@ -2,9 +2,9 @@ using System.Windows.Input;
 using Avalonia.Media;
 using ClearC.Core.Formatting;
 using ClearC.Core.Models;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
-using ClearC.Desktop.I18n;
 using ClearC.Desktop.Themes;
 using ReactiveUI;
 

@@ -1,5 +1,5 @@
-﻿using ClearC.Desktop.I18n;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Windows;
 
 namespace ClearC.Desktop.Infrastructure.Cleanup;

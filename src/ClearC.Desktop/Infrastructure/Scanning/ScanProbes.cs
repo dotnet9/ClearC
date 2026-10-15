@@ -1,7 +1,7 @@
-﻿using ClearC.Desktop.I18n;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using ClearC.Core.Formatting;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using ClearC.Desktop.Infrastructure.Windows;
 

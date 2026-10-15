@@ -1,8 +1,8 @@
-﻿using ClearC.Desktop.I18n;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using ClearC.Core.Models;
 using ClearC.Core.Services;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using ClearC.Desktop.Infrastructure.Windows;
 

@@ -1,11 +1,11 @@
 using Avalonia;
-using Avalonia.Media;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using Avalonia.Threading;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Scanning;
 using ClearC.Desktop.Infrastructure.Windows;
-using ClearC.Desktop.I18n;
 using ClearC.Desktop.ViewModels;
 using CodeWF.Toolkit.Logging;
 using Microsoft.Extensions.Logging;

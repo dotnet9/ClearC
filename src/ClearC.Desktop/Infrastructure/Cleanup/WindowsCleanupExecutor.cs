@@ -1,7 +1,7 @@
-﻿using ClearC.Desktop.I18n;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using ClearC.Core.Models;
 using ClearC.Core.Services;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Scanning;
 using ClearC.Desktop.Infrastructure.Windows;
 

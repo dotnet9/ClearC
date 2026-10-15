@@ -83,16 +83,16 @@ public sealed class DriveCardViewModel : ReactiveObject
     public string ScanSummary
     {
         get => _scanSummary;
-            set
+        set
+        {
+            if (_scanSummary == value)
             {
-                if (_scanSummary == value)
-                {
-                    return;
-                }
-
-                this.RaiseAndSetIfChanged(ref _scanSummary, value);
-                this.RaisePropertyChanged(nameof(HasScanSummary));
+                return;
             }
+
+            this.RaiseAndSetIfChanged(ref _scanSummary, value);
+            this.RaisePropertyChanged(nameof(HasScanSummary));
+        }
     }
 
     public bool HasScanSummary => ScanSummary.Length > 0;

@@ -1,5 +1,5 @@
-﻿using ClearC.Desktop.I18n;
-using ClearC.Core.Models;
+﻿using ClearC.Core.Models;
+using ClearC.Desktop.I18n;
 
 namespace ClearC.Desktop.Infrastructure.Scanning;
 

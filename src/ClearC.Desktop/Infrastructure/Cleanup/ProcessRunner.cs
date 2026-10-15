@@ -1,5 +1,5 @@
-﻿using ClearC.Desktop.I18n;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using ClearC.Desktop.I18n;
 
 namespace ClearC.Desktop.Infrastructure.Cleanup;
 

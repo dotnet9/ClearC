@@ -1,9 +1,9 @@
 using ClearC.Core.Models;
 using ClearC.Core.Safety;
 using ClearC.Core.Services;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Windows;
-using ClearC.Desktop.I18n;
 using ClearC.Desktop.ViewModels;
 
 namespace ClearC.Desktop.Tests;

@@ -35,17 +35,17 @@ public sealed class AppearanceAndAboutTests(AvaloniaHeadlessFixture fixture)
                 var window = new MainWindow();
                 window.Show();
                 foreach (var palette in Enum.GetValues<StudioPalette>())
-                foreach (var mode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark })
-                {
-                    appearance.Palette = palette;
-                    appearance.Mode = mode;
-                    Dispatcher.UIThread.RunJobs();
-                    window.UpdateLayout();
-                    Assert.True(application.TryGetResource("StudioBackgroundColor", application.ActualThemeVariant, out var expected));
-                    Assert.Equal(Assert.IsType<Color>(expected), Assert.IsType<SolidColorBrush>(window.Background).Color);
-                    Assert.Equal(palette, store.Load().Palette);
-                    Assert.Equal(mode, store.Load().Mode);
-                }
+                    foreach (var mode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark })
+                    {
+                        appearance.Palette = palette;
+                        appearance.Mode = mode;
+                        Dispatcher.UIThread.RunJobs();
+                        window.UpdateLayout();
+                        Assert.True(application.TryGetResource("StudioBackgroundColor", application.ActualThemeVariant, out var expected));
+                        Assert.Equal(Assert.IsType<Color>(expected), Assert.IsType<SolidColorBrush>(window.Background).Color);
+                        Assert.Equal(palette, store.Load().Palette);
+                        Assert.Equal(mode, store.Load().Mode);
+                    }
 
                 appearance.CultureName = "en-US";
                 Assert.Equal("en-US", store.Load().CultureName);

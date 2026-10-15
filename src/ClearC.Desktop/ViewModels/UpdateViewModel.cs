@@ -1,11 +1,11 @@
-﻿using System.Reactive;
+﻿using System.Diagnostics;
+using System.Reactive;
 using System.Reactive.Subjects;
-using Unit = ReactiveUI.Primitives.RxVoid;
+using Avalonia.Controls.ApplicationLifetimes;
+using ClearC.Desktop.I18n;
 using CodeWF.Toolkit.Core.UpdateChecking;
 using ReactiveUI;
-using ClearC.Desktop.I18n;
-using Avalonia.Controls.ApplicationLifetimes;
-using System.Diagnostics;
+using Unit = ReactiveUI.Primitives.RxVoid;
 
 namespace ClearC.Desktop.ViewModels;
 
@@ -33,7 +33,8 @@ public sealed class UpdateViewModel : ReactiveObject, IDisposable
     {
         _updates = updates ?? new UpdateService(new UpdateServiceOptions
         {
-            Repository = "ClearC", ProductName = "ClearC",
+            Repository = "ClearC",
+            ProductName = "ClearC",
             Log = message => log("WARN", message, null)
         });
         _ownsService = updates is null;

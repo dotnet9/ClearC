@@ -1,6 +1,6 @@
-﻿using ClearC.Desktop.I18n;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using Microsoft.Win32;
 

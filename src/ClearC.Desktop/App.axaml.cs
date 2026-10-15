@@ -1,16 +1,16 @@
-﻿using Avalonia;
+﻿using System.Globalization;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using System.Globalization;
 using ClearC.Core.Safety;
-using ClearC.Desktop.Services;
-using CodeWF.Avalonia.Controls.Themes;
+using ClearC.Desktop.I18n;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Scanning;
-using ClearC.Desktop.I18n;
+using ClearC.Desktop.Services;
 using ClearC.Desktop.ViewModels;
 using ClearC.Desktop.Views;
+using CodeWF.Avalonia.Controls.Themes;
 
 namespace ClearC.Desktop;
 
