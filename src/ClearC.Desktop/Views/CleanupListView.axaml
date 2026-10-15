@@ -11,7 +11,7 @@
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8"
                 IsVisible="{Binding IsEmptyVisible}">
       <Border Width="56" Height="56" CornerRadius="14"
-              Background="#f6f9ff" BorderBrush="#c9d6f5" BorderThickness="1.5">
+              Background="{DynamicResource ClearCAccentSoft}" BorderBrush="{DynamicResource ClearCAccentBorder}" BorderThickness="1">
         <controls:IconGlyph Width="25" Height="25"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Data="{StaticResource ClearCIconFolder}"
@@ -43,7 +43,7 @@
                 IsVisible="{Binding IsGhostVisible}">
           <Grid ColumnDefinitions="22,34,12,*,12">
             <Border Grid.Column="1" Width="34" Height="34" VerticalAlignment="Center"
-                    Background="#142f6bff" BorderBrush="#4D2f6bff" BorderThickness="1"
+                    Background="{DynamicResource ClearCAccentSoft}" BorderBrush="{DynamicResource ClearCAccentBorder}" BorderThickness="1"
                     CornerRadius="{DynamicResource ClearCRadiusTile}">
               <controls:IconGlyph Width="17" Height="17"
                                   HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -62,16 +62,16 @@
     <!-- 扫描光带（仅扫描态） -->
     <Border Classes="scanSweep" Margin="0,0,10,0"
             Height="80" VerticalAlignment="Top"
-            BorderBrush="#472f6bff" BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource ClearCAccentBorder}" BorderThickness="0,0,0,1"
             IsHitTestVisible="False"
             IsVisible="{Binding IsSweepVisible}">
       <Border.Background>
-        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-          <GradientStop Offset="0" Color="#002f6bff" />
-          <GradientStop Offset="0.45" Color="#0D2f6bff" />
-          <GradientStop Offset="0.5" Color="#1C7c5cff" />
-          <GradientStop Offset="0.55" Color="#0D2f6bff" />
-          <GradientStop Offset="1" Color="#002f6bff" />
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" Opacity="0.1">
+          <GradientStop Offset="0" Color="Transparent" />
+          <GradientStop Offset="0.45" Color="{DynamicResource StudioAccentColor}" />
+          <GradientStop Offset="0.5" Color="{DynamicResource StudioSecondaryColor}" />
+          <GradientStop Offset="0.55" Color="{DynamicResource StudioAccentColor}" />
+          <GradientStop Offset="1" Color="Transparent" />
         </LinearGradientBrush>
       </Border.Background>
     </Border>

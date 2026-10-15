@@ -5,12 +5,17 @@
         xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
         xmlns:vm="using:ClearC.Desktop.ViewModels"
         xmlns:views="using:ClearC.Desktop.Views"
+        xmlns:l="using:ClearC.Desktop.I18n"
         x:Class="ClearC.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="ClearC"
         Icon="avares://ClearC.Desktop/Assets/logo.ico"
         Width="1060"
         Height="700"
+        TitleBarHeight="{DynamicResource ClearCTitleBarHeight}"
+        CaptionButtonWidth="44"
+        TitleBarBackground="{DynamicResource ClearCWin}"
+        TitleBarBorderBrush="{DynamicResource ClearCLine}"
         MinWidth="960"
         MinHeight="620"
         Background="{DynamicResource ClearCWin}"
@@ -20,7 +25,7 @@
         WindowStartupLocation="CenterScreen">
   <codewf:CodeWFWindow.LeftContent>
     <!-- 品牌区（原 TitleBarView） -->
-    <StackPanel Margin="14,0,0,0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+    <StackPanel Margin="6,0,0,0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
       <Border Width="24" Height="24" VerticalAlignment="Center"
               Background="{DynamicResource ClearCAccentGradient}"
               BoxShadow="0 2 8 0 #592F6BFF"
@@ -38,13 +43,37 @@
                  Foreground="{DynamicResource ClearCText3}" Text="{Binding TitleBar.Tagline}" />
     </StackPanel>
   </codewf:CodeWFWindow.LeftContent>
+  <codewf:CodeWFWindow.RightContent>
+    <Button Margin="0,0,8,0" Padding="10,3" Height="28" MinHeight="0"
+            Content="{i18n:I18n {x:Static l:Language.AppearanceTitle}}">
+      <Button.Flyout>
+        <Flyout Placement="BottomEdgeAlignedRight">
+          <Grid Width="290" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="12" ColumnSpacing="14"
+                DataContext="{Binding Appearance}" x:DataType="vm:AppearanceViewModel">
+            <TextBlock VerticalAlignment="Center" Text="{i18n:I18n {x:Static l:Language.AppearanceMode}}" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding Modes}" SelectedValueBinding="{Binding Value}"
+                      SelectedValue="{Binding Mode, Mode=TwoWay}" DisplayMemberBinding="{Binding DisplayName}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
+            <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{i18n:I18n {x:Static l:Language.AppearancePalette}}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Palettes}" SelectedValueBinding="{Binding Value}"
+                      SelectedValue="{Binding Palette, Mode=TwoWay}" DisplayMemberBinding="{Binding DisplayName}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
+            <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{i18n:I18n {x:Static l:Language.AppearanceLanguage}}" />
+            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Languages}" SelectedValueBinding="{Binding Value}"
+                      SelectedValue="{Binding CultureName, Mode=TwoWay}" DisplayMemberBinding="{Binding DisplayName}"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
+          </Grid>
+        </Flyout>
+      </Button.Flyout>
+    </Button>
+  </codewf:CodeWFWindow.RightContent>
   <Grid RowDefinitions="Auto,*,160,28">
     <Border x:Name="PlatformNoticeBanner" Grid.Row="0" IsVisible="False"
-            Background="#FFF6E5" BorderBrush="#F0C878" BorderThickness="0,1"
+            Background="{DynamicResource ClearCWarnBg}" BorderBrush="{DynamicResource ClearCWarnBorder}" BorderThickness="0,1"
             Padding="14,8">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
-                   Foreground="#8A6116"
+                   Foreground="{DynamicResource ClearCWarnText}"
                    Text="{i18n:I18n ClearC.PlatformNotice}" />
         <Button Grid.Column="1" Content="{i18n:I18n ClearC.Dismiss}" Margin="12,0,0,0" Padding="10,4"
                 Click="OnPlatformNoticeDismiss" VerticalAlignment="Center" />

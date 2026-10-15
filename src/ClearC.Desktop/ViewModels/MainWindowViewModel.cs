@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows.Input;
 using Avalonia;
@@ -16,7 +16,7 @@ using ReactiveUI;
 
 namespace ClearC.Desktop.ViewModels;
 
-public sealed class MainWindowViewModel : ReactiveObject
+public sealed class MainWindowViewModel : ReactiveObject, IDisposable
 {
     /// <summary>Toast 自动消失时间（§2.6）。</summary>
     public static readonly TimeSpan ToastDuration = TimeSpan.FromSeconds(6);
@@ -69,7 +69,9 @@ public sealed class MainWindowViewModel : ReactiveObject
         IToastScheduler? toastScheduler = null,
         ILocationOpener? locationOpener = null,
         ITextClipboard? clipboard = null,
-        IReadOnlyList<DiskSnapshot>? initialDrives = null)
+        IReadOnlyList<DiskSnapshot>? initialDrives = null,
+        CodeWF.Toolkit.Core.UpdateChecking.IUpdateService? updateService = null,
+        AppearanceViewModel? appearance = null)
     {
         _scanner = scanner;
         _executor = executor;
@@ -108,12 +110,14 @@ public sealed class MainWindowViewModel : ReactiveObject
         CancelCloseCommand = ReactiveCommand.Create(() => IsCloseConfirmationVisible = false);
         ConfirmCloseCommand = ReactiveCommand.CreateFromTask(ConfirmCloseAsync);
 
+        Appearance = appearance;
+        AboutCommand = ReactiveCommand.Create(() => AboutRequested?.Invoke(this, EventArgs.Empty));
         TitleBar = new TitleBarViewModel();
         Workspace = new CleanupWorkspaceViewModel(this);
         LogPanel = new LogPanelViewModel(this, logStore, _palette);
-        StatusBar = new StatusBarViewModel(this);
         Overlay = new WorkflowOverlayViewModel(this);
-        Update = new UpdateViewModel((level, message, exception) => AddLog(level, message, exception));
+        Update = new UpdateViewModel((level, message, exception) => AddLog(level, message, exception), updateService);
+        StatusBar = new StatusBarViewModel(this);
         AppLocalizer.Instance.CultureChanged += OnCultureChanged;
 
         State = WorkflowState.Idle;
@@ -129,7 +133,6 @@ public sealed class MainWindowViewModel : ReactiveObject
         }
 
         AddLog("INFO", AppText.Get(Language.MainScopeIdle));
-        _ = Update.CheckAsync();
     }
 
     /// <summary>「停止并退出」完成、可以真正关闭窗口时触发。</summary>
@@ -152,6 +155,9 @@ public sealed class MainWindowViewModel : ReactiveObject
     public StatusBarViewModel StatusBar { get; }
     public WorkflowOverlayViewModel Overlay { get; }
     public UpdateViewModel Update { get; }
+    public AppearanceViewModel? Appearance { get; }
+    public ICommand AboutCommand { get; }
+    public event EventHandler? AboutRequested;
 
     public ICommand PrimaryCommand { get; }
     public ICommand SecondaryCommand { get; }
@@ -580,7 +586,16 @@ public sealed class MainWindowViewModel : ReactiveObject
     public void PrepareForShutdown()
     {
         _operationCancellation?.Cancel();
+        Update.Cancel();
         StopToastTimer();
+    }
+
+    public void Dispose()
+    {
+        PrepareForShutdown();
+        AppLocalizer.Instance.CultureChanged -= OnCultureChanged;
+        Appearance?.Dispose();
+        Update.Dispose();
     }
 
     private async Task HandlePrimaryAsync()

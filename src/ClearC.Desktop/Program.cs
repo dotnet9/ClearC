@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
@@ -24,7 +25,8 @@ internal static class Program
 
         if (args.Contains("--selfcheck", StringComparer.OrdinalIgnoreCase))
         {
-            return SelfCheck.Run();
+            var captureIndex = Array.IndexOf(args, "--capture");
+            return SelfCheck.Run(captureIndex >= 0 && captureIndex + 1 < args.Length ? args[captureIndex + 1] : null);
         }
 
         // 单实例（§2.7）：第二个实例把已有实例带到前台后自身退出。
@@ -84,6 +86,16 @@ internal static class Program
     public static AppBuilder BuildAvaloniaApp() => AppBuilder
         .Configure<App>()
         .UsePlatformDetect()
+        // 保持中文界面使用无衬线字体，避免默认西文字体的系统回退变成宋体。
+        .With(new FontManagerOptions
+        {
+            FontFallbacks =
+            [
+                new FontFallback { FontFamily = new FontFamily("Microsoft YaHei UI") },
+                new FontFallback { FontFamily = new FontFamily("PingFang SC") },
+                new FontFallback { FontFamily = new FontFamily("Noto Sans CJK SC") }
+            ]
+        })
         .LogToTrace();
 
     private static void BringToFront(ClassicDesktopStyleApplicationLifetime lifetime)

@@ -1,4 +1,4 @@
-using Avalonia.Media;
+﻿using Avalonia.Media;
 
 namespace ClearC.Desktop.ViewModels;
 
@@ -11,6 +11,7 @@ public sealed class StatusBarViewModel : MainWindowSectionViewModel
     }
 
     public UpdateViewModel Update { get; }
+    public System.Windows.Input.ICommand AboutCommand => Owner.AboutCommand;
 
     public string StatusText => Owner.StatusText;
     public IBrush StatusBrush => Owner.StatusBrush;

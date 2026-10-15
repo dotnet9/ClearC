@@ -9,8 +9,8 @@
     <Border Classes="dsHead" Margin="0,0,0,2">
       <Grid ColumnDefinitions="Auto,10,*,Auto,12,Auto,12,Auto">
         <Border Grid.Column="0" Width="26" Height="26" VerticalAlignment="Center"
-                Background="#FFE9F0FF"
-                BorderBrush="#FFCDDDFF"
+                Background="{DynamicResource ClearCAccentSoft}"
+                BorderBrush="{DynamicResource ClearCAccentBorder}"
                 BorderThickness="1"
                 CornerRadius="7">
           <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"

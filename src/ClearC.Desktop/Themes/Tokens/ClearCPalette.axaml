@@ -1,69 +1,72 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui"
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- 唯一色板：值与 design/assets/theme.css 的 :root 一一对应。 -->
+  <!-- 应用语义画刷绑定共享 Studio / Semi 令牌，切换配色时保留布局与画刷实例。 -->
 
-  <SolidColorBrush x:Key="ClearCBg" Color="#eef2f9" />
-  <SolidColorBrush x:Key="ClearCWin" Color="#ffffff" />
-  <SolidColorBrush x:Key="ClearCPanel" Color="#f7f9fc" />
-  <SolidColorBrush x:Key="ClearCLine" Color="#e8edf5" />
-  <SolidColorBrush x:Key="ClearCLine2" Color="#dbe3ef" />
-  <SolidColorBrush x:Key="ClearCText" Color="#1e293b" />
-  <SolidColorBrush x:Key="ClearCText2" Color="#5b6b84" />
-  <SolidColorBrush x:Key="ClearCText3" Color="#8a99b5" />
+  <SolidColorBrush x:Key="ClearCBg" Color="{DynamicResource StudioSurfaceColor}" />
+  <SolidColorBrush x:Key="ClearCWin" Color="{DynamicResource StudioBackgroundColor}" />
+  <SolidColorBrush x:Key="ClearCPanel" Color="{DynamicResource StudioSurfaceColor}" />
+  <SolidColorBrush x:Key="ClearCLine" Color="{DynamicResource StudioBorderColor}" />
+  <SolidColorBrush x:Key="ClearCLine2" Color="{DynamicResource StudioBorderColor}" />
+  <SolidColorBrush x:Key="ClearCText" Color="{DynamicResource StudioTextColor}" />
+  <SolidColorBrush x:Key="ClearCText2" Color="{DynamicResource StudioMutedColor}" />
+  <SolidColorBrush x:Key="ClearCText3" Color="{DynamicResource StudioMutedColor}" />
 
-  <SolidColorBrush x:Key="ClearCAccent" Color="#2f6bff" />
-  <SolidColorBrush x:Key="ClearCAccent2" Color="#7c5cff" />
-  <SolidColorBrush x:Key="ClearCGreen" Color="#10b981" />
-  <SolidColorBrush x:Key="ClearCAmber" Color="#f59e0b" />
-  <SolidColorBrush x:Key="ClearCRed" Color="#ef4444" />
+  <SolidColorBrush x:Key="ClearCAccent" Color="{DynamicResource StudioAccentColor}" />
+  <SolidColorBrush x:Key="ClearCAccent2" Color="{DynamicResource StudioSecondaryColor}" />
+  <SolidColorBrush x:Key="ClearCAccentSoft" Color="{DynamicResource StudioAccentColor}" Opacity="0.08" />
+  <SolidColorBrush x:Key="ClearCAccentBorder" Color="{DynamicResource StudioAccentColor}" Opacity="0.35" />
+  <SolidColorBrush x:Key="ClearCSecondarySoft" Color="{DynamicResource StudioSecondaryColor}" Opacity="0.1" />
+  <SolidColorBrush x:Key="ClearCGreen" Color="{DynamicResource SemiGreen5Color}" />
+  <SolidColorBrush x:Key="ClearCAmber" Color="{DynamicResource SemiOrange5Color}" />
+  <SolidColorBrush x:Key="ClearCRed" Color="{DynamicResource SemiRed5Color}" />
 
   <LinearGradientBrush x:Key="ClearCAccentGradient" StartPoint="0%,0%" EndPoint="100%,100%">
-    <GradientStop Offset="0" Color="#2f6bff" />
-    <GradientStop Offset="1" Color="#7c5cff" />
+    <GradientStop Offset="0" Color="{DynamicResource StudioGradientStartColor}" />
+    <GradientStop Offset="1" Color="{DynamicResource StudioSecondaryColor}" />
   </LinearGradientBrush>
   <LinearGradientBrush x:Key="ClearCTextGradient" StartPoint="0%,0%" EndPoint="100%,0%">
-    <GradientStop Offset="0" Color="#2f6bff" />
-    <GradientStop Offset="1" Color="#7c5cff" />
+    <GradientStop Offset="0" Color="{DynamicResource StudioGradientStartColor}" />
+    <GradientStop Offset="1" Color="{DynamicResource StudioSecondaryColor}" />
   </LinearGradientBrush>
   <LinearGradientBrush x:Key="ClearCDangerGradient" StartPoint="0%,0%" EndPoint="100%,100%">
     <GradientStop Offset="0" Color="#ef4444" />
     <GradientStop Offset="1" Color="#dc2626" />
   </LinearGradientBrush>
 
-  <SolidColorBrush x:Key="ClearCDonutTrack" Color="#e9eef7" />
-  <SolidColorBrush x:Key="ClearCProgressTrack" Color="#e9eef7" />
+  <SolidColorBrush x:Key="ClearCDonutTrack" Color="{DynamicResource StudioRaisedColor}" />
+  <SolidColorBrush x:Key="ClearCProgressTrack" Color="{DynamicResource StudioRaisedColor}" />
 
-  <SolidColorBrush x:Key="ClearCWindowBorder" Color="#e3e9f4" />
-  <SolidColorBrush x:Key="ClearCTitleHover" Color="#f1f5fa" />
-  <SolidColorBrush x:Key="ClearCTitleCloseHover" Color="#fdecec" />
-  <SolidColorBrush x:Key="ClearCRowHover" Color="#f4f7fd" />
-  <SolidColorBrush x:Key="ClearCRowCurrentBg" Color="#f3f7ff" />
-  <SolidColorBrush x:Key="ClearCRowCurrentBorder" Color="#b9c8ff" />
-  <SolidColorBrush x:Key="ClearCDividerSoft" Color="#f1f5f9" />
-  <SolidColorBrush x:Key="ClearCTagBg" Color="#f1f5f9" />
-  <SolidColorBrush x:Key="ClearCCountBg" Color="#eef3ff" />
-  <SolidColorBrush x:Key="ClearCStatusBg" Color="#fbfcfe" />
-  <SolidColorBrush x:Key="ClearCConsoleBg" Color="#f8fafd" />
+  <SolidColorBrush x:Key="ClearCWindowBorder" Color="{DynamicResource StudioBorderColor}" />
+  <SolidColorBrush x:Key="ClearCTitleHover" Color="{DynamicResource StudioRaisedColor}" />
+  <SolidColorBrush x:Key="ClearCTitleCloseHover" Color="{DynamicResource SemiRed1Color}" />
+  <SolidColorBrush x:Key="ClearCRowHover" Color="{DynamicResource StudioRaisedColor}" />
+  <SolidColorBrush x:Key="ClearCRowCurrentBg" Color="{DynamicResource StudioRaisedColor}" />
+  <SolidColorBrush x:Key="ClearCRowCurrentBorder" Color="{DynamicResource StudioAccentColor}" />
+  <SolidColorBrush x:Key="ClearCDividerSoft" Color="{DynamicResource StudioBorderColor}" />
+  <SolidColorBrush x:Key="ClearCTagBg" Color="{DynamicResource StudioRaisedColor}" />
+  <SolidColorBrush x:Key="ClearCCountBg" Color="{DynamicResource StudioRaisedColor}" />
+  <SolidColorBrush x:Key="ClearCStatusBg" Color="{DynamicResource StudioSurfaceColor}" />
+  <SolidColorBrush x:Key="ClearCConsoleBg" Color="{DynamicResource StudioSurfaceColor}" />
 
-  <SolidColorBrush x:Key="ClearCRiskLowText" Color="#059669" />
-  <SolidColorBrush x:Key="ClearCRiskLowBg" Color="#e6f7f0" />
-  <SolidColorBrush x:Key="ClearCRiskMidText" Color="#b45309" />
-  <SolidColorBrush x:Key="ClearCRiskMidBg" Color="#fdf3e3" />
-  <SolidColorBrush x:Key="ClearCRiskHighText" Color="#dc2626" />
-  <SolidColorBrush x:Key="ClearCRiskHighBg" Color="#fdecec" />
+  <SolidColorBrush x:Key="ClearCRiskLowText" Color="{DynamicResource SemiGreen5Color}" />
+  <SolidColorBrush x:Key="ClearCRiskLowBg" Color="{DynamicResource SemiGreen0Color}" />
+  <SolidColorBrush x:Key="ClearCRiskMidText" Color="{DynamicResource SemiOrange5Color}" />
+  <SolidColorBrush x:Key="ClearCRiskMidBg" Color="{DynamicResource SemiOrange0Color}" />
+  <SolidColorBrush x:Key="ClearCRiskHighText" Color="{DynamicResource SemiRed5Color}" />
+  <SolidColorBrush x:Key="ClearCRiskHighBg" Color="{DynamicResource SemiRed0Color}" />
 
-  <SolidColorBrush x:Key="ClearCLogText" Color="#475569" />
-  <SolidColorBrush x:Key="ClearCLogTime" Color="#9aa8bf" />
-  <SolidColorBrush x:Key="ClearCLogInfo" Color="#2563eb" />
-  <SolidColorBrush x:Key="ClearCLogOk" Color="#059669" />
-  <SolidColorBrush x:Key="ClearCLogWarn" Color="#b45309" />
-  <SolidColorBrush x:Key="ClearCLogErr" Color="#dc2626" />
+  <SolidColorBrush x:Key="ClearCLogText" Color="{DynamicResource StudioTextColor}" />
+  <SolidColorBrush x:Key="ClearCLogTime" Color="{DynamicResource StudioMutedColor}" />
+  <SolidColorBrush x:Key="ClearCLogInfo" Color="{DynamicResource StudioAccentColor}" />
+  <SolidColorBrush x:Key="ClearCLogOk" Color="{DynamicResource SemiGreen5Color}" />
+  <SolidColorBrush x:Key="ClearCLogWarn" Color="{DynamicResource SemiOrange5Color}" />
+  <SolidColorBrush x:Key="ClearCLogErr" Color="{DynamicResource SemiRed5Color}" />
 
   <SolidColorBrush x:Key="ClearCMask" Color="#521e2948" />
-  <SolidColorBrush x:Key="ClearCWarnBg" Color="#fff8eb" />
-  <SolidColorBrush x:Key="ClearCWarnBorder" Color="#f6e3b8" />
-  <SolidColorBrush x:Key="ClearCWarnText" Color="#92600a" />
+  <SolidColorBrush x:Key="ClearCWarnBg" Color="{DynamicResource SemiOrange0Color}" />
+  <SolidColorBrush x:Key="ClearCWarnBorder" Color="{DynamicResource SemiOrange3Color}" />
+  <SolidColorBrush x:Key="ClearCWarnText" Color="{DynamicResource SemiOrange6Color}" />
 
-  <SolidColorBrush x:Key="ClearCScrollThumb" Color="#cdd7e6" />
-  <SolidColorBrush x:Key="ClearCScrollThumbHover" Color="#b3c1d8" />
+  <SolidColorBrush x:Key="ClearCScrollThumb" Color="{DynamicResource StudioBorderColor}" />
+  <SolidColorBrush x:Key="ClearCScrollThumbHover" Color="{DynamicResource StudioMutedColor}" />
 </ResourceDictionary>

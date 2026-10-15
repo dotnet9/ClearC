@@ -1,244 +1,184 @@
-using System.Collections.Generic;
-using System.Diagnostics;
-using ClearC.Desktop.Services;
-using ClearC.Desktop.I18n;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Windows.Input;
+﻿using System.Reactive;
+using System.Reactive.Subjects;
+using Unit = ReactiveUI.Primitives.RxVoid;
+using CodeWF.Toolkit.Core.UpdateChecking;
 using ReactiveUI;
+using ClearC.Desktop.I18n;
+using Avalonia.Controls.ApplicationLifetimes;
+using System.Diagnostics;
 
 namespace ClearC.Desktop.ViewModels;
 
-/// <summary>
-/// 更新状态机：检查 GitHub 最新版 → 下载（带进度）→ 运行安装器。
-/// 任何失败都转成可直接展示的中文提示，不抛出。
-/// </summary>
-public sealed class UpdateViewModel : ReactiveObject
+public sealed class UpdateViewModel : ReactiveObject, IDisposable
 {
-    private readonly IUpdateChecker _checker;
-    private readonly IUpdateDownloader _downloader;
-    private readonly HttpClient _http;
-    private readonly Action<string, string, Exception?> _log;
-    private CancellationTokenSource? _downloadCancellation;
-    private double _downloadProgress;
-    private bool _isChecking;
-    private bool _isDownloading;
-    private string? _downloadedPath;
-    private UpdateInfo? _pendingUpdate;
-    private string _resultText = string.Empty;
+    private readonly IUpdateService _updates;
+    private readonly bool _ownsService;
+    private readonly AppLocalizer _localizer;
+    private readonly Action<string> _openUrl;
+    private readonly Action _exit;
+    private readonly CancellationTokenSource _lifetime = new();
+    private readonly BehaviorSubject<bool> _canUpdate = new(true);
+    private CancellationTokenSource? _operation;
+    private UpdateInfo? _update;
+    private UpdateDownloadResult? _download;
+    private UpdateState _state;
+    private string? _error;
+    private UpdateInstallResult? _install;
+    private double? _progress;
+    private bool _disposed;
 
-    public UpdateViewModel(Action<string, string, Exception?> log)
+    /// <summary>应用只保留状态机；网络、选包、校验和安装全部由 Toolkit 提供。</summary>
+    public UpdateViewModel(Action<string, string, Exception?> log, IUpdateService? updates = null,
+        Action<string>? openUrl = null, Action? exit = null)
     {
-        _log = log;
-        _http = new HttpClient();
-        _checker = new UpdateChecker(_http, "dotnet9", "ClearC", log: (message, exception) => _log("WARN", message, exception));
-        _downloader = new UpdateDownloader(_http);
-
-        CheckCommand = ReactiveCommand.CreateFromTask(() => CheckAsync());
-        DownloadCommand = ReactiveCommand.CreateFromTask(() => DownloadAsync());
-        InstallCommand = ReactiveCommand.Create(InstallDownloaded);
-        OpenPageCommand = ReactiveCommand.Create(OpenReleasePage);
-        AppLocalizer.Instance.CultureChanged += OnCultureChanged;
+        _updates = updates ?? new UpdateService(new UpdateServiceOptions
+        {
+            Repository = "ClearC", ProductName = "ClearC",
+            Log = message => log("WARN", message, null)
+        });
+        _ownsService = updates is null;
+        _localizer = AppLocalizer.Instance;
+        _openUrl = openUrl ?? (url => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }));
+        _exit = exit ?? (() => (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown());
+        UpdateCommand = ReactiveCommand.CreateFromTask(AdvanceAsync, _canUpdate);
+        CheckCommand = ReactiveCommand.CreateFromTask(CheckAsync, _canUpdate);
+        CancelCommand = ReactiveCommand.Create(() => _operation?.Cancel());
+        RepositoryCommand = ReactiveCommand.Create(() => OpenUrl("https://github.com/dotnet9/ClearC"));
+        WebsiteCommand = ReactiveCommand.Create(() => OpenUrl("https://codewf.com"));
+        _localizer.CultureChanged += OnCultureChanged;
     }
 
-    public ICommand CheckCommand { get; }
-    public ICommand DownloadCommand { get; }
-    public ICommand InstallCommand { get; }
-    public ICommand OpenPageCommand { get; }
-
-    public bool IsChecking
+    public ReactiveCommand<Unit, Unit> UpdateCommand { get; }
+    public ReactiveCommand<Unit, Unit> CheckCommand { get; }
+    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+    public ReactiveCommand<Unit, Unit> RepositoryCommand { get; }
+    public ReactiveCommand<Unit, Unit> WebsiteCommand { get; }
+    public UpdateState State => _state;
+    public bool IsBusy => _state is UpdateState.Checking or UpdateState.Downloading or UpdateState.Installing;
+    public bool IsDownloading => _state == UpdateState.Downloading;
+    public bool CanRecheck => _state is UpdateState.Available or UpdateState.Downloaded;
+    public bool IsIndeterminate => !_progress.HasValue;
+    public double Progress => _progress ?? 0;
+    public string ProgressText => _progress.HasValue ? (_progress.Value / 100).ToString("P0", _localizer.Culture) : string.Empty;
+    public string ActionText => _localizer.Get(_state switch
     {
-        get => _isChecking;
-        private set => this.RaiseAndSetIfChanged(ref _isChecking, value);
+        UpdateState.Checking => Language.AboutChecking,
+        UpdateState.Downloading => Language.AboutDownloading,
+        UpdateState.Installing => Language.AboutInstalling,
+        UpdateState.Available when !CanDownload => Language.UpdateReleasePage,
+        UpdateState.Available => Language.UpdateDownload,
+        UpdateState.Downloaded when _download?.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) == true => Language.AboutOpenFolder,
+        UpdateState.Downloaded => Language.UpdateInstall,
+        _ => Language.UpdateCheck
+    });
+    public string StatusText => _state switch
+    {
+        UpdateState.Checking => _localizer.Get(Language.AboutChecking),
+        UpdateState.Current => _localizer.Get(Language.AboutCurrent),
+        UpdateState.Available => _localizer.Format(Language.AboutAvailable, _update!.Tag),
+        UpdateState.Downloading => _localizer.Format(Language.AboutDownloadProgress, ProgressText),
+        UpdateState.Downloaded => _localizer.Get(Language.AboutDownloaded),
+        UpdateState.Failed => _localizer.Format(Language.AboutFailed, _error),
+        UpdateState.Canceled => _localizer.Get(Language.AboutCanceled),
+        UpdateState.Installed => _install?.Message ?? string.Empty,
+        _ => string.Empty
+    };
+    public void Cancel() => _operation?.Cancel();
+
+    public string ReleaseNotes => _update?.Notes ?? string.Empty;
+    private bool CanDownload => !string.IsNullOrWhiteSpace(_update?.AssetUrl) && !string.IsNullOrWhiteSpace(_update.ChecksumUrl);
+
+    public async Task AdvanceAsync()
+    {
+        if (IsBusy || _disposed) return;
+        if (_state == UpdateState.Available)
+        {
+            if (CanDownload) await DownloadAsync();
+            else OpenUrl(_update!.PageUrl);
+        }
+        else if (_state == UpdateState.Downloaded) await InstallAsync();
+        else await CheckAsync();
     }
 
-    public bool IsDownloading
+    public Task CheckAsync() => RunAsync(UpdateState.Checking, async token =>
     {
-        get => _isDownloading;
-        private set
+        _update = null;
+        _download = null;
+        _install = null;
+        var result = await _updates.CheckAsync(cancellationToken: token);
+        token.ThrowIfCancellationRequested();
+        if (!result.Succeeded) { _error = result.Error; SetState(UpdateState.Failed); }
+        else { _update = result.Update; SetState(_update is null ? UpdateState.Current : UpdateState.Available); }
+    });
+
+    private Task DownloadAsync() => RunAsync(UpdateState.Downloading, async token =>
+    {
+        _progress = null;
+        var progress = new Progress<UpdateDownloadProgress>(value =>
         {
-            if (this.RaiseAndSetIfChanged(ref _isDownloading, value))
-            {
-                this.RaisePropertyChanged(nameof(CanDownload));
-            }
-        }
+            if (_disposed || !IsDownloading) return;
+            _progress = value.Percentage;
+            Refresh();
+        });
+        _download = await _updates.DownloadAsync(_update!, progress, token);
+        token.ThrowIfCancellationRequested();
+        SetState(UpdateState.Downloaded);
+    });
+
+    private Task InstallAsync() => RunAsync(UpdateState.Installing, async token =>
+    {
+        _install = await _updates.InstallAsync(_download!, token);
+        SetState(UpdateState.Installed);
+        if (_install.ShouldExitApplication) _exit();
+    });
+
+    private async Task RunAsync(UpdateState state, Func<CancellationToken, Task> action)
+    {
+        if (IsBusy || _disposed) return;
+        using var operation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _operation = operation;
+        SetState(state);
+        try { await action(operation.Token); }
+        catch (OperationCanceledException) when (operation.IsCancellationRequested) { SetState(UpdateState.Canceled); }
+        catch (Exception error) { _error = error.Message; SetState(UpdateState.Failed); }
+        finally { _operation = null; }
     }
 
-    public bool IsReady => !string.IsNullOrWhiteSpace(_downloadedPath) && File.Exists(_downloadedPath);
-
-    public bool UpdateAvailable => _pendingUpdate is not null;
-
-    /// <summary>状态栏常驻按钮的文案：平时是检查更新，发现新版后变成版本徽标。</summary>
-    public string ButtonText => UpdateAvailable ? AppText.Format(Language.UpdateNewVersion, _pendingUpdate!.Tag) : AppText.Get(Language.UpdateCheck);
-
-    public string ResultText => _resultText;
-
-    public double DownloadProgress => _downloadProgress;
-
-    public string ProgressText => IsDownloading
-        ? _downloadProgress > 0 ? AppText.Format(Language.UpdateDownloading, _downloadProgress.ToString("0", AppLocalizer.Instance.Culture)) : AppText.Get(Language.UpdatePreparing)
-        : IsReady ? AppText.Get(Language.UpdateProgressReady) : string.Empty;
-
-    public bool CanDownload => UpdateAvailable && !IsDownloading && !IsReady &&
-        !string.IsNullOrWhiteSpace(_pendingUpdate?.AssetUrl) &&
-        !string.IsNullOrWhiteSpace(_pendingUpdate?.ChecksumUrl);
-
-    /// <summary>没有匹配资产或缺少校验文件时，只能引导用户去 Release 页面。</summary>
-    public bool NeedsReleasePage => UpdateAvailable && !IsDownloading && !IsReady && !CanDownload;
-
-    public async Task CheckAsync()
+    private void OpenUrl(string url)
     {
-        if (IsChecking || IsDownloading)
-        {
-            return;
-        }
-
-        IsChecking = true;
-        try
-        {
-            var current = ParseCurrentVersion();
-            UpdateCheckResult result = await _checker.CheckAsync(current).ConfigureAwait(true);
-
-            if (!result.Succeeded)
-            {
-                SetResult(AppText.Get(Language.UpdateError));
-                return;
-            }
-
-            if (result.Update is null)
-            {
-                _pendingUpdate = null;
-                SetResult(AppText.Format(Language.UpdateLatest, current));
-                return;
-            }
-
-            _pendingUpdate = result.Update;
-            SetResult(NeedsReleasePage
-                ? AppText.Get(Language.UpdateNoAsset)
-                : AppText.Format(Language.UpdateAvailable, result.Update.Tag));
-        }
-        finally
-        {
-            IsChecking = false;
-        }
+        try { _openUrl(url); }
+        catch (Exception error) { _error = error.Message; SetState(UpdateState.Failed); }
     }
 
-    public async Task DownloadAsync()
+    private void SetState(UpdateState state)
     {
-        if (IsDownloading || _pendingUpdate?.AssetUrl is null)
-        {
-            if (NeedsReleasePage)
-            {
-                OpenReleasePage();
-            }
-            return;
-        }
-
-        _downloadCancellation?.Dispose();
-        _downloadCancellation = new CancellationTokenSource();
-        _downloadProgress = 0;
-        IsDownloading = true;
-        RaiseAll();
-
-        try
-        {
-            var progress = new Progress<UpdateDownloadProgress>(value =>
-            {
-                _downloadProgress = value.Percentage ?? _downloadProgress;
-                this.RaisePropertyChanged(nameof(DownloadProgress));
-                this.RaisePropertyChanged(nameof(ProgressText));
-            });
-
-            UpdateDownloadResult download = await _downloader.DownloadAsync(
-                _pendingUpdate, progress, _downloadCancellation.Token).ConfigureAwait(true);
-            _downloadedPath = download.FilePath;
-            SetResult(AppText.Format(Language.UpdateDownloaded, download.FileName));
-        }
-        catch (OperationCanceledException)
-        {
-            SetResult(AppText.Get(Language.UpdateCanceled));
-        }
-        catch (Exception exception)
-        {
-            SetResult(AppText.Format(Language.UpdateDownloadFailed, exception.Message));
-        }
-        finally
-        {
-            IsDownloading = false;
-            RaiseAll();
-        }
+        _state = state;
+        _canUpdate.OnNext(!IsBusy);
+        Refresh();
+    }
+    private void OnCultureChanged(object? sender, EventArgs args) => Refresh();
+    private void Refresh()
+    {
+        foreach (var property in new[] { nameof(State), nameof(IsBusy), nameof(IsDownloading), nameof(CanRecheck), nameof(IsIndeterminate),
+                     nameof(Progress), nameof(ProgressText), nameof(ActionText), nameof(StatusText), nameof(ReleaseNotes) })
+            this.RaisePropertyChanged(property);
     }
 
-    /// <summary>运行下载好的安装器（Inno Setup），主程序退出让安装器接管。</summary>
-    public void InstallDownloaded()
+    public void Dispose()
     {
-        string? path = _downloadedPath;
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-        {
-            SetResult(AppText.Get(Language.UpdateInstallMissing));
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = path,
-                UseShellExecute = true
-            });
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                desktop.Shutdown();
-            }
-        }
-        catch (Exception exception)
-        {
-            SetResult(AppText.Format(Language.UpdateInstallFailed, exception.Message));
-        }
-    }
-
-    public void OpenReleasePage()
-    {
-        if (_pendingUpdate?.PageUrl is string url)
-        {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-        }
-    }
-
-    private static Version ParseCurrentVersion()
-    {
-        var informational = typeof(UpdateViewModel).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-        return VersionUtil.Parse(informational) ?? new Version(0, 1, 0);
-    }
-
-    private void SetResult(string text)
-    {
-        _resultText = text;
-        this.RaisePropertyChanged(nameof(ResultText));
-        this.RaisePropertyChanged(nameof(UpdateAvailable));
-        this.RaisePropertyChanged(nameof(ButtonText));
-        this.RaisePropertyChanged(nameof(IsReady));
-        this.RaisePropertyChanged(nameof(CanDownload));
-        this.RaisePropertyChanged(nameof(NeedsReleasePage));
-        this.RaisePropertyChanged(nameof(ProgressText));
-        _log("INFO", text, null);
-    }
-
-    private void RaiseAll()
-    {
-        this.RaisePropertyChanged(nameof(IsReady));
-        this.RaisePropertyChanged(nameof(CanDownload));
-        this.RaisePropertyChanged(nameof(ProgressText));
-    }
-
-    private void OnCultureChanged(object? sender, EventArgs args)
-    {
-        this.RaisePropertyChanged(nameof(ButtonText));
-        this.RaisePropertyChanged(nameof(ResultText));
-        this.RaisePropertyChanged(nameof(ProgressText));
+        if (_disposed) return;
+        _disposed = true;
+        _lifetime.Cancel();
+        _localizer.CultureChanged -= OnCultureChanged;
+        _lifetime.Dispose();
+        UpdateCommand.Dispose();
+        CheckCommand.Dispose();
+        CancelCommand.Dispose();
+        RepositoryCommand.Dispose();
+        WebsiteCommand.Dispose();
+        _canUpdate.Dispose();
+        if (_ownsService && _updates is IDisposable service) service.Dispose();
     }
 }
+
+public enum UpdateState { Idle, Checking, Current, Available, Downloading, Downloaded, Installing, Installed, Failed, Canceled }

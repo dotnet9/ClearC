@@ -84,8 +84,8 @@ public sealed class DiskDonut : Control
         base.Render(context);
 
         var size = Math.Min(Bounds.Width, Bounds.Height);
-        var thickness = StrokeThickness;
-        var radius = size / 2 * RadiusRatio;
+        var thickness = StrokeThickness * size / 150;
+        var radius = size * RadiusRatio;
         if (radius <= thickness)
         {
             return;

@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:ClearC.Desktop.Controls">
   <Styles.Resources>
@@ -45,8 +45,8 @@
       <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine2}" />
       <Setter Property="BorderThickness" Value="1" />
       <Style Selector="^:pointerover /template/ Border#PART_Root">
-        <Setter Property="Background" Value="#f6f9ff" />
-        <Setter Property="BorderBrush" Value="#b9c8ff" />
+        <Setter Property="Background" Value="{DynamicResource ClearCRowHover}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ClearCRowCurrentBorder}" />
       </Style>
       <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCAccent}" />
@@ -84,7 +84,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource ClearCLine2}" />
       <Setter Property="BorderThickness" Value="1" />
       <Style Selector="^:pointerover /template/ Border#PART_Root">
-        <Setter Property="BorderBrush" Value="#b9c8ff" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ClearCRowCurrentBorder}" />
       </Style>
       <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="TextElement.Foreground" Value="{DynamicResource ClearCAccent}" />
@@ -192,7 +192,7 @@
                     Height="16"
                     VerticalAlignment="Center"
                     Background="{DynamicResource ClearCWin}"
-                    BorderBrush="#c6d2e5"
+                    BorderBrush="{DynamicResource ClearCLine2}"
                     BorderThickness="1.5"
                     CornerRadius="{DynamicResource ClearCRadiusMini}">
               <controls:IconGlyph Width="10"
@@ -251,7 +251,7 @@
   </Styles.Resources>
 
   <!-- ═══ 基础 ═══ -->
-  <Style Selector="Window">
+  <Style Selector=":is(Window)">
     <Setter Property="FontFamily" Value="{DynamicResource ClearCSansFont}" />
     <Setter Property="FontSize" Value="{DynamicResource ClearCFontBody}" />
     <Setter Property="Foreground" Value="{DynamicResource ClearCText}" />
@@ -320,8 +320,8 @@
     <Setter Property="MinWidth" Value="330" />
   </Style>
   <Style Selector="Border.driveCard.on">
-    <Setter Property="BorderBrush" Value="#FF9FB6FF" />
-    <Setter Property="Background" Value="#FFF3F7FF" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCAccentBorder}" />
+    <Setter Property="Background" Value="{DynamicResource ClearCAccentSoft}" />
     <Setter Property="BoxShadow" Value="0 4 14 0 #1A2F6BFF" />
   </Style>
   <Style Selector="TextBlock.driveLetter">
@@ -334,7 +334,7 @@
   <Style Selector="Border.driveType">
     <Setter Property="Padding" Value="7,1" />
     <Setter Property="CornerRadius" Value="99" />
-    <Setter Property="Background" Value="#FFE9F0FF" />
+    <Setter Property="Background" Value="{DynamicResource ClearCAccentSoft}" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
   <Style Selector="Border.driveType TextBlock">
@@ -343,10 +343,10 @@
     <Setter Property="Foreground" Value="{DynamicResource ClearCAccent}" />
   </Style>
   <Style Selector="Border.driveType.data">
-    <Setter Property="Background" Value="#FFF1EDFF" />
+    <Setter Property="Background" Value="{DynamicResource ClearCSecondarySoft}" />
   </Style>
   <Style Selector="Border.driveType.data TextBlock">
-    <Setter Property="Foreground" Value="#FF7C5CFF" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCAccent2}" />
   </Style>
   <Style Selector="Border.driveUsageTrack">
     <Setter Property="Height" Value="5" />
@@ -360,7 +360,7 @@
     <Setter Property="HorizontalAlignment" Value="Left" />
   </Style>
   <Style Selector="Border.driveUsageFill.hot">
-    <Setter Property="Background" Value="#FFEF4444" />
+    <Setter Property="Background" Value="{DynamicResource ClearCRed}" />
   </Style>
   <Style Selector="TextBlock.driveScan">
     <Setter Property="FontSize" Value="11" />
@@ -384,17 +384,17 @@
     <Setter Property="Padding" Value="8,7,12,7" />
   </Style>
   <Style Selector="Border.dsPolicy">
-    <Setter Property="Background" Value="#FFFDF3E3" />
+    <Setter Property="Background" Value="{DynamicResource ClearCWarnBg}" />
     <Setter Property="CornerRadius" Value="99" />
   </Style>
   <Style Selector="Border.dsPolicy TextBlock">
-    <Setter Property="Foreground" Value="#FFB45309" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCWarnText}" />
   </Style>
   <Style Selector="Border.dsPolicy.auto">
-    <Setter Property="Background" Value="#FFE6F7F0" />
+    <Setter Property="Background" Value="{DynamicResource ClearCRiskLowBg}" />
   </Style>
   <Style Selector="Border.dsPolicy.auto TextBlock">
-    <Setter Property="Foreground" Value="#FF059669" />
+    <Setter Property="Foreground" Value="{DynamicResource ClearCRiskLowText}" />
   </Style>
 
   <!-- ═══ 行内「打开所在目录」按钮（原型 .row-open） ═══ -->
@@ -411,8 +411,8 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
   <Style Selector="Button.rowOpen:pointerover">
-    <Setter Property="Background" Value="#FFF6F9FF" />
-    <Setter Property="BorderBrush" Value="#FFB9C8FF" />
+    <Setter Property="Background" Value="{DynamicResource ClearCAccentSoft}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ClearCAccentBorder}" />
   </Style>
 
   <!-- ═══ 滚动条方向尺寸 ═══ -->

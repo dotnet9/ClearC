@@ -8,15 +8,14 @@
              x:DataType="vm:CleanupWorkspaceViewModel">
   <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
     <!-- ═══ 总览区 ═══ -->
-    <Grid Grid.Row="0" Margin="26,20,26,18" ColumnDefinitions="150,30,*">
-      <Grid Width="150" Height="150">
+    <Grid Grid.Row="0" Margin="26,16,26,12" ColumnDefinitions="132,30,*">
+      <Grid Width="132" Height="132">
         <controls:DiskDonut UsedRatio="{Binding UsedRatio}"
                             AccentBrush="{DynamicResource ClearCAccentGradient}"
                             TrackBrush="{DynamicResource ClearCDonutTrack}"
                             StrokeThickness="9" />
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="1">
           <TextBlock HorizontalAlignment="Center" FontSize="23" FontWeight="ExtraBold"
-                     FontFamily="{DynamicResource ClearCMonoFont}"
                      Foreground="{DynamicResource ClearCAccent}" Text="{Binding UsedPercent}" />
           <TextBlock HorizontalAlignment="Center" FontSize="10.5" LetterSpacing="2"
                      Foreground="{DynamicResource ClearCText3}" Text="{i18n:I18n ClearC.Workspace.Used}" />
@@ -27,7 +26,6 @@
         <StackPanel Orientation="Horizontal" Spacing="10">
           <TextBlock FontSize="15" FontWeight="Bold" Text="{Binding DriveTitle}" />
           <TextBlock VerticalAlignment="Center" FontSize="11"
-                     FontFamily="{DynamicResource ClearCMonoFont}"
                      Foreground="{DynamicResource ClearCText3}" Text="{Binding DriveInfo}" />
         </StackPanel>
 
@@ -35,8 +33,7 @@
           <TextBlock VerticalAlignment="Bottom" Margin="0,0,0,3" FontSize="12"
                      Foreground="{DynamicResource ClearCText2}" Text="{Binding HeroLabel}" />
           <TextBlock FontSize="26" FontWeight="ExtraBold" LetterSpacing="-0.5"
-                     FontFamily="{DynamicResource ClearCMonoFont}"
-                     Foreground="{DynamicResource ClearCAccent}"
+                     Foreground="{DynamicResource ClearCTextGradient}"
                      IsVisible="{Binding !IsHeroPlaceholder}" Text="{Binding HeroValue}" />
           <TextBlock FontSize="16" FontWeight="Normal"
                      Foreground="{DynamicResource ClearCText3}"
@@ -167,6 +164,6 @@
     </Grid>
 
     <!-- ═══ 结果列表 ═══ -->
-    <views:CleanupListView Grid.Row="3" />
+    <views:CleanupListView Grid.Row="4" />
   </Grid>
 </UserControl>

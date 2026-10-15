@@ -1,0 +1,68 @@
+﻿<codewf:CodeWFWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:codewf="https://codewf.com"
+    xmlns:l="using:ClearC.Desktop.I18n" xmlns:vm="using:ClearC.Desktop.ViewModels"
+    x:Class="ClearC.Desktop.Views.AboutWindow" x:DataType="vm:AboutViewModel"
+    Title="{codewf:I18n {x:Static l:Language.AboutTitle}}" Icon="/Assets/logo.ico"
+    Width="620" Height="560" MinWidth="540" MinHeight="460" ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner" Background="{DynamicResource StudioBackground}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24" Spacing="18">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                <Image Width="44" Height="44" Source="/Assets/logo.ico" />
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock FontSize="22" FontWeight="SemiBold" Text="ClearC" />
+                    <TextBlock Foreground="{DynamicResource StudioMuted}" TextWrapping="Wrap"
+                        Text="{codewf:I18n {x:Static l:Language.AboutDescription}}" />
+                </StackPanel>
+            </Grid>
+            <Border Background="{DynamicResource StudioSurface}" BorderBrush="{DynamicResource StudioBorder}"
+                    BorderThickness="1" Padding="16" CornerRadius="10">
+                <StackPanel Spacing="10" DataContext="{Binding Update}" x:DataType="vm:UpdateViewModel">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                        <StackPanel Spacing="4">
+                            <TextBlock FontWeight="SemiBold" Text="{codewf:I18n {x:Static l:Language.UpdateCheck}}" />
+                            <TextBlock FontSize="12" Foreground="{DynamicResource StudioMuted}" TextWrapping="Wrap"
+                                Text="{codewf:I18n {x:Static l:Language.AboutUpdateHint}}" />
+                        </StackPanel>
+                        <Button Grid.Column="1" VerticalAlignment="Center" Classes="btn primary"
+                                Command="{Binding UpdateCommand}" Content="{Binding ActionText}" MinWidth="100" />
+                    </Grid>
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap"
+                               IsVisible="{Binding StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <ProgressBar IsVisible="{Binding IsDownloading}" IsIndeterminate="{Binding IsIndeterminate}"
+                                 Value="{Binding Progress}" Maximum="100" />
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsBusy}">
+                        <TextBlock Text="{Binding ProgressText}" IsVisible="{Binding IsDownloading}" />
+                        <Button Grid.Column="1" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}"
+                                Content="{codewf:I18n {x:Static l:Language.AboutCancel}}" />
+                    </Grid>
+                    <Expander Header="{codewf:I18n {x:Static l:Language.AboutReleaseNotes}}"
+                              IsVisible="{Binding ReleaseNotes, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <ScrollViewer MaxHeight="130"><TextBlock Text="{Binding ReleaseNotes}" TextWrapping="Wrap" /></ScrollViewer>
+                    </Expander>
+                </StackPanel>
+            </Border>
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="20" RowSpacing="12">
+                <TextBlock Foreground="{DynamicResource StudioMuted}" Text="{codewf:I18n {x:Static l:Language.AboutVersion}}" />
+                <TextBlock Grid.Column="1" Text="{Binding VersionText}" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Foreground="{DynamicResource StudioMuted}" Text="{codewf:I18n {x:Static l:Language.AboutPlatform}}" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlatformText}" TextWrapping="Wrap" />
+                <TextBlock Grid.Row="2" Foreground="{DynamicResource StudioMuted}" Text="{codewf:I18n {x:Static l:Language.AboutCompileTime}}" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CompileTimeText}" />
+                <TextBlock Grid.Row="3" Foreground="{DynamicResource StudioMuted}" Text="{codewf:I18n {x:Static l:Language.AboutAuthor}}" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{codewf:I18n {x:Static l:Language.AboutAuthorName}}" />
+                <TextBlock Grid.Row="4" Foreground="{DynamicResource StudioMuted}" Text="{codewf:I18n {x:Static l:Language.AboutRepository}}" />
+                <Button Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" Classes="link"
+                        Command="{Binding Update.RepositoryCommand}" Content="github.com/dotnet9/ClearC" />
+                <TextBlock Grid.Row="5" Foreground="{DynamicResource StudioMuted}" Text="{codewf:I18n {x:Static l:Language.AboutCopyright}}" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CopyrightText}" TextWrapping="Wrap" />
+            </Grid>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Command="{Binding Update.CheckCommand}" IsVisible="{Binding Update.CanRecheck}"
+                        Content="{codewf:I18n {x:Static l:Language.UpdateCheck}}" />
+                <Button Command="{Binding CloseCommand}" Content="{codewf:I18n {x:Static l:Language.AboutClose}}" MinWidth="80" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</codewf:CodeWFWindow>

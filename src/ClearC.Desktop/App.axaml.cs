@@ -1,8 +1,10 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using System.Globalization;
 using ClearC.Core.Safety;
+using ClearC.Desktop.Services;
+using CodeWF.Avalonia.Controls.Themes;
 using ClearC.Desktop.Infrastructure.Cleanup;
 using ClearC.Desktop.Infrastructure.Logging;
 using ClearC.Desktop.Infrastructure.Scanning;
@@ -14,11 +16,17 @@ namespace ClearC.Desktop;
 
 public sealed partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        var reactiveBuilder = ReactiveUI.Builder.RxAppBuilder.CreateReactiveUIBuilder();
+        reactiveBuilder.WithCoreServices();
+        reactiveBuilder.BuildApp();
+        AvaloniaXamlLoader.Load(this);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        AppLocalizer.Initialize(GetCultureName());
+        AppLocalizer.Initialize(new AppearanceSettingsStore().Load().CultureName ?? GetCultureName());
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownRequested += OnShutdownRequested;
@@ -31,7 +39,8 @@ public sealed partial class App : Application
     private static string GetCultureName() =>
         CultureInfo.CurrentUICulture.Name.Equals("en-US", StringComparison.OrdinalIgnoreCase) ? "en-US" : "zh-CN";
 
-    internal static MainWindow CreateMainWindow(IApplicationLogger? logger = null)
+    internal static MainWindow CreateMainWindow(IApplicationLogger? logger = null,
+        bool checkUpdates = true, AppearanceSettingsStore? appearanceStore = null)
     {
         var scanner = new WindowsCleanupScanner();
         var executor = new WindowsCleanupExecutor();
@@ -39,16 +48,24 @@ public sealed partial class App : Application
         var disk = diskProvider.GetSystemDrive();
         var drives = diskProvider.GetFixedDrives();
         var logStore = new InMemoryLogStore(logger ?? CodeWfApplicationLogger.Instance);
-        return new MainWindow
-        {
-            DataContext = new MainWindowViewModel(
+        var window = new MainWindow();
+        var appearance = Application.Current is { } application
+            ? new AppearanceViewModel(new StudioThemeController(application), appearanceStore ?? new AppearanceSettingsStore(),
+                error => logStore.Warning(AppText.Format(Language.AppearanceSaveFailed, error.Message), error))
+            : null;
+        var model = new MainWindowViewModel(
                 scanner,
                 executor,
                 new CleanupSafetyPolicy(),
                 disk,
                 logStore,
-                initialDrives: drives)
-        };
+                initialDrives: drives, appearance: appearance);
+        window.DataContext = model;
+        var about = new AboutWindowService(window, model.Update);
+        model.AboutRequested += (_, _) => about.Show();
+        if (checkUpdates) window.Opened += (_, _) => _ = model.Update.CheckAsync();
+        window.Closed += (_, _) => model.Dispose();
+        return window;
     }
 
     /// <summary>

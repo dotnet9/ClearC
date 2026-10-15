@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ClearC.Desktop.ViewModels"
              xmlns:i18n="using:CodeWF.Avalonia.Lang.MarkupExtensions"
@@ -15,32 +15,8 @@
       <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="11" Margin="0,0,12,0"
                  FontFamily="{DynamicResource ClearCMonoFont}"
                  Foreground="{DynamicResource ClearCText3}" Text="{Binding StateCode}" />
-      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
-                  DataContext="{Binding Update}">
-        <TextBlock VerticalAlignment="Center" FontSize="11"
-                   Foreground="{DynamicResource ClearCText2}" Text="{Binding ResultText}"
-                   IsVisible="{Binding ResultText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        <ProgressBar Width="90" Height="4" VerticalAlignment="Center"
-                     IsVisible="{Binding IsDownloading}"
-                     Maximum="100" Value="{Binding DownloadProgress}" />
-        <TextBlock VerticalAlignment="Center" FontSize="11"
-                   Foreground="{DynamicResource ClearCText2}" Text="{Binding ProgressText}"
-                   IsVisible="{Binding IsDownloading}" />
-        <Button Classes="btn mini" Content="{Binding ButtonText}"
-                Command="{Binding CheckCommand}"
-                IsEnabled="{Binding !IsChecking}"
-                Classes.danger="{Binding UpdateAvailable}"
-                VerticalAlignment="Center" />
-        <Button Classes="btn mini" Content="{i18n:I18n ClearC.Update.Download}" Command="{Binding DownloadCommand}"
-                IsVisible="{Binding CanDownload}"
-                VerticalAlignment="Center" />
-        <Button Classes="btn mini primary" Content="{i18n:I18n ClearC.Update.Install}" Command="{Binding InstallCommand}"
-                IsVisible="{Binding IsReady}"
-                VerticalAlignment="Center" />
-        <Button Classes="btn mini ghost" Content="{i18n:I18n ClearC.Update.ReleasePage}" Command="{Binding OpenPageCommand}"
-                IsVisible="{Binding NeedsReleasePage}"
-                VerticalAlignment="Center" />
-      </StackPanel>
+      <Button Grid.Column="2" Classes="mini" Content="{i18n:I18n ClearC.About.Title}"
+              Command="{Binding AboutCommand}" VerticalAlignment="Center" />
     </Grid>
   </Border>
 </UserControl>
