@@ -6,6 +6,10 @@ $sourceRoot = Join-Path $PSScriptRoot 'prototype'
 $template = Join-Path $sourceRoot 'index.template.html'
 $output = Join-Path $repositoryRoot 'design/index.html'
 $designRoot = Join-Path $repositoryRoot 'design'
+$versionMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $repositoryRoot 'Directory.Build.props')), '<Version>(?<version>\d+\.\d+\.\d+)</Version>')
+if (-not $versionMatch.Success) { throw '未找到产品版本号。' }
+$productVersion = $versionMatch.Groups['version'].Value
+$sampleVersion = '99.0.0'
 & node (Join-Path $sourceRoot 'build-resources.cjs') $(if ($Check) { '--check' })
 if ($LASTEXITCODE -ne 0) { throw '原型国际化资源生成失败。' }
 
@@ -67,7 +71,7 @@ $html = [regex]::Replace($html, '(?<prefix><(?:img|link)\b[^>]*?\b(?:src|href)\s
     param($match)
     return $match.Groups['prefix'].Value + $match.Groups['quote'].Value + (Convert-PrototypeImage $match.Groups['path'].Value $sourceRoot) + $match.Groups['quote'].Value
 })
-$html = $html.ReplaceLineEndings("`n")
+$html = $html.Replace('__APP_VERSION__', $productVersion).Replace('__UPDATE_VERSION__', $sampleVersion).ReplaceLineEndings("`n")
 if ($Check) {
     if (-not (Test-Path -LiteralPath $output) -or [IO.File]::ReadAllText($output).ReplaceLineEndings("`n") -cne $html) {
         throw '单文件原型未更新，请运行 scripts/build_standalone_prototype.ps1。'

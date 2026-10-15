@@ -106,7 +106,7 @@
     const check=el('checkAll');check.disabled=state.phase!=='results';check.checked=state.checked.size>0&&state.checked.size===state.scanList.filter(item=>item.cleanable&&!Object.hasOwn(state.cleaned,item.id)).length;
     el('selInfo').textContent=state.checked.size?t('Main.SelectedSummary',state.checked.size,size(total([...state.checked]))):t('Main.NoSelection');
     el('sbText').textContent=t({idle:'Main.StatusReady',scanning:'Main.StatusScanning',results:'Main.StatusComplete',cleaning:'Main.StatusCleaning',done:'Main.StatusDone'}[state.phase],state.scope.map(letter=>letter+':').join(' · '));
-    el('sbDot').className='dot'+(busy()?' run':'');el('stateCode').textContent='CLEARC · v0.2.7 · '+state.phase.toUpperCase();
+    el('sbDot').className='dot'+(busy()?' run':'');el('stateCode').textContent='CLEARC · v__APP_VERSION__ · '+state.phase.toUpperCase();
   }
   function renderLogs() { el('logCount').textContent=state.logs.length;el('logBody').innerHTML=state.logs.map(entry=>`<div class="log-line"><span class="log-time">${entry.time}</span><span class="log-lvl lvl-${entry.level}">${entry.level}</span>${esc(t(entry.key,...entry.args))}</div>`).join('')+'<div class="cursor-line"></div>';el('logBody').scrollTop=el('logBody').scrollHeight; }
   function render() { document.body.dataset.state=state.phase;appearance();renderHero();renderDrives();renderBar();renderList();renderLogs();renderUpdate();if(!el('mask').hidden&&el('mask').dataset.kind==='confirm')openConfirm(false); }
@@ -130,7 +130,7 @@
   function openContext(event,item) { const menu=el('ctxMenu');menu.replaceChildren();for(const [key,action]of [['Item.OpenDirectory',()=>toast('Prototype.Opened')],['Item.CopyPath',()=>{navigator.clipboard?.writeText(item.path).catch(()=>{});toast('Prototype.Copied');}],['Item.Select',()=>{if(state.phase==='results'&&item.cleanable){state.checked.has(item.id)?state.checked.delete(item.id):state.checked.add(item.id);render();}}],['Item.Expand',()=>{state.expanded=item.id;renderList();}]]){const button=document.createElement('button');button.className='ctx-item';button.textContent=t(key);button.onclick=()=>{action();menu.hidden=true;};menu.append(button);}menu.hidden=false;menu.style.left=Math.min(event.clientX,innerWidth-230)+'px';menu.style.top=Math.min(event.clientY,innerHeight-180)+'px'; }
   function renderUpdate() {
     const statuses={idle:'',checking:'About.Checking',available:'About.Available',downloading:'About.DownloadProgress',downloaded:'About.Downloaded',installed:'Prototype.UpdateInstalled',canceled:'About.Canceled',failed:'About.Failed'};
-    el('updateStatus').textContent=statuses[state.update]?t(statuses[state.update],state.update==='failed'?t('Prototype.UpdateError'):state.update==='downloading'?'52%':'0.2.8'):'';
+    el('updateStatus').textContent=statuses[state.update]?t(statuses[state.update],state.update==='failed'?t('Prototype.UpdateError'):state.update==='downloading'?'52%':'__UPDATE_VERSION__'):'';
     el('updateAction').textContent=t(state.update==='available'?'Prototype.UpdateDownload':state.update==='downloaded'?'Prototype.UpdateInstall':state.update==='checking'?'About.Checking':state.update==='downloading'?'About.Downloading':'Update.Check');
     el('updateCancel').hidden=!['checking','downloading'].includes(state.update);el('updateProgress').hidden=state.update!=='downloading';
   }
