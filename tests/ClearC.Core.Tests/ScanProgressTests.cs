@@ -3,6 +3,7 @@ using ClearC.Core.Models;
 
 namespace ClearC.Core.Tests;
 
+[Collection(nameof(ChineseResourceCollection))]
 public sealed class ScanProgressTests
 {
     [Fact]
@@ -87,6 +88,7 @@ public sealed class ScanProgressTests
     }
 }
 
+[Collection(nameof(ChineseResourceCollection))]
 public sealed class RelativeTimeFormatterTests
 {
     // 以本机当前时区的正午为基准，避免偏移换算把日期推过午夜。

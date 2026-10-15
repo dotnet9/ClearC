@@ -101,7 +101,7 @@
   "Prototype.LogCleanDone": "Cleanup complete · reclaimed {0}",
   "Prototype.LogCleanCanceled": "Cleanup canceled · reclaimed {0}",
   "Prototype.LogBusyFiles": "2 files are in use and were skipped",
-  "Prototype.LogInit": "ClearC engine initialized · v0.2.7",
+  "Prototype.LogInit": "ClearC engine initialized · v0.2.8",
   "Prototype.LogDisks": "Detected {0} sample drives",
   "Prototype.LogConfirm": "Waiting for cleanup confirmation …",
   "Prototype.ExitWarning": "Stop and exit cancels the current operation.",

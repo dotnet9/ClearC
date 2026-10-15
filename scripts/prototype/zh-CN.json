@@ -101,7 +101,7 @@
   "Prototype.LogCleanDone": "清理完成 · 释放 {0}",
   "Prototype.LogCleanCanceled": "清理已取消 · 已释放 {0}",
   "Prototype.LogBusyFiles": "2 个文件被占用，已跳过",
-  "Prototype.LogInit": "ClearC 引擎初始化完成 · v0.2.7",
+  "Prototype.LogInit": "ClearC 引擎初始化完成 · v0.2.8",
   "Prototype.LogDisks": "检测到 {0} 个示例磁盘",
   "Prototype.LogConfirm": "等待用户确认清理 …",
   "Prototype.ExitWarning": "停止并退出会取消当前任务。",
