@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const standaloneFixture=require('./standalone-fixture.cjs');
-const output=path.resolve(process.env.CLEARC_AUDIT_OUTPUT||'artifacts/prototype-audit');
+const output=path.resolve(process.env.CLEARC_AUDIT_OUTPUT||path.join(__dirname,'../../artifacts/prototype-audit'));
 fs.mkdirSync(output,{recursive:true});
 (async()=>{
   const standalone=standaloneFixture(path.resolve(__dirname,'../index.html'));
@@ -35,6 +35,9 @@ fs.mkdirSync(output,{recursive:true});
     for(const culture of ['zh-CN','en-US']){
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture,palette:'DotNet',mode:'Light'});
       await page.locator('#btnAbout').click();assert.equal(await page.locator('#about').isVisible(),true);
+      assert.equal(await page.locator('.about-captions button').count(),3);
+      assert.ok((await page.locator('#about dl').innerText()).includes('2026-10-15 00:00:00'));
+      assert.ok(await page.locator('#appWindow').evaluate(el=>parseFloat(getComputedStyle(el).borderTopWidth)>0));
       for(const update of ['checking','available','downloading','downloaded','canceled','failed']){
         await page.evaluate(value=>window.ClearCPrototype.setUpdate(value),update);
         assert.ok((await page.locator('#updateStatus').innerText()).length>0);

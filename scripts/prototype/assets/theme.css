@@ -792,3 +792,4 @@ body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:176
 .hi-actions { margin-top:6px; }
 .hi-progress { margin-top:4px;height:14px;line-height:14px; }
 body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:160px; }
+.about-captions{display:flex;height:44px}.about-captions .tb-btn{width:34px;height:44px}.about-window{border-radius:0}.about-window.about-maximized{width:90vw;height:90vh}

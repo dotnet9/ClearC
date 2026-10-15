@@ -145,6 +145,7 @@
   el('btnClearLog').onclick=()=>{state.logs=[];renderLogs();};el('btnCopyLog').onclick=()=>{navigator.clipboard?.writeText(el('logBody').innerText).catch(()=>{});toast('Prototype.LogCopied');};
   el('btnExportLog').onclick=()=>{const url=URL.createObjectURL(new Blob([el('logBody').innerText],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='ClearC.log';link.click();setTimeout(()=>URL.revokeObjectURL(url),500);toast('Prototype.Exported');};
   el('btnAdmin').onclick=()=>toast('Prototype.Opened');el('btnAbout').onclick=()=>el('about').showModal();el('aboutClose').onclick=()=>el('about').close();
+  el('aboutMinimize').onclick=()=>el('about').close();el('aboutMaximize').onclick=()=>el('about').classList.toggle('about-maximized');
   el('updateAction').onclick=()=>{state.update=({idle:'checking',checking:'available',available:'downloading',downloading:'downloaded',downloaded:'installed',installed:'checking',canceled:'checking',failed:'checking'})[state.update];renderUpdate();};el('updateCancel').onclick=()=>{state.update='canceled';renderUpdate();};
   el('btnMin').onclick=()=>{el('appWindow').hidden=true;el('taskbar').hidden=false;};el('btnRestore').onclick=()=>{el('appWindow').hidden=false;el('taskbar').hidden=true;};
   el('btnMax').onclick=()=>el('appWindow').classList.toggle('maximized');el('titlebar').ondblclick=event=>{if(!event.target.closest('button,select'))el('btnMax').click();};
