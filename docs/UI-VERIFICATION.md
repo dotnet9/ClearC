@@ -38,11 +38,11 @@ pwsh scripts/publish.ps1 -RuntimeIdentifiers win-x64
 
 ![原生结果界面](media/native-results.png)
 
-![真实关于窗口（托管版离屏渲染）](media/about-window.png)
+![真实关于窗口（NativeAOT 离屏渲染）](media/about-window.png)
 
 ## 平台与人工验收边界
 
-Windows x64 正式 NativeAOT 发布成功；独立原生验证器编译及实际运行成功，退出码 0，生成 44 张 PNG，原生与原型 1008 项坐标对照通过。README 的静态图及动画来自此次原生输出。本页关于窗口图片来自升级 12.1.4.22 后的托管版真实 Skia 渲染，显示最新按钮禁用状态；相同版本的托管验收器再次通过 1008 项坐标对照。五平台 CI 均原生编译并执行离屏验证器，安装器另行打包并验证 SHA-256。Semi、Ursa 与 Reactive 的裁剪／AOT 分析告警保持可见。
+Windows x64 正式 NativeAOT 发布成功；正式 EXE 的 `--verify-runtime` 实际运行通过，检查发布目录双语资源、语言切换及隔离偏好保存。独立原生验证器在 CodeWF.Avalonia 12.1.4.22 下重新编译并实际运行成功，退出码 0，生成 44 张 PNG，原生与原型 1008 项坐标对照通过。README 的静态图、六帧工作流动画及本页关于窗口均来自此次最终原生输出。正式 Windows 发布补齐完整反射元数据参数，与原生验证器保持一致。五平台 CI 均原生编译并执行离屏验证器，安装器另行打包并验证 SHA-256。Semi、Ursa 与 Reactive 的裁剪／AOT 分析告警保持可见。
 
 ClearC 的实际扫描、提权和清理只支持 Windows；Linux/macOS 验证器检查 34 张外观及关于视图、偏好、更新和隔离目录计算，跳过仅适用于 Windows 的清理目标与工作流。相应安装包验证构建与分发结构，正式程序在这些平台提示后以退出码 2 结束，不代表已支持跨平台清理。锁屏期间未执行人工桌面验收，多 DPI、跨屏、窗口拖动、文件选择器、管理员重启和实际安装器交互仍需在可用桌面及目标系统验证。
 

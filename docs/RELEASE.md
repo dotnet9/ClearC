@@ -8,12 +8,16 @@
 
 ```powershell
 pwsh scripts/publish.ps1 -RuntimeIdentifiers win-x64
-dotnet publish scripts/ui-verification/UiVerification.csproj -c Release -r win-x64 --self-contained true -p:PublishAot=true -p:PublishTrimmed=true -p:DebugType=portable -p:DebugSymbols=true -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true -o artifacts/ui-native/win-x64
+$process = Start-Process ./artifacts/publish/win-x64/ClearC/ClearC.Desktop.exe -ArgumentList '--verify-runtime', 'artifacts/runtime-verification/win-x64' -WindowStyle Hidden -Wait -PassThru
+if ($process.ExitCode -ne 0) { throw 'NativeAOT runtime verification failed.' }
+dotnet publish scripts/ui-verification/UiVerification.csproj -c Release -r win-x64 --self-contained true -m:1 -p:PublishAot=true -p:PublishTrimmed=true -p:DebugType=portable -p:DebugSymbols=true -p:IlcGenerateCompleteTypeMetadata=true -p:IlcTrimMetadata=false -p:IlcSingleThreaded=true -o artifacts/ui-native/win-x64
 artifacts/ui-native/win-x64/UiVerification.exe artifacts/ui-evidence/win-x64
 node design/tests/compare-layout.cjs artifacts/ui-evidence/win-x64 artifacts/prototype-audit
 ```
 
 本地验证 NuGet 可使用 `temp_nugets` 环境变量指向的源；提交的包引用使用公开版本，不提交本地源配置。
+
+`--verify-runtime <独立目录>` 直接执行正式原生 EXE，检查发布目录的两份翻译及语言切换，并在指定目录使用实际配置服务完成外观偏好写入和回读。不初始化桌面、单实例、日志或系统清理，也不读写用户配置。五平台 CI 均执行此项；这只验证分发与配置能力，不代表非 Windows 平台已支持清理。
 
 ## 提交、标签与 CI
 
