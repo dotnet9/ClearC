@@ -1,6 +1,6 @@
 # ClearC 发布流程
 
-版本号取自 `Directory.Build.props`；本轮版本为 0.2.9。主分支提交与附注标签 `v0.2.9` 保持一致，发布说明维护在 `.github/release-notes/v0.2.9.md`，标签附注复用该文件。
+版本号取自 `Directory.Build.props`；本轮版本为 0.2.10。主分支提交与附注标签 `v0.2.10` 保持一致，发布说明维护在 `.github/release-notes/v0.2.10.md`，标签附注复用该文件。
 
 ## 发布前验证
 
@@ -20,8 +20,8 @@ node design/tests/compare-layout.cjs artifacts/ui-evidence/win-x64 artifacts/pro
 按修改范围用中文简体规范提交并推送 main，然后创建附注标签：
 
 ```powershell
-git tag -a v0.2.9 -F .github/release-notes/v0.2.9.md
-git push origin v0.2.9
+git tag -a v0.2.10 -F .github/release-notes/v0.2.10.md
+git push origin v0.2.10
 ```
 
 `release.yml` 先测试并检查原型与真实界面，再分别在五个原生 runner 编译正式程序和 NativeAOT 界面验证器。界面证据单独上传，不能混入 Release 安装包目录。准备发布说明时优先读取精选说明文件，再读取附注标签；两者均缺失会失败，不能生成只有版本标题的发布页。
