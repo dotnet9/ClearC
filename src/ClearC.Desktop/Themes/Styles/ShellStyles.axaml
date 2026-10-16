@@ -11,6 +11,7 @@
               BorderThickness="{TemplateBinding BorderThickness}"
               CornerRadius="{TemplateBinding CornerRadius}">
         <ContentPresenter Name="PART_ContentPresenter"
+                          TextElement.Foreground="{TemplateBinding Foreground}"
                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                           Content="{TemplateBinding Content}"
@@ -20,12 +21,18 @@
 
     <ControlTheme x:Key="ClearCPrimaryButtonTheme" TargetType="Button">
       <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
-      <Setter Property="Background" Value="{DynamicResource ClearCAccentGradient}" />
-      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Background" Value="{DynamicResource StudioPrimary}" />
+      <Setter Property="Foreground" Value="{DynamicResource StudioOnPrimary}" />
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="BorderThickness" Value="1" />
       <Style Selector="^ /template/ Border#PART_Root">
         <Setter Property="BoxShadow" Value="0 6 16 0 #522F6BFF" />
+      </Style>
+      <Style Selector="^:pointerover">
+        <Setter Property="Background" Value="{DynamicResource StudioPrimaryHover}" />
+      </Style>
+      <Style Selector="^:pressed">
+        <Setter Property="Background" Value="{DynamicResource StudioPrimaryPressed}" />
       </Style>
       <Style Selector="^:pointerover /template/ Border#PART_Root">
         <Setter Property="BoxShadow" Value="0 8 22 0 #732F6BFF" />
@@ -61,9 +68,16 @@
 
     <ControlTheme x:Key="ClearCDangerButtonTheme" TargetType="Button">
       <Setter Property="Template" Value="{StaticResource ClearCButtonTemplate}" />
-      <Setter Property="Background" Value="{DynamicResource ClearCDangerGradient}" />
-      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Background" Value="{DynamicResource SemiColorDangerLight}" />
+      <Setter Property="Foreground" Value="{DynamicResource SemiColorDanger}" />
       <Setter Property="BorderThickness" Value="0" />
+      <Style Selector="^:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SemiColorDangerLightActive}" />
+      </Style>
+      <Style Selector="^:pressed">
+        <Setter Property="Background" Value="{DynamicResource SemiColorDangerLightActive}" />
+        <Setter Property="Foreground" Value="{DynamicResource SemiColorDangerActive}" />
+      </Style>
       <Style Selector="^ /template/ Border#PART_Root">
         <Setter Property="BoxShadow" Value="0 6 16 0 #47EF4444" />
       </Style>

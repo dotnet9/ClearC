@@ -57,8 +57,8 @@
                     IsVisible="{Binding IsPrimaryGlowing}" />
             <Button Classes="btn primary" Command="{Binding PrimaryCommand}" IsEnabled="{Binding IsPrimaryEnabled}">
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <controls:IconGlyph Width="15" Height="15" IconKey="{Binding PrimaryIconKey}" Foreground="White" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding PrimaryButtonText}" />
+                <controls:IconGlyph Width="15" Height="15" IconKey="{Binding PrimaryIconKey}" Foreground="{DynamicResource StudioOnPrimary}" />
+                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource StudioOnPrimary}" Text="{Binding PrimaryButtonText}" />
               </StackPanel>
             </Button>
           </Grid>
