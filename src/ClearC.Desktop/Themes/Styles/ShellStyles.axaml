@@ -198,7 +198,7 @@
               <controls:IconGlyph Width="10"
                                   Height="10"
                                   Data="{StaticResource ClearCIconCheck}"
-                                  Foreground="White"
+                                  Foreground="{DynamicResource StudioOnPrimary}"
                                   Opacity="0"
                                   StrokeThickness="3" />
             </Border>
@@ -211,8 +211,8 @@
         </ControlTemplate>
       </Setter>
       <Style Selector="^:checked /template/ Border#PART_Box">
-        <Setter Property="Background" Value="{DynamicResource ClearCAccent}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource ClearCAccent}" />
+        <Setter Property="Background" Value="{DynamicResource StudioPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StudioPrimary}" />
       </Style>
       <Style Selector="^:checked /template/ controls|IconGlyph">
         <Setter Property="Opacity" Value="1" />
