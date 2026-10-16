@@ -6,11 +6,11 @@ ClearC 是一个面向 Windows 的 C 盘空间分析与安全清理工具，使�
 
 项目的重点不是“尽可能多删”，而是把每个清理目标的容量、风险、执行方式和失败原因展示清楚。仅系统盘上的低风险缓存默认选中；中高风险项目与其他盘符的全部结果默认不勾选，由用户决策，并必须手动选择再次确认。
 
-![ClearC 原生界面](docs/media/native-main-v0.2.13.png)
+![ClearC 原生界面](docs/media/native-main-v0.2.13-buttons.png)
 
-![原生控件工作流演示](docs/media/native-workflow-v0.2.13.gif)
+![原生控件工作流演示](docs/media/native-workflow-v0.2.13-buttons.gif)
 
-静态图与动图来自 0.2.13 本地候选版本的 Windows NativeAOT 真实视图。动图是六个受控工作流状态组成的 12.2 秒序列，不是人工桌面操作录像；源码指纹和媒体 SHA-256 见 [本轮媒体复核](docs/recheck25-native-media.md)。本机验证记录不替代 GitHub Release 发布状态。
+静态图与动图来自 0.2.13 本地候选版本的 Windows NativeAOT 真实视图。动图是六个受控工作流状态组成的 12.2 秒序列，不是人工桌面操作录像；源码指纹和媒体 SHA-256 见 [本轮媒体复核](docs/recheck25-buttons-native-media.md)。本机验证记录不替代 GitHub Release 发布状态。
 
 上图来自 Windows x64 NativeAOT 独立验证器对真实视图的 Skia 离屏渲染；工作流由受控样例驱动，不扫描或清理用户文件。原型对照、验证方法与边界见 [界面验收记录](docs/UI-VERIFICATION.md)。
 
