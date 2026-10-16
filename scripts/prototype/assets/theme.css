@@ -273,8 +273,8 @@ body[data-state="idle"] .btn.primary { animation: btnGlow 2.8s ease-in-out infin
 }
 .chk .box .icon { width: 10px; height: 10px; stroke-width: 3; color: #fff; opacity: 0; }
 .chk:hover .box { border-color: var(--acc); }
-.chk input:checked + .box { background: var(--acc); border-color: var(--acc); }
-.chk input:checked + .box .icon { opacity: 1; }
+.chk input:checked + .box { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.chk input:checked + .box .icon { opacity: 1; color: var(--on-primary); }
 .chk input:disabled + .box { opacity: .35; cursor: default; }
 .chk input:disabled { pointer-events: none; }
 
@@ -610,8 +610,8 @@ body[data-state="scanning"] .list-zone::after {
 }
 .dcard .box .icon { width: 10px; height: 10px; stroke-width: 3; color: #fff; opacity: 0; }
 .dcard:hover .box { border-color: var(--acc); }
-.dcard input:checked + .box { background: var(--acc); border-color: var(--acc); }
-.dcard input:checked + .box .icon { opacity: 1; }
+.dcard input:checked + .box { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.dcard input:checked + .box .icon { opacity: 1; color: var(--on-primary); }
 .dcard input:disabled + .box { opacity: .55; }
 .dc-letter {
   flex: none; width: 32px;

@@ -37,7 +37,7 @@
   function appearance() {
     const dark=state.mode==='Dark'||(state.mode==='System'&&matchMedia('(prefers-color-scheme: dark)').matches);
     const token=paletteTokens[state.palette][dark?'Dark':'Light'];
-    for(const [variable,key]of Object.entries({'--win':'StudioBackgroundColor','--bg':'StudioSurfaceColor','--panel':'StudioSurfaceColor','--raised':'StudioRaisedColor','--line':'StudioBorderColor','--line2':'StudioBorderColor','--text':'StudioTextColor','--text2':'StudioMutedColor','--text3':'StudioMutedColor','--acc':'StudioAccentColor','--acc2':'StudioSecondaryColor'}))document.documentElement.style.setProperty(variable,token[key]);
+    for(const [variable,key]of Object.entries({'--win':'StudioBackgroundColor','--bg':'StudioSurfaceColor','--panel':'StudioSurfaceColor','--raised':'StudioRaisedColor','--line':'StudioBorderColor','--line2':'StudioBorderColor','--text':'StudioTextColor','--text2':'StudioMutedColor','--text3':'StudioMutedColor','--acc':'StudioAccentColor','--acc2':'StudioSecondaryColor','--primary':'StudioPrimaryColor','--on-primary':'StudioOnPrimary'}))document.documentElement.style.setProperty(variable,token[key]);
     document.documentElement.style.setProperty('--grad',`linear-gradient(135deg,${token.StudioGradientStartColor},${token.StudioSecondaryColor})`);
     document.body.dataset.theme=dark?'dark':'light';document.documentElement.lang=state.culture;
     const stops=document.querySelectorAll('#dg stop');stops[0].setAttribute('stop-color',token.StudioGradientStartColor);stops[1].setAttribute('stop-color',token.StudioSecondaryColor);

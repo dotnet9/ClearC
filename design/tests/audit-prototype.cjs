@@ -11,7 +11,8 @@ fs.mkdirSync(output,{recursive:true});
   try{
     const context=await browser.newContext({viewport:{width:1360,height:900},offline:true,reducedMotion:'reduce'});
     const page=await context.newPage();await standalone.attach(page);
-    const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto(standalone.url);
+    const errors=[],checkboxColors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto(standalone.url);
+    await page.addStyleTag({content:'*,*::before,*::after{transition:none!important;animation:none!important}'});
     async function capture(name){
       await page.locator('#appWindow').screenshot({path:path.join(output,name+'.png'),animations:'disabled'});
       const geometry=await page.evaluate(()=>{
@@ -29,6 +30,22 @@ fs.mkdirSync(output,{recursive:true});
     assert.deepEqual(nativeSwatches.map(item=>item.key),['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky']);assert.ok(await page.evaluate(items=>items.every(item=>item.color===window.CLEARC_PALETTES[item.key].Light.StudioAccentColor),nativeSwatches));
     for(const culture of ['zh-CN','en-US'])for(const palette of ['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky'])for(const mode of ['Light','Dark']){
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture,palette,mode});
+      if(culture==='zh-CN'){
+        const label=page.locator('.dcard').first(),input=label.locator('input'),box=label.locator('.box');
+        await input.evaluate(element=>element.checked=false);await page.mouse.move(1,1);await recordCheckbox('normal',false);
+        await label.hover();await recordCheckbox('hover',false);
+        await page.mouse.move(1,1);await input.evaluate(element=>element.checked=true);await recordCheckbox('checked',true);
+        await label.hover();await recordCheckbox('checked-hover',true);
+        await page.mouse.move(1,1);await input.evaluate(element=>element.disabled=true);await recordCheckbox('disabled',true);
+        await input.evaluate(element=>element.disabled=false);await recordCheckbox('reenabled',true);
+        async function recordCheckbox(state,selected){
+          const value=await box.evaluate(element=>{const style=getComputedStyle(element),icon=getComputedStyle(element.querySelector('.icon')),rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);const lum=value=>rgb(value).map(channel=>{const x=channel/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;}).reduce((sum,x,index)=>sum+x*[.2126,.7152,.0722][index],0);const a=lum(icon.color),b=lum(style.backgroundColor);return{foreground:icon.color,background:style.backgroundColor,glyphOpacity:Number(icon.opacity),boxOpacity:Number(style.opacity),ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
+          checkboxColors.push({palette,mode,state,...value});
+          assert.equal(value.glyphOpacity,selected?1:0);
+          if(selected&&state!=='disabled')assert.ok(value.ratio>=3,'Unreadable selected checkbox '+JSON.stringify({palette,mode,state,...value}));
+          if(state==='disabled')assert.ok(value.boxOpacity<1);
+        }
+      }
       assert.equal(await page.locator('[data-culture="'+culture+'"]').getAttribute('aria-checked'),'true');
       assert.equal(await page.locator('.palette-dot.on').getAttribute('data-palette-key'),palette);
       assert.equal(await page.locator('.palette-dot.on').count(),1);
@@ -75,6 +92,7 @@ fs.mkdirSync(output,{recursive:true});
       await page.locator('#btnClose').click();assert.equal(await page.locator('#relaunch').isVisible(),true);await page.locator('#btnRelaunch').click();assert.equal(await state(),'idle');
     }
     await standalone.verify(page);assert.deepEqual(errors,[]);
-    console.log('PASS ClearC: 32 appearance/language combinations, live language changes, persisted preferences, 6 workflow views, selection, context menu, cancel, confirmation, log export, about, 6 update states and offline relaunch.');
+    fs.writeFileSync(path.join(output,'checkbox-colors.json'),JSON.stringify(checkboxColors,null,2));
+    console.log('PASS ClearC: 32 appearance/language combinations, '+checkboxColors.length+' checkbox state records, live language changes, persisted preferences, 6 workflow views, selection, context menu, cancel, confirmation, log export, about, 6 update states and offline relaunch.');
   }finally{await browser.close();standalone.dispose();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
