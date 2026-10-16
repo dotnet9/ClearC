@@ -14,6 +14,7 @@
 #endif
 
 [Setup]
+LicenseFile=..\LICENSE
 AppId={{BD0B3FEE-9372-438C-8B55-E3CE4A4E9DB6}
 AppName=ClearC
 AppVersion={#AppVersion}
@@ -38,10 +39,11 @@ UninstallDisplayIcon={app}\ClearC.Desktop.exe
 WizardStyle=modern
 
 [Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "chinesesimplified"; MessagesFile: "Languages\ChineseSimplified.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "*.pdb,*.dbg,*.dSYM"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -51,4 +53,6 @@ Name: "{autoprograms}\ClearC"; Filename: "{app}\ClearC.Desktop.exe"; WorkingDir:
 Name: "{autodesktop}\ClearC"; Filename: "{app}\ClearC.Desktop.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\ClearC.Desktop.exe"; Description: "Launch ClearC"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\ClearC.Desktop.exe"; Description: "{cm:LaunchProgram,ClearC}"; Flags: nowait postinstall skipifsilent
+
+#include "installer\CodeWF.Setup.iss"
