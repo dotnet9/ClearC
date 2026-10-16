@@ -1,13 +1,15 @@
-# ClearC 0.2.12 界面与行为验收
+# ClearC 0.2.13 界面与行为验收
 
-本机基线为 Windows x64、1060 × 700、简体中文与英文；CodeWF.Avalonia 12.1.4.22、CodeWF.Toolkit 1.0.0.19。主界面沿用磁盘总览、结果清单、日志与状态栏的产品结构，标题栏统一使用 Ursa 三态主题按钮、八配色圆点与语言图标菜单，移除重复下拉框。
+本机基线为 Windows x64、1060 × 700、简体中文与英文；CodeWF.Avalonia Controls/Lang 12.1.4.25、CodeWF.Toolkit 1.0.0.19。主界面沿用磁盘总览、结果清单、日志与状态栏的产品结构，标题栏统一使用 Ursa 三态主题按钮、八配色圆点与语言图标菜单，移除重复下拉框。
+
+0.2.13 将实际复选框的选中白勾和底色改为共享 Primary / OnPrimary，修复八套深色 Accent 底上仅 1.71–2.72 的图标对比。独立真实控件验证器新增十六套配色的 normal、hover、checked、checked-hover、disabled、reenabled，共 96 条断言与取色记录；启用选中图标要求至少 3:1，禁用态单独验证操作与视觉弱化。原型同步盘符与结果列表复选框，新增同样 96 条状态记录。JSON 证据使用源生成序列化；本文既有图片与历史原生记录仍为 0.2.12，新版本原生结果以对应实际运行日志为准。
 
 关于窗口使用 12.1.4.22 的实际模板检查三颗按钮：最小化、最大化按钮可见且禁用，即使直接触发点击事件也不会改变窗口状态；关闭按钮保持可用。
 
 ## 可复现命令
 
 ```powershell
-dotnet test ClearC.slnx -c Release
+dotnet test --solution ClearC.slnx -c Release
 pwsh scripts/sync_localization_keys.ps1 -Check
 pwsh scripts/build_standalone_prototype.ps1 -Check
 npm ci --prefix design/tests
@@ -65,3 +67,8 @@ ClearC 的实际扫描、提权和清理只支持 Windows；Linux/macOS 验证�
 新增后台直接切换唯一全局语言、同一个语言菜单回切及外观 JSON 落盘回归。外观模型通过界面线程读取主题并刷新选项；释放后忽略已经排队的切语通知，验证配置文件不再变化。
 
 原型关于、状态栏和日志统一读取项目版本生成，并通过双语审计检查；更新样例版本固定高于当前产品版本。
+
+
+## 0.2.13 本地原生复核
+
+本轮冻结源码的正式 NativeAOT、实际隔离 runtime、既有完整 SelfCheck 通过，新增复选框状态断言 96/96 通过、196 项测试、离线原型和原样式 Windows 安装器编译均通过。README 使用本轮原生输出；历史章节与旧图片保持其原版本范围。当前源码指纹、媒体 SHA-256 和完整边界见 [本轮媒体复核](recheck25-native-media.md)。未运行安装器，未宣称整页 95% 还原或其他系统桌面验收完成。
