@@ -1,0 +1,16 @@
+{
+  "id": "com.codewf.clearc",
+  "package": "clearc",
+  "command": "clearc",
+  "name": "ClearC",
+  "chineseName": "磁盘清理工具",
+  "summary": "Review disk usage and clean selected files",
+  "chineseSummary": "检查磁盘占用并清理选中文件",
+  "description": "A disk cleanup application. Platform-specific cleanup capabilities depend on the operating system.",
+  "chineseDescription": "磁盘清理应用；具体清理能力取决于当前操作系统。",
+  "categories": [
+    "Utility",
+    "System"
+  ],
+  "homepage": "https://github.com/dotnet9/ClearC"
+}
