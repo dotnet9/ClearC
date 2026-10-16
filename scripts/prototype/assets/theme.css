@@ -192,11 +192,12 @@ b { font-weight: 600; }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn .icon { width: 15px; height: 15px; }
 .btn.primary {
-  background: var(--grad);
-  color: #fff;
+  background: var(--primary);
+  color: var(--on-primary);
   box-shadow: 0 6px 16px rgba(47, 107, 255, .32);
 }
-.btn.primary:hover:not(:disabled) { box-shadow: 0 8px 22px rgba(47, 107, 255, .45); filter: brightness(1.05); }
+.btn.primary:hover:not(:disabled) { background: var(--primary-hover); box-shadow: 0 8px 22px rgba(47, 107, 255, .45); }
+.btn.primary:active:not(:disabled) { background: var(--primary-pressed); }
 .btn.ghost {
   background: var(--win);
   color: var(--text2);
@@ -204,10 +205,12 @@ b { font-weight: 600; }
 }
 .btn.ghost:hover:not(:disabled) { color: var(--acc); border-color: #b9c8ff; background: #f6f9ff; }
 .btn.danger {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #fff;
+  background: var(--danger-light);
+  color: var(--danger);
   box-shadow: 0 6px 16px rgba(239, 68, 68, .28);
 }
+.btn.danger:hover:not(:disabled) { background: var(--danger-light-active); }
+.btn.danger:active:not(:disabled) { background: var(--danger-light-active); color: var(--danger-active); }
 
 /* 初始状态主按钮呼吸提示 */
 body[data-state="idle"] .btn.primary { animation: btnGlow 2.8s ease-in-out infinite; }

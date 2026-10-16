@@ -11,7 +11,7 @@ fs.mkdirSync(output,{recursive:true});
   try{
     const context=await browser.newContext({viewport:{width:1360,height:900},offline:true,reducedMotion:'reduce'});
     const page=await context.newPage();await standalone.attach(page);
-    const errors=[],checkboxColors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto(standalone.url);
+    const errors=[],checkboxColors=[],buttonColors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto(standalone.url);
     await page.addStyleTag({content:'*,*::before,*::after{transition:none!important;animation:none!important}'});
     async function capture(name){
       await page.locator('#appWindow').screenshot({path:path.join(output,name+'.png'),animations:'disabled'});
@@ -22,12 +22,45 @@ fs.mkdirSync(output,{recursive:true});
       fs.writeFileSync(path.join(output,name+'.geometry.csv'),'key,x,y,width,height\n'+geometry.join('\n')+'\n');
     }
     const state=()=>page.locator('body').getAttribute('data-state');
+    // 在真实业务按钮上移动、按下并移出释放，避免调用扫描、清理、退出和更新动作。
+    async function auditButton(selector,consumer,role){
+      for(const palette of ['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky'])for(const mode of ['Light','Dark']){
+        await page.evaluate(change=>window.ClearCPrototype.set(change),{palette,mode});
+        const button=page.locator(selector);
+        await button.evaluate(element=>element.disabled=false);await page.mouse.move(1,1);await recordButton('normal');
+        await button.hover();await recordButton('hover');
+        await page.mouse.down();await recordButton('pressed');
+        await page.mouse.move(1,1);await page.mouse.up();await button.evaluate(element=>element.disabled=true);await recordButton('disabled');
+        await button.evaluate(element=>element.disabled=false);await recordButton('reenabled');
+        async function recordButton(state){
+          const value=await button.evaluate((element,{palette,mode,role,state})=>{
+            const style=getComputedStyle(element),rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
+            const lum=value=>rgb(value).map(channel=>{const x=channel/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;}).reduce((sum,x,index)=>sum+x*[.2126,.7152,.0722][index],0);
+            const contrast=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
+            const token=window.CLEARC_PALETTES[palette][mode],bgKey=role==='primary'?(state==='pressed'?'StudioPrimaryPressed':state==='hover'?'StudioPrimaryHover':'StudioPrimaryColor'):(['hover','pressed'].includes(state)?'SemiColorDangerLightActive':'SemiColorDangerLight');
+            const fgKey=role==='primary'?'StudioOnPrimary':state==='pressed'?'SemiColorDangerActive':'SemiColorDanger';
+            const normalize=value=>{const probe=document.createElement('span');probe.style.color=value;document.body.append(probe);const result=getComputedStyle(probe).color;probe.remove();return result;};
+            return{foreground:style.color,background:style.backgroundColor,expectedForeground:normalize(token[fgKey]),expectedBackground:normalize(token[bgKey]),opacity:Number(style.opacity),filter:style.filter,hover:element.matches(':hover'),pressed:element.matches(':active'),disabled:element.disabled,iconForegrounds:[...element.querySelectorAll('.icon')].map(icon=>getComputedStyle(icon).color),ratio:contrast(style.color,style.backgroundColor)};
+          },{palette,mode,role,state});
+          buttonColors.push({consumer,role,palette,mode,state,...value});
+          assert.equal(value.foreground,value.expectedForeground);assert.equal(value.background,value.expectedBackground);assert.equal(value.filter,'none');
+          assert.ok(value.iconForegrounds.every(color=>color===value.foreground));
+          if(state==='disabled'){assert.equal(value.disabled,true);assert.ok(value.opacity<1);}else{assert.equal(value.disabled,false);assert.equal(value.opacity,1);assert.ok(value.ratio>=4.5,'Unreadable actual button '+JSON.stringify({consumer,palette,mode,state,...value}));}
+          if(state==='hover')assert.equal(value.hover,true);if(state==='pressed')assert.equal(value.pressed,true);
+        }
+      }
+      await page.evaluate(change=>window.ClearCPrototype.set(change),{palette:'DotNet',mode:'Light'});
+    }
     assert.ok(await page.evaluate(()=>['btnMin','btnMax','btnClose'].every(id=>document.getElementById(id).closest('#titlebar')&&!document.getElementById(id).closest('.appearance-tools'))),'Caption actions belong to the three desktop controls');
     await page.locator('#btnMax').click();assert.ok(await page.locator('#appWindow').evaluate(el=>el.classList.contains('maximized')));await page.locator('#btnMax').click();assert.ok(await page.locator('#appWindow').evaluate(el=>!el.classList.contains('maximized')));
     await page.locator('#btnMin').click();assert.equal(await page.locator('#appWindow').isVisible(),false);await page.locator('#btnRestore').click();assert.equal(await page.locator('#appWindow').isVisible(),true);
     await page.locator('#btnClose').click();assert.equal(await page.locator('#appWindow').isVisible(),false);await page.locator('#btnRelaunch').click();assert.equal(await page.locator('#appWindow').isVisible(),true);
     const nativeSwatches=await page.locator('#paletteDots button').evaluateAll(items=>items.map(item=>({key:item.dataset.paletteKey,color:item.style.getPropertyValue('--swatch')})));
     assert.deepEqual(nativeSwatches.map(item=>item.key),['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky']);assert.ok(await page.evaluate(items=>items.every(item=>item.color===window.CLEARC_PALETTES[item.key].Light.StudioAccentColor),nativeSwatches));
+    await auditButton('#btnMain','workspace-primary','primary');
+    await page.locator('#btnAbout').click();await auditButton('#updateAction','about-primary','primary');await page.locator('#aboutClose').click();
+    await page.locator('#btnMain').click();await page.locator('#btnClose').click();await auditButton('#mActions .danger','workflow-close-danger','danger');
+    await page.locator('#mActions .danger').click();await page.locator('#btnRelaunch').click();assert.equal(await state(),'idle');
     for(const culture of ['zh-CN','en-US'])for(const palette of ['DotNet','Aurora','Ember','Default','Aquatic','Desert','Dusk','NightSky'])for(const mode of ['Light','Dark']){
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture,palette,mode});
       if(culture==='zh-CN'){
@@ -84,7 +117,9 @@ fs.mkdirSync(output,{recursive:true});
       await page.evaluate(change=>window.ClearCPrototype.set(change),{culture});
       await capture(`workflow-${culture}-results`);
       await page.locator('.row[data-id]').first().click({button:'right'});assert.equal(await page.locator('#ctxMenu').isVisible(),true);await page.locator('#ctxMenu button').first().click();
-      await page.locator('#btnMain').click();assert.equal(await page.locator('#mask').isVisible(),true);await capture(`workflow-${culture}-confirming`);
+      await page.locator('#btnMain').click();assert.equal(await page.locator('#mask').isVisible(),true);
+      if(culture==='zh-CN')await auditButton('#mActions .primary','workflow-confirm-primary','primary');
+      await capture(`workflow-${culture}-confirming`);
       await page.keyboard.press('Escape');assert.equal(await page.locator('#mask').isVisible(),false);
       await page.locator('#btnMain').click();await page.locator('#mActions button').last().click();assert.equal(await state(),'cleaning');await capture(`workflow-${culture}-cleaning`);
       await page.waitForFunction(()=>document.body.dataset.state==='done');await capture(`workflow-${culture}-done`);
@@ -93,6 +128,8 @@ fs.mkdirSync(output,{recursive:true});
     }
     await standalone.verify(page);assert.deepEqual(errors,[]);
     fs.writeFileSync(path.join(output,'checkbox-colors.json'),JSON.stringify(checkboxColors,null,2));
-    console.log('PASS ClearC: 32 appearance/language combinations, '+checkboxColors.length+' checkbox state records, live language changes, persisted preferences, 6 workflow views, selection, context menu, cancel, confirmation, log export, about, 6 update states and offline relaunch.');
+    fs.writeFileSync(path.join(output,'button-colors.json'),JSON.stringify(buttonColors,null,2));
+    assert.equal(buttonColors.length,320);
+    console.log('PASS ClearC: 32 appearance/language combinations, '+checkboxColors.length+' checkbox state records, '+buttonColors.length+' actual button state records, live language changes, persisted preferences, 6 workflow views, selection, context menu, cancel, confirmation, log export, about, 6 update states and offline relaunch.');
   }finally{await browser.close();standalone.dispose();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
