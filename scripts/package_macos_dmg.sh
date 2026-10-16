@@ -4,6 +4,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 仓内自包含的品牌化 Finder 镜像助手。
+source "$ROOT_DIR/scripts/installer/macos/create-branded-dmg.sh"
 APP_NAME="ClearC"
 EXECUTABLE_NAME="ClearC.Desktop"
 BUNDLE_ID="com.dotnet9.clearc"
@@ -148,7 +150,7 @@ ln -s /Applications "$DMG_STAGE/Applications"
 mkdir -p "$OUTPUT_DIR"
 DMG_PATH="$OUTPUT_DIR/$APP_NAME-$VERSION-$RID.dmg"
 rm -f "$DMG_PATH"
-hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_STAGE" -ov -format UDZO "$DMG_PATH" >/dev/null
+codewf_create_branded_dmg "$DMG_STAGE" "$APP_NAME" "$DMG_PATH" "$APP_NAME" || die "Branded DMG creation failed."
 
 shasum -a 256 "$DMG_PATH" | sed "s|$OUTPUT_DIR/||" >"$DMG_PATH.sha256"
 
