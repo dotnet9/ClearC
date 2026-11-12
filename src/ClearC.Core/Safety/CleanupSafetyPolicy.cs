@@ -31,6 +31,14 @@ public sealed class CleanupSafetyPolicy
         "archived_sessions"
     ];
 
+    private static readonly string[] OneDriveLogCacheSegments =
+    [
+        "AppData",
+        "Local",
+        "Microsoft",
+        "OneDrive"
+    ];
+
     public SafetyDecision Evaluate(CleanupItem item, bool riskAcknowledged)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -45,7 +53,7 @@ public sealed class CleanupSafetyPolicy
             return new(SafetyDecisionKind.Denied, CoreText.Get(CoreLanguage.CoreSafetyProtected));
         }
 
-        if (!IsCodexConversationCleaner(item))
+        if (!IsCodexConversationCleaner(item) && !IsOneDriveLogCache(item))
         {
             var offending = item.CleanRoots.FirstOrDefault(ContainsProtectedDirectory);
             if (offending is not null)
@@ -131,6 +139,29 @@ public sealed class CleanupSafetyPolicy
 
     private static string FileNameOf(string path) =>
         Path.GetFileName(Path.TrimEndingDirectorySeparator(path));
+
+    /// <summary>
+    /// OneDrive 客户端自身的日志缓存（<c>AppData\Local\Microsoft\OneDrive</c> 之下）是低风险默认勾选项；
+    /// 「OneDrive」保护名单要防的是用户的同步内容目录，不能把该项误拒，否则确认页会一直禁用「开始清理」。
+    /// </summary>
+    private static bool IsOneDriveLogCache(CleanupItem item) =>
+        item.Id == "onedrive-logs" &&
+        item.CleanRoots.Count > 0 &&
+        item.CleanRoots.All(path => HasSegmentSequence(SplitSegments(path), OneDriveLogCacheSegments));
+
+    private static bool HasSegmentSequence(string[] segments, string[] sequence)
+    {
+        for (var start = 0; start + sequence.Length <= segments.Length; start++)
+        {
+            if (segments.Skip(start).Take(sequence.Length)
+                .SequenceEqual(sequence, StringComparer.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static bool IsCodexConversationCleaner(CleanupItem item)
     {

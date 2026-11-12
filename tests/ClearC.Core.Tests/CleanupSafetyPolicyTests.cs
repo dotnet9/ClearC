@@ -87,6 +87,48 @@ public sealed class CleanupSafetyPolicyTests
         Assert.Equal(SafetyDecisionKind.Denied, _policy.Evaluate(item, true).Kind);
     }
 
+    /// <summary>OneDrive 客户端日志缓存是低风险默认勾选项，不能被「OneDrive」保护名单误拒（否则开始清理恒禁用）。</summary>
+    [Fact]
+    public void Evaluate_AllowsOneDriveClientLogCache()
+    {
+        var item = CreateItem(@"C:\Users\test\AppData\Local\Microsoft\OneDrive\logs", CleanupRisk.Low) with
+        {
+            Id = "onedrive-logs",
+            Paths =
+            [
+                @"C:\Users\test\AppData\Local\Microsoft\OneDrive\logs",
+                @"C:\Users\test\AppData\Local\Microsoft\OneDrive\setup\logs"
+            ]
+        };
+
+        Assert.Equal(SafetyDecisionKind.Allowed, _policy.Evaluate(item, true).Kind);
+    }
+
+    /// <summary>同名豁免只覆盖客户端缓存目录；OneDrive 同步内容仍然受保护。</summary>
+    [Fact]
+    public void Evaluate_StillDeniesOneDrivePathsOutsideTheClientCache()
+    {
+        var item = CreateItem(@"C:\Users\test\OneDrive\Documents", CleanupRisk.Low) with
+        {
+            Id = "onedrive-logs",
+            Paths = [@"C:\Users\test\OneDrive\Documents"]
+        };
+
+        var decision = _policy.Evaluate(item, true);
+
+        Assert.Equal(SafetyDecisionKind.Denied, decision.Kind);
+        Assert.Contains("OneDrive", decision.Reason);
+    }
+
+    /// <summary>借用 onedrive-logs 之外的保护名路径不享受豁免。</summary>
+    [Fact]
+    public void Evaluate_StillDeniesOtherItemsUnderOneDriveClientCacheName()
+    {
+        var item = CreateItem(@"C:\Users\test\AppData\Local\Microsoft\OneDrive\logs", CleanupRisk.Low);
+
+        Assert.Equal(SafetyDecisionKind.Denied, _policy.Evaluate(item, true).Kind);
+    }
+
     [Fact]
     public void EvaluateForPlan_ReportsReasonsWithoutThrowing()
     {
