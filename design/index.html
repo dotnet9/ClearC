@@ -941,7 +941,7 @@ body[data-state="scanning"] .hero,body[data-state="cleaning"] .hero { height:160
   <header><b data-i18n="About.Title"></b><div class="about-captions"><button class="tb-btn" id="aboutMinimize">−</button><button class="tb-btn" id="aboutMaximize">□</button><button class="tb-btn" id="aboutClose">×</button></div></header>
   <div class="about-content"><h2>ClearC</h2><p data-i18n="About.Description"></p>
     <section class="about-update"><div class="about-update-heading"><div><b data-i18n="Update.Check"></b><p data-i18n="About.UpdateHint"></p></div><button class="btn primary" id="updateAction"></button></div><p id="updateStatus" role="status"></p><progress id="updateProgress" value="52" max="100" hidden></progress><button id="updateCancel" class="mini" data-i18n="About.Cancel" hidden></button></section>
-    <dl><dt data-i18n="About.Version"></dt><dd data-product-version>0.2.14</dd><dt data-i18n="About.Platform"></dt><dd>.NET 10 · Avalonia 12.1.4</dd><dt data-i18n="About.CompileTime"></dt><dd>2026-10-15 00:00:00</dd><dt data-i18n="About.Author"></dt><dd data-i18n="About.AuthorName"></dd><dt data-i18n="About.Repository"></dt><dd><a href="https://github.com/dotnet9/ClearC">github.com/dotnet9/ClearC</a></dd><dt data-i18n="About.Copyright"></dt><dd>Copyright © 2026 Dotnet9</dd></dl>
+    <dl><dt data-i18n="About.Version"></dt><dd data-product-version>0.2.15</dd><dt data-i18n="About.Platform"></dt><dd>.NET 11 · Avalonia 12.1.6</dd><dt data-i18n="About.CompileTime"></dt><dd>2026-11-12 00:00:00</dd><dt data-i18n="About.Author"></dt><dd data-i18n="About.AuthorName"></dd><dt data-i18n="About.Repository"></dt><dd><a href="https://github.com/dotnet9/ClearC">github.com/dotnet9/ClearC</a></dd><dt data-i18n="About.Copyright"></dt><dd>Copyright © 2026 Dotnet9</dd></dl>
   </div>
 </dialog>
 <script>
@@ -1068,7 +1068,7 @@ window.CLEARC_DATA={"icons":"\r\n  <svg xmlns=\"http://www.w3.org/2000/svg\" sty
     const check=el('checkAll');check.disabled=state.phase!=='results';check.checked=state.checked.size>0&&state.checked.size===state.scanList.filter(item=>item.cleanable&&!Object.hasOwn(state.cleaned,item.id)).length;
     el('selInfo').textContent=state.checked.size?t('Main.SelectedSummary',state.checked.size,size(total([...state.checked]))):t('Main.NoSelection');
     el('sbText').textContent=t({idle:'Main.StatusReady',scanning:'Main.StatusScanning',results:'Main.StatusComplete',cleaning:'Main.StatusCleaning',done:'Main.StatusDone'}[state.phase],state.scope.map(letter=>letter+':').join(' · '));
-    el('sbDot').className='dot'+(busy()?' run':'');el('stateCode').textContent='CLEARC · v0.2.14 · '+state.phase.toUpperCase();
+    el('sbDot').className='dot'+(busy()?' run':'');el('stateCode').textContent='CLEARC · v0.2.15 · '+state.phase.toUpperCase();
   }
   function renderLogs() { el('logCount').textContent=state.logs.length;el('logBody').innerHTML=state.logs.map(entry=>`<div class="log-line"><span class="log-time">${entry.time}</span><span class="log-lvl lvl-${entry.level}">${entry.level}</span>${esc(t(entry.key,...entry.args))}</div>`).join('')+'<div class="cursor-line"></div>';el('logBody').scrollTop=el('logBody').scrollHeight; }
   function render() { document.body.dataset.state=state.phase;appearance();renderHero();renderDrives();renderBar();renderList();renderLogs();renderUpdate();if(!el('mask').hidden&&el('mask').dataset.kind==='confirm')openConfirm(false); }
