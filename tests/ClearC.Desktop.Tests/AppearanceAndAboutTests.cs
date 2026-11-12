@@ -18,7 +18,7 @@ namespace ClearC.Desktop.Tests;
 public sealed class AppearanceAndAboutTests(AvaloniaHeadlessFixture fixture)
 {
     [Fact]
-    public async Task EightPalettesRenderLightAndDarkSurfacesWithRestorableSettings()
+    public async Task BuiltInPalettesRenderLightAndDarkSurfacesWithRestorableSettings()
     {
         await fixture.Session.Dispatch(() =>
         {
@@ -30,20 +30,20 @@ public sealed class AppearanceAndAboutTests(AvaloniaHeadlessFixture fixture)
             try
             {
                 using var appearance = new AppearanceViewModel(new StudioThemeController(application), store);
-                Assert.Equal(8, appearance.Palettes.Count);
+                Assert.Equal(9, appearance.Palettes.Count);
                 Assert.Equal(3, appearance.Modes.Count);
                 var window = new MainWindow();
                 window.Show();
-                foreach (var palette in Enum.GetValues<StudioPalette>())
+                foreach (var palette in appearance.Palettes.Select(choice => choice.Value))
                     foreach (var mode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark })
                     {
-                        appearance.Palette = palette;
+                        appearance.PaletteKey = palette;
                         appearance.Mode = mode;
                         Dispatcher.UIThread.RunJobs();
                         window.UpdateLayout();
                         Assert.True(application.TryGetResource("StudioBackgroundColor", application.ActualThemeVariant, out var expected));
                         Assert.Equal(Assert.IsType<Color>(expected), Assert.IsType<SolidColorBrush>(window.Background).Color);
-                        Assert.Equal(palette, store.Load().Palette);
+                        Assert.Equal(palette, store.Load().PaletteKey);
                         Assert.Equal(mode, store.Load().Mode);
                     }
 

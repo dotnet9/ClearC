@@ -25,7 +25,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
         _onSaveError = onSaveError;
         var settings = store.Load();
         _controller.Mode = settings.Mode;
-        _controller.Palette = settings.Palette;
+        _controller.PaletteKey = settings.PaletteKey;
         _controller.PropertyChanged += OnThemeChanged;
         AppLocalizer.Instance.CultureChanged += OnCultureChanged;
         SelectLanguageCommand = ReactiveCommand.Create<string>(value => { CultureName = value; });
@@ -38,17 +38,15 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
         new(StudioThemeMode.Dark, Language.AppearanceDark)
     ];
 
-    public IReadOnlyList<PaletteChoice> Palettes { get; } =
-    [
-        new(StudioPalette.DotNet, Language.AppearanceDotNet),
-        new(StudioPalette.Aurora, Language.AppearanceAurora),
-        new(StudioPalette.Ember, Language.AppearanceEmber),
-        new(StudioPalette.Default, Language.AppearanceDefault),
-        new(StudioPalette.Aquatic, Language.AppearanceAquatic),
-        new(StudioPalette.Desert, Language.AppearanceDesert),
-        new(StudioPalette.Dusk, Language.AppearanceDusk),
-        new(StudioPalette.NightSky, Language.AppearanceNightSky)
-    ];
+    public IReadOnlyList<PaletteChoice> Palettes { get; } = CreatePalettes();
+
+    private static IReadOnlyList<PaletteChoice> CreatePalettes()
+    {
+        var registry = new StudioPaletteRegistry();
+        return registry.List()
+            .Select(entry => new PaletteChoice(entry.Key, registry.Find(entry.Key)!))
+            .ToArray();
+    }
 
     public IReadOnlyList<AppearanceOption<string>> Languages { get; } =
     [
@@ -57,14 +55,14 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
     ];
 
     public StudioThemeMode Mode { get => _controller.Mode; set => _controller.Mode = value; }
-    public StudioPalette Palette { get => _controller.Palette; set => _controller.Palette = value; }
+    public string PaletteKey { get => _controller.PaletteKey; set => _controller.PaletteKey = value; }
     public string CultureName { get => AppLocalizer.Instance.Culture.Name; set => AppLocalizer.Instance.SetCulture(value); }
     public ReactiveCommand<string, RxVoid> SelectLanguageCommand { get; }
 
     private void OnThemeChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs args)
     {
         this.RaisePropertyChanged(nameof(Mode));
-        this.RaisePropertyChanged(nameof(Palette));
+        this.RaisePropertyChanged(nameof(PaletteKey));
         Save();
     }
 
@@ -85,7 +83,7 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
 
     private void Save()
     {
-        try { _store.Save(new(Mode, Palette, CultureName)); }
+        try { _store.Save(new(Mode, PaletteKey, CultureName)); }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException) { _onSaveError?.Invoke(error); }
     }
 
@@ -104,15 +102,16 @@ public sealed class AppearanceViewModel : ReactiveObject, IDisposable
 public class AppearanceOption<T>(T value, string resourceKey) : ReactiveObject
 {
     public T Value { get; } = value;
-    public string DisplayName => AppText.Get(resourceKey);
+    public virtual string DisplayName => AppText.Get(resourceKey);
     internal void Refresh() => this.RaisePropertyChanged(nameof(DisplayName));
 }
 
-/// <summary>配色预览从共享主题字典读取，不在业务代码中重复维护颜色。</summary>
-public sealed class PaletteChoice(StudioPalette value, string resourceKey) : AppearanceOption<StudioPalette>(value, resourceKey)
+/// <summary>配色名称与预览色都取自共享调色板注册表，不在业务代码中重复维护颜色。</summary>
+public sealed class PaletteChoice(string key, StudioPaletteDefinition definition) : AppearanceOption<string>(key, string.Empty)
 {
-    public IBrush PreviewBrush { get; } = Application.Current is { } application &&
-        application.TryGetResource("StudioAccentColor", StudioTheme.GetVariant(value, false), out var color) && color is Color resolved
-            ? new SolidColorBrush(resolved)
-            : Brushes.Transparent;
+    public override string DisplayName => AppLocalizer.Instance.Culture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
+        ? definition.Name
+        : definition.EnglishName;
+
+    public IBrush PreviewBrush { get; } = new SolidColorBrush(Color.Parse(definition.Light.Accent));
 }

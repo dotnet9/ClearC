@@ -52,7 +52,7 @@
                             ToolTip.Tip="{i18n:I18n {x:Static l:Language.AppearanceMode}}" />
       </ThemeVariantScope>
       <ListBox Grid.Column="1" Classes="paletteSwatches" ItemsSource="{Binding Palettes}"
-               SelectedValueBinding="{Binding Value}" SelectedValue="{Binding Palette, Mode=TwoWay}"
+               SelectedValueBinding="{Binding Value}" SelectedValue="{Binding PaletteKey, Mode=TwoWay}"
                AutoScrollToSelectedItem="False">
         <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate></ListBox.ItemsPanel>
         <ListBox.ItemTemplate>

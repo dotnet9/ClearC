@@ -5,20 +5,20 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
-    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.1.4.25" />
-    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.1.4.25" />
-    <PackageVersion Include="CodeWF.Toolkit.Lang" Version="1.0.0.19" />
-    <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.0.0.19" />
-    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.0.0.19" />
-    <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.2.0" />
+    <PackageVersion Include="Avalonia" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.6" />
+    <PackageVersion Include="CodeWF.Avalonia.Controls" Version="12.2.51" />
+    <PackageVersion Include="CodeWF.Avalonia.Lang" Version="12.2.51" />
+    <PackageVersion Include="CodeWF.Toolkit.Lang" Version="1.1.6" />
+    <PackageVersion Include="CodeWF.Toolkit.Core" Version="1.1.6" />
+    <PackageVersion Include="CodeWF.Toolkit.Logging" Version="1.1.6" />
+    <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.3.1" />
     <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
-    <PackageVersion Include="ReactiveUI" Version="24.1.0" />
+    <PackageVersion Include="ReactiveUI" Version="26.0.1" />
     <PackageVersion Include="System.Reactive" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.0" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 </Project>

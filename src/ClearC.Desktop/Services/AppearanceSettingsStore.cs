@@ -16,13 +16,16 @@ public sealed class AppearanceSettingsStore(string? filePath = null)
         {
             if (!File.Exists(_filePath)) return new();
             var settings = JsonSerializer.Deserialize(File.ReadAllText(_filePath), AppearanceJsonContext.Default.AppearanceSettings);
-            return settings is not null && Enum.IsDefined(settings.Mode) && Enum.IsDefined(settings.Palette) ? settings : new();
+            return settings is not null && Enum.IsDefined(settings.Mode) && IsKnownPalette(settings.PaletteKey) ? settings : new();
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
         {
             return new();
         }
     }
+
+    private static bool IsKnownPalette(string? paletteKey) =>
+        !string.IsNullOrWhiteSpace(paletteKey) && new StudioPaletteRegistry().Find(paletteKey) is not null;
 
     public void Save(AppearanceSettings settings)
     {
@@ -42,7 +45,7 @@ public sealed class AppearanceSettingsStore(string? filePath = null)
 
 public sealed record AppearanceSettings(
     StudioThemeMode Mode = StudioThemeMode.System,
-    StudioPalette Palette = StudioPalette.DotNet,
+    string PaletteKey = "indigo",
     string? CultureName = null);
 
 [JsonSerializable(typeof(AppearanceSettings))]

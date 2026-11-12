@@ -35,9 +35,9 @@ internal static class RuntimeVerification
         }
         if (labels.Count != 2) throw new InvalidOperationException("Published languages do not switch.");
         var preferencesPath = Path.Combine(root, "runtime-" + Guid.NewGuid().ToString("N") + ".json");
-        new AppearanceSettingsStore(preferencesPath).Save(new AppearanceSettings(StudioThemeMode.System, StudioPalette.Aurora, "en-US"));
+        new AppearanceSettingsStore(preferencesPath).Save(new AppearanceSettings(StudioThemeMode.System, "violet", "en-US"));
         var saved = new AppearanceSettingsStore(preferencesPath).Load();
-        if (saved.Mode != StudioThemeMode.System || saved.Palette != StudioPalette.Aurora || saved.CultureName != "en-US")
+        if (saved.Mode != StudioThemeMode.System || saved.PaletteKey != "violet" || saved.CultureName != "en-US")
             throw new InvalidOperationException("Native appearance preferences did not round-trip.");
         var result = $"NativeAOT runtime verification passed; version={typeof(Program).Assembly.GetName().Version}; languages=2; preferences=isolated";
         File.WriteAllText(Path.Combine(root, "runtime-verification.txt"), result);

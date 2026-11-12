@@ -72,13 +72,13 @@ internal static partial class SelfCheck
             var model = (MainWindowViewModel)window.DataContext!;
             var themeControl = window.GetVisualDescendants().OfType<ThemeToggleButton>().Single();
             var themeButton = themeControl.GetVisualDescendants().OfType<Button>().Single(button => button.Name == ThemeToggleButton.PART_ThemeButton);
-            model.Appearance!.Palette = StudioPalette.Aurora;
+            model.Appearance!.PaletteKey = "violet";
             model.Appearance.Mode = StudioThemeMode.System;
             foreach (var expectedMode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark, StudioThemeMode.System })
             {
                 themeButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Dispatcher.UIThread.RunJobs();
-                if (model.Appearance.Mode != expectedMode || model.Appearance.Palette != StudioPalette.Aurora)
+                if (model.Appearance.Mode != expectedMode || model.Appearance.PaletteKey != "violet")
                     throw new InvalidOperationException("Title theme button must cycle three modes without replacing the palette.");
             }
             if (window.FindControl<Button>("TitleLanguageButton")?.Flyout is not MenuFlyout { Items.Count: 2 } languageMenu)
@@ -155,11 +155,11 @@ internal static partial class SelfCheck
             localeWindow.Close();
             Console.WriteLine("Global culture, existing Semi/Ursa controls and host resource override verification passed.");
             foreach (var culture in new[] { "zh-CN", "en-US" })
-                foreach (var palette in Enum.GetValues<StudioPalette>())
+                foreach (var palette in model.Appearance!.Palettes.Select(choice => choice.Value))
                     foreach (var mode in new[] { StudioThemeMode.Light, StudioThemeMode.Dark })
                     {
                         AppLocalizer.Instance.SetCulture(culture);
-                        model.Appearance!.Palette = palette;
+                        model.Appearance!.PaletteKey = palette;
                         model.Appearance.Mode = mode;
                         Dispatcher.UIThread.RunJobs();
                         window.UpdateLayout();
@@ -169,7 +169,7 @@ internal static partial class SelfCheck
                             throw new InvalidOperationException(AppText.Format(Language.SystemSelfCheckThemeMismatch, palette, mode));
                         }
                         var swatches = window.GetVisualDescendants().OfType<ListBox>().Single(list => list.Classes.Contains("paletteSwatches"));
-                        if (swatches.Items.Count != 8 || swatches.SelectedItem is null ||
+                        if (swatches.Items.Count != model.Appearance!.Palettes.Count || swatches.SelectedItem is null ||
                             window.GetVisualDescendants().OfType<ComboBox>().Any(combo => combo.IsEffectivelyVisible))
                             throw new InvalidOperationException("Title appearance tools must retain eight swatches and avoid duplicate selectors.");
                         if (culture == "en-US" && window.GetVisualDescendants().OfType<TextBlock>()
@@ -177,7 +177,7 @@ internal static partial class SelfCheck
                             .Any(text => System.Text.RegularExpressions.Regex.IsMatch(text.Text ?? string.Empty, @"[\u4e00-\u9fff]")))
                             throw new InvalidOperationException("English interface contains untranslated text.");
                         var saved = new AppearanceSettingsStore(appearancePath).Load();
-                        if (saved.Mode != mode || saved.Palette != palette || saved.CultureName != culture)
+                        if (saved.Mode != mode || saved.PaletteKey != palette || saved.CultureName != culture)
                             throw new InvalidOperationException("Appearance preferences did not persist the selected values.");
                         if (captureDirectory is not null) Capture(window, captureDirectory, $"main-{culture}-{palette}-{mode}.png");
                     }
@@ -185,7 +185,7 @@ internal static partial class SelfCheck
             if (new AppearanceSettingsStore(appearancePath).Load().Mode != StudioThemeMode.System)
                 throw new InvalidOperationException("The system appearance mode must persist independently from the palette.");
             model.Appearance.Mode = StudioThemeMode.Light;
-            model.Appearance.Palette = StudioPalette.DotNet;
+            model.Appearance.PaletteKey = "indigo";
 
             var about = new AboutWindow { DataContext = new AboutViewModel(model.Update) };
             about.Show(window);

@@ -26,7 +26,7 @@ internal static partial class SelfCheck
         var preferencePath = Path.Combine(Path.GetTempPath(), "clearc-workflow-" + Guid.NewGuid().ToString("N"), "appearance.json");
         var appearance = new AppearanceViewModel(new StudioThemeController(Application.Current!), new AppearanceSettingsStore(preferencePath));
         appearance.Mode = StudioThemeMode.Light;
-        appearance.Palette = StudioPalette.DotNet;
+        appearance.PaletteKey = "indigo";
         using var model = new MainWindowViewModel(scanner, executor, new CleanupSafetyPolicy(),
             new DiskSnapshot("C:", "NTFS", 256L * 1024 * 1024 * 1024, 64L * 1024 * 1024 * 1024),
             new InMemoryLogStore(NullApplicationLogger.Instance), elevationService: new FixtureElevation(),
